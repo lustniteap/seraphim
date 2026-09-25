@@ -29,6 +29,12 @@ pip install -e .
 
 ## Web interface
 
+On a Mac, double-click `MixCheck.command` in Finder. The first run sets up Python packages
+(about a minute); after that it opens straight to the page. Keep the Terminal window it opens
+while you use MixCheck, and close it to quit. Launching it again while it's running just reopens the page.
+
+Or from a terminal:
+
 ```bash
 pip install -e ".[web]"
 mixcheck-web
@@ -109,3 +115,5 @@ their current documentation.
 - Mono and stereo files only (no surround yet).
 - Mono files are measured per BS.1770 as a single channel.
 - Without `soundfile` installed, only WAV files can be read.
+- MP3 is accepted for quick checks, but use a WAV/AIFF/FLAC bounce for final QC: the encoder
+  changes true peak and tonal balance, and its padding shifts timestamps by a few tens of ms.

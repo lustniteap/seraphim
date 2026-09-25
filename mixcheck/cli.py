@@ -45,7 +45,7 @@ def print_summary(r, show_fixes=True):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="mixcheck", description="Technical QC for mixes and masters.")
-    parser.add_argument("file", help="Audio file (WAV; AIFF/FLAC with soundfile installed)")
+    parser.add_argument("file", help="Audio file (WAV; AIFF/FLAC/MP3 with soundfile installed)")
     parser.add_argument("--json", metavar="PATH", help="Write the full report to a JSON file")
     parser.add_argument("--print-json", action="store_true", help="Print JSON instead of the summary")
     parser.add_argument("--profile", default=DEFAULT_PROFILE, choices=sorted(PROFILES),

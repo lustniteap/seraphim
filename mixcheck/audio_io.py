@@ -15,7 +15,7 @@ def load_audio(path):
         raise FileNotFoundError(f"No such file: {path}")
 
     try:
-        import soundfile as sf  # handles WAV, AIFF, FLAC and more
+        import soundfile as sf  # handles WAV, AIFF, FLAC, MP3 and more
         data, sr = sf.read(str(path), always_2d=True, dtype="float64")
         return data, sr
     except ImportError:

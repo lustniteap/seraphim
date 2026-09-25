@@ -9,16 +9,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --panel: #E3E7E9;
-    --recess: #D2D8DB;
-    --ink: #152433;
-    --ink-soft: #4A5968;
-    --rule: #AEB8BF;
-    --critical: #B8322A;
-    --warning: #C77E12;
-    --note: #2C6A87;
-    --ok: #3B7556;
-    --curve: #2A4A63;
+    color-scheme: dark;
+    --panel: #050607;
+    --recess: rgba(8, 11, 13, 0.55);
+    --card: #0D1114;
+    --card-edge: #1B2328;
+    --ink: #E8EDF0;
+    --ink-soft: #8C99A3;
+    --rule: #232C32;
+    --grid: #151B1F;
+    --critical: #F2665E;
+    --critical-bg: rgba(242, 102, 94, 0.10);
+    --warning: #F2AA3F;
+    --warning-bg: rgba(242, 170, 63, 0.10);
+    --note: #62B6DC;
+    --ok: #4FC28F;
+    --ok-bg: rgba(79, 194, 143, 0.09);
+    --wave: #9ADDF3;
+    --wave-fill: rgba(154, 221, 243, 0.22);
     --font: "Archivo", "Helvetica Neue", Arial, sans-serif;
   }
   * { box-sizing: border-box; }
@@ -28,6 +36,7 @@
     color: var(--ink);
     font: 400 16px/1.5 var(--font);
     font-variation-settings: "wdth" 100;
+    overflow-x: clip;
   }
   .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 64px; }
   h1, h2 {
@@ -39,57 +48,137 @@
   h1 { font-size: 22px; }
   h2 { font-size: 15px; margin-bottom: 14px; }
   button, input, summary { font: inherit; }
+  summary { cursor: pointer; }
   :focus-visible { outline: 2px solid var(--note); outline-offset: 3px; }
 
   /* Header */
   header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   header p { margin: 0; color: var(--ink-soft); font-size: 14px; }
   details.plugins { position: relative; font-size: 14px; }
-  details.plugins summary { cursor: pointer; color: var(--ink-soft); }
+  details.plugins summary { color: var(--ink-soft); }
   details.plugins .menu {
     position: absolute; right: 0; top: 30px; z-index: 5; width: 270px;
-    background: var(--panel); border: 1px solid var(--rule); padding: 14px 16px;
-    box-shadow: 0 8px 24px rgba(21, 36, 51, 0.16);
+    background: var(--card); border: 1px solid var(--card-edge); padding: 14px 16px; border-radius: 6px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
   }
   .menu p { margin: 0 0 10px; color: var(--ink-soft); }
   .menu label { display: flex; gap: 8px; align-items: center; padding: 3px 0; cursor: pointer; }
+  .menu input { accent-color: var(--wave); }
+
+  /* The pool: full-bleed black water of waveforms, with the slot floating on it */
+  .pool {
+    position: relative; overflow: hidden;
+    width: 100vw; margin: 20px 0 0 calc(50% - 50vw); padding: 0 24px;
+    min-height: max(480px, calc(100vh - 110px));
+    display: flex; align-items: center; justify-content: center;
+    transition: min-height 0.6s cubic-bezier(.2, .7, .2, 1);
+  }
+  .pool.compact { min-height: 150px; }
+  .pool canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .pool::after { /* fade the water into the page at the edges */
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      linear-gradient(to bottom, var(--panel) 0, transparent 10%, transparent 85%, var(--panel) 100%),
+      linear-gradient(to right, var(--panel) 0, transparent 6%, transparent 94%, var(--panel) 100%);
+  }
 
   /* The slot: where a bounce goes in */
   .slot {
-    margin-top: 24px;
+    position: relative; z-index: 1;
+    width: min(760px, 100%);
     display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
     background: var(--recess);
-    border-radius: 6px;
-    box-shadow: inset 0 2px 5px rgba(21, 36, 51, 0.22), inset 0 -1px 0 rgba(255, 255, 255, 0.6);
-    padding: 44px 40px;
-    transition: box-shadow 0.15s, background 0.15s;
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    border: 1px solid rgba(154, 221, 243, 0.16);
+    border-radius: 10px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+    padding: 40px 40px;
+    transition: border-color 0.2s, box-shadow 0.2s, padding 0.4s;
   }
-  .slot.compact { padding: 18px 24px; }
-  .slot.dragging { background: #C7D3D9; box-shadow: inset 0 0 0 2px var(--note), inset 0 2px 5px rgba(21, 36, 51, 0.22); }
+  .pool.compact .slot { padding: 16px 22px; width: min(1132px, 100%); }
+  .slot.dragging { border-color: var(--wave); box-shadow: 0 0 0 1px var(--wave), 0 0 60px rgba(154, 221, 243, 0.25); }
   .slot-title {
-    font-size: clamp(24px, 4vw, 40px); font-weight: 750; line-height: 1.1;
+    font-size: clamp(26px, 4.2vw, 44px); font-weight: 750; line-height: 1.08;
     font-variation-settings: "wdth" 118; margin: 0;
   }
-  .slot.compact .slot-title { font-size: 20px; }
-  .slot-sub { margin: 6px 0 0; color: var(--ink-soft); }
+  .pool.compact .slot-title { font-size: 20px; }
+  .slot-sub { margin: 8px 0 0; color: var(--ink-soft); }
+  .steps { margin: 20px 0 0; padding: 0; list-style: none; display: flex; gap: 10px 28px; flex-wrap: wrap; color: var(--ink-soft); font-size: 14px; }
+  .steps b { color: var(--wave); margin-right: 6px; }
+  .pool.compact .steps { display: none; }
   .button {
-    display: inline-block; cursor: pointer; border: 0; border-radius: 4px;
-    background: var(--ink); color: var(--panel); padding: 11px 20px; font-weight: 650;
+    display: inline-block; cursor: pointer; border: 0; border-radius: 6px;
+    background: var(--ink); color: var(--panel); padding: 12px 22px; font-weight: 650;
   }
-  .button:hover { background: #22384C; }
-  .progress { height: 3px; background: var(--rule); margin-top: 14px; overflow: hidden; border-radius: 2px; width: min(420px, 100%); }
-  .progress span { display: block; height: 100%; width: 35%; background: var(--ink); animation: slide 1.1s ease-in-out infinite; }
+  .button:hover { background: #FFFFFF; }
+  .progress { height: 3px; background: var(--rule); margin-top: 16px; overflow: hidden; border-radius: 2px; width: min(420px, 100%); }
+  .progress span { display: block; height: 100%; width: 35%; background: var(--wave); animation: slide 1.1s ease-in-out infinite; }
   @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
   .error { margin-top: 14px; color: var(--critical); font-weight: 600; }
 
   /* Report */
-  #report { margin-top: 32px; }
+  #report { margin-top: 12px; }
   #report[hidden] { display: none; }
-  .fileline { display: flex; gap: 20px; flex-wrap: wrap; color: var(--ink-soft); font-size: 14px; margin-bottom: 10px; }
+  .fileline { display: flex; gap: 20px; flex-wrap: wrap; color: var(--ink-soft); font-size: 14px; margin-bottom: 12px; }
   .fileline strong { color: var(--ink); font-size: 16px; }
 
+  /* Verdict */
+  .verdict { border-left: 6px solid var(--ok); background: var(--ok-bg); padding: 20px 24px; border-radius: 0 6px 6px 0; }
+  .verdict[data-state="critical"] { border-color: var(--critical); background: var(--critical-bg); }
+  .verdict[data-state="warning"] { border-color: var(--warning); background: var(--warning-bg); }
+  .verdict h2 { font-size: clamp(22px, 3vw, 30px); margin: 0; line-height: 1.15; }
+  .verdict p { margin: 6px 0 0; color: var(--ink-soft); max-width: 72ch; }
+
+  /* Checklist */
+  .groups { margin-top: 28px; }
+  .group { margin-bottom: 26px; }
+  .group h2 { display: flex; align-items: center; gap: 8px; }
+  .group h2::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--note); }
+  .group[data-sev="critical"] h2::before { background: var(--critical); }
+  .group[data-sev="warning"] h2::before { background: var(--warning); }
+  .items { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .item { background: var(--card); border: 1px solid var(--card-edge); border-left: 4px solid var(--note); border-radius: 0 5px 5px 0; }
+  .group[data-sev="critical"] .item { border-left-color: var(--critical); }
+  .group[data-sev="warning"] .item { border-left-color: var(--warning); }
+  .item summary { list-style: none; padding: 14px 18px; display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; }
+  .item summary::-webkit-details-marker { display: none; }
+  .item .title { font-weight: 700; }
+  .item .why { grid-column: 1; color: var(--ink-soft); font-size: 15px; max-width: 72ch; }
+  .item .when { grid-row: 1; grid-column: 2; font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .item .toggle { grid-column: 1 / -1; font-size: 13px; color: var(--wave); font-weight: 600; margin-top: 6px; }
+  .item[open] .toggle .show, .item:not([open]) .toggle .hide { display: none; }
+  .item .body { padding: 0 18px 16px; }
+  .fix-title { font-size: 13px; color: var(--ink-soft); margin: 0 0 4px; font-weight: 600; }
+  .fixes { margin: 0; padding-left: 20px; max-width: 72ch; }
+  .fixes li { margin-bottom: 5px; }
+  .fixes li.optional::marker { color: var(--note); }
+  .measured { margin: 10px 0 0; font-size: 13px; color: var(--ink-soft); }
+  .item.linked:hover .title { text-decoration: underline; text-decoration-color: var(--ink-soft); }
+  .item summary:hover .toggle { color: var(--wave); }
+
+  /* Readings */
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 36px; }
+  .section-head p { margin: 0 0 14px; font-size: 13px; color: var(--ink-soft); }
+  .readings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: start; }
+  .reading { background: var(--card); border: 1px solid var(--card-edge); border-radius: 5px; padding: 14px 16px 12px; border-top: 4px solid var(--rule); }
+  .reading[data-state="ok"] { border-top-color: var(--ok); }
+  .reading[data-state="info"] { border-top-color: var(--note); }
+  .reading[data-state="warning"] { border-top-color: var(--warning); }
+  .reading[data-state="critical"] { border-top-color: var(--critical); }
+  .reading .name { font-size: 13px; color: var(--ink-soft); font-weight: 600; }
+  .reading .status { font-weight: 700; font-size: 17px; margin: 2px 0 4px; }
+  .reading .value {
+    font-size: 28px; line-height: 1; font-weight: 620;
+    font-variation-settings: "wdth" 72; font-variant-numeric: tabular-nums;
+  }
+  .reading .unit { font-size: 14px; font-weight: 500; color: var(--ink-soft); margin-left: 3px; font-variation-settings: "wdth" 90; }
+  .reading details { margin-top: 8px; font-size: 14px; }
+  .reading details summary { color: var(--wave); font-size: 13px; font-weight: 600; }
+  .reading details p { margin: 6px 0 0; color: var(--ink-soft); }
+
+  /* Timeline */
   .tape {
-    background: #F1F3F4; border: 1px solid var(--rule); border-radius: 4px;
+    background: #080B0D; border: 1px solid var(--card-edge); border-radius: 6px;
     padding: 8px 0 0; position: relative;
   }
   .tape svg { display: block; width: 100%; height: 230px; }
@@ -100,77 +189,49 @@
   .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: var(--ink-soft); margin: 8px 0 0; }
   .legend i { display: inline-block; width: 14px; height: 10px; margin-right: 6px; vertical-align: -1px; }
 
-  .meters {
-    display: grid; grid-template-columns: repeat(6, 1fr);
-    border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
-    margin: 28px 0 34px;
-  }
-  .meter { padding: 16px 16px 14px; border-left: 1px solid var(--rule); }
-  .meter:first-child { border-left: 0; padding-left: 0; }
-  .meter .value {
-    font-size: 38px; line-height: 1; font-weight: 620;
-    font-variation-settings: "wdth" 72; font-variant-numeric: tabular-nums;
-  }
-  .meter .unit { font-size: 15px; font-weight: 500; color: var(--ink-soft); margin-left: 3px; font-variation-settings: "wdth" 90; }
-  .meter .label { font-size: 13px; color: var(--ink-soft); margin-top: 6px; }
-  .meter .lamp { height: 4px; border-radius: 2px; background: var(--rule); margin-top: 10px; }
-  .meter[data-state="ok"] .lamp { background: var(--ok); }
-  .meter[data-state="info"] .lamp { background: var(--note); }
-  .meter[data-state="warning"] .lamp { background: var(--warning); }
-  .meter[data-state="critical"] .lamp { background: var(--critical); }
-
-  .columns { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 48px; }
-
-  .findings { list-style: none; margin: 0; padding: 0; }
-  .finding { border-left: 4px solid var(--rule); padding: 4px 0 4px 16px; margin-bottom: 22px; }
-  .finding[data-sev="critical"] { border-color: var(--critical); }
-  .finding[data-sev="warning"] { border-color: var(--warning); }
-  .finding[data-sev="info"] { border-color: var(--note); }
-  .finding.linked { cursor: default; }
-  .finding.linked:hover .msg { text-decoration: underline; text-decoration-color: var(--rule); }
-  .sev { font-size: 13px; font-weight: 700; font-variation-settings: "wdth" 110; }
-  .finding[data-sev="critical"] .sev { color: var(--critical); }
-  .finding[data-sev="warning"] .sev { color: var(--warning); }
-  .finding[data-sev="info"] .sev { color: var(--note); }
-  .msg { margin: 2px 0 8px; font-weight: 600; max-width: 68ch; }
-  .fix-title { font-size: 13px; color: var(--ink-soft); margin: 0 0 4px; }
-  .fixes { margin: 0; padding-left: 18px; max-width: 70ch; }
-  .fixes li { margin-bottom: 5px; }
-  .fixes li.optional::marker { color: var(--note); }
-  .clean { padding: 18px 20px; background: #DCE8E1; border-left: 4px solid var(--ok); }
-
-  aside section { margin-bottom: 32px; }
+  /* Engineering detail */
+  details.detail { margin-top: 36px; border-top: 1px solid var(--rule); padding-top: 14px; }
+  details.detail > summary { font-weight: 700; font-variation-settings: "wdth" 115; }
+  details.detail > summary span { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 6px; font-variation-settings: "wdth" 100; }
+  .detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; margin-top: 20px; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
   td { padding: 7px 0; border-bottom: 1px solid var(--rule); }
   td:last-child { text-align: right; }
   .muted { color: var(--ink-soft); font-size: 13px; margin: 8px 0 0; }
   .band { display: grid; grid-template-columns: 74px 1fr 52px; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 6px; }
-  .band .bar { height: 10px; background: var(--recess); border-radius: 2px; overflow: hidden; }
-  .band .bar span { display: block; height: 100%; background: var(--curve); }
+  .band .bar { height: 10px; background: var(--grid); border-radius: 2px; overflow: hidden; }
+  .band .bar span { display: block; height: 100%; background: var(--wave); opacity: 0.75; }
   .band .pct { text-align: right; font-variant-numeric: tabular-nums; }
   dl.pairs { display: grid; grid-template-columns: 1fr auto; margin: 0; font-size: 14px; }
   dl.pairs dt, dl.pairs dd { padding: 7px 0; border-bottom: 1px solid var(--rule); margin: 0; }
   dl.pairs dd { text-align: right; font-variant-numeric: tabular-nums; }
 
   @media (max-width: 900px) {
-    .meters { grid-template-columns: repeat(3, 1fr); }
-    .meter:nth-child(4) { border-left: 0; padding-left: 0; }
-    .meter:nth-child(n+4) { border-top: 1px solid var(--rule); }
-    .columns { grid-template-columns: 1fr; gap: 12px; }
+    .readings { grid-template-columns: repeat(2, 1fr); }
+    .detail-grid { grid-template-columns: 1fr; gap: 24px; }
   }
   @media (max-width: 520px) {
     .wrap { padding: 20px 16px 48px; }
+    .pool { margin-top: 16px; padding: 0 16px; }
     .slot { padding: 28px 22px; }
-    .meters { grid-template-columns: repeat(2, 1fr); }
-    .meter:nth-child(n) { border-left: 0; padding-left: 0; }
-    .meter:nth-child(even) { border-left: 1px solid var(--rule); padding-left: 16px; }
-    .meter:nth-child(n+3) { border-top: 1px solid var(--rule); }
-    .meter .value { font-size: 32px; }
+    .readings { grid-template-columns: 1fr; }
+    .item summary { grid-template-columns: 1fr; }
+    .item .when { grid-row: auto; grid-column: 1; }
   }
   @media (prefers-reduced-motion: reduce) {
     .progress span { animation: none; width: 100%; opacity: 0.5; }
-    .slot { transition: none; }
+    .slot, .pool { transition: none; }
   }
+
+  /* Timeline marks */
+  .tl-grid { stroke: var(--grid); }
+  .tl-label { fill: var(--ink-soft); font-size: 11px; }
+  .tl-silence { fill: #030405; }
+  .tl-wave { fill: var(--wave-fill); stroke: var(--wave); stroke-width: 1.2; stroke-linejoin: round; }
+  .tl-ref { stroke: var(--ink-soft); stroke-width: 1.2; stroke-dasharray: 5 4; }
+  .tl-cursor { stroke: var(--ink); stroke-width: 1; }
+  .tl-clip { stroke: var(--critical); stroke-width: 3; }
+  .phase { fill: var(--warning); }
 </style>
 </head>
 <body>
@@ -178,7 +239,7 @@
   <header>
     <div>
       <h1>MixCheck</h1>
-      <p>Technical QC for mixes and masters, with fixes for Pro Tools and Waves Essential.</p>
+      <p>Checks a mix or master for technical problems and tells you how to fix them in Pro Tools.</p>
     </div>
     <details class="plugins">
       <summary>Plugins I own beyond Waves Essential</summary>
@@ -189,39 +250,54 @@
     </details>
   </header>
 
+  <section class="pool" id="pool">
+  <canvas id="waves" aria-hidden="true"></canvas>
   <div class="slot" id="slot">
     <div>
       <p class="slot-title" id="slot-title">Drop a bounce here to check it</p>
-      <p class="slot-sub" id="slot-sub">WAV, AIFF or FLAC. The file is analyzed on this computer and isn't stored.</p>
+      <p class="slot-sub" id="slot-sub">WAV, AIFF, FLAC or MP3 (use a WAV for final QC). The file is analyzed on this computer and isn't stored.</p>
+      <ol class="steps">
+        <li><b>1</b>In Pro Tools, File › Bounce Mix as a WAV</li>
+        <li><b>2</b>Drag the file onto this page</li>
+        <li><b>3</b>Get a checklist of anything to fix</li>
+      </ol>
       <div class="progress" id="progress" hidden><span></span></div>
       <p class="error" id="error" role="alert" hidden></p>
     </div>
     <label class="button" for="file-input" id="choose">Choose a file</label>
-    <input type="file" id="file-input" accept=".wav,.wave,.aif,.aiff,.flac" hidden>
+    <input type="file" id="file-input" accept=".wav,.wave,.aif,.aiff,.flac,.mp3" hidden>
   </div>
+  </section>
 
   <main id="report" hidden aria-live="polite">
     <div class="fileline" id="fileline"></div>
+    <div class="verdict" id="verdict"></div>
+    <div class="groups" id="groups"></div>
 
+    <div class="section-head">
+      <h2>At a glance</h2>
+      <p>Tap "What's this?" on any card for a plain explanation.</p>
+    </div>
+    <div class="readings" id="readings"></div>
+
+    <div class="section-head">
+      <h2>Loudness over time</h2>
+      <p>Hover to read the level at any point.</p>
+    </div>
     <div class="tape" id="tape">
       <div class="readout" id="readout"></div>
       <svg id="timeline" role="img" aria-label="Short-term loudness over time"></svg>
     </div>
     <div class="legend">
-      <span><i style="background:#9FB3C3"></i>Short-term loudness</span>
-      <span><i style="background:repeating-linear-gradient(90deg,var(--ink) 0 4px,transparent 4px 7px);height:2px"></i>Streaming reference, −14 LUFS</span>
-      <span><i style="background:rgba(199,126,18,.35)"></i>Phase problem</span>
+      <span><i style="background:var(--wave-fill);border-top:2px solid var(--wave)"></i>Loudness</span>
+      <span><i style="background:repeating-linear-gradient(90deg,var(--ink) 0 4px,transparent 4px 7px);height:2px"></i>Typical streaming level (−14 LUFS)</span>
+      <span><i style="background:var(--warning);opacity:.45"></i>Problem section</span>
       <span><i style="background:var(--critical);width:3px"></i>Clipping</span>
     </div>
 
-    <div class="meters" id="meters"></div>
-
-    <div class="columns">
-      <section>
-        <h2>Findings</h2>
-        <ul class="findings" id="findings"></ul>
-      </section>
-      <aside>
+    <details class="detail" id="detail">
+      <summary>Engineering detail<span>Streaming gain, stereo measurements and tonal balance</span></summary>
+      <div class="detail-grid">
         <section>
           <h2>On streaming services</h2>
           <table id="streaming"></table>
@@ -236,17 +312,42 @@
           <div id="bands"></div>
           <p class="muted">Share of total energy per band. Low bands normally dominate.</p>
         </section>
-      </aside>
-    </div>
+      </div>
+    </details>
   </main>
 </div>
 
 <script>
 const $ = (id) => document.getElementById(id);
-const ACCEPTED = [".wav", ".wave", ".aif", ".aiff", ".flac"];
-const SEV_LABEL = { critical: "Critical", warning: "Warning", info: "Note" };
+const ACCEPTED = [".wav", ".wave", ".aif", ".aiff", ".flac", ".mp3"];
 const BAND_LABEL = { sub: "Sub", low: "Low", low_mid: "Low mid", high_mid: "High mid", high: "High" };
 const DEFAULT_PLUGINS = ["PAZ Analyzer", "S1 Shuffler", "S1 Stereo Imager", "WLM Plus"];
+
+// Plain-English title and "why it matters" for each finding id from analyze.py.
+const PLAIN = {
+  true_peak_over: ["Peaks go over 0 dB", "Expect crackles or distortion on phones, car stereos and after streaming services convert the file."],
+  true_peak_hot: ["Peaks are very close to 0 dB", "Streaming services' conversion can push these over and cause distortion. Most services ask for −1 dB or lower."],
+  clipping: ["The audio clips", "Some samples hit the digital ceiling and get flattened, which can sound like crackles or harshness."],
+  very_loud: ["Mastered very loud", "Streaming services will turn it down, so the extra loudness gains nothing and can cost punch."],
+  low_plr: ["Heavily limited", "The peaks are squashed close to the average level, which can sound flat or tiring over a whole song."],
+  low_lra: ["Little contrast between loud and quiet parts", "Sections sit at nearly the same level. Fine for some genres; just check the song still builds."],
+  negative_correlation: ["Left and right cancel each other out", "Usually a flipped polarity. The mix will sound hollow and can nearly vanish on mono speakers."],
+  mono_loss: ["Gets noticeably quieter in mono", "On phones, Bluetooth speakers and club systems, parts of the mix will drop out."],
+  wide_low_end: ["Bass is too wide", "The kick and bass may thin out or disappear on mono systems like phones and club PAs."],
+  phase_section: ["Phase problem in one section", "Left and right cancel here, so this part will sound hollow or drop out in mono."],
+  imbalance: ["The mix leans to one side", "One side is noticeably louder than the other."],
+  dc_offset: ["DC offset", "The waveform is shifted off center. It wastes headroom and can cause clicks at edits."],
+  silent: ["The file is silent", "Nothing was bounced. Check the bounce source and that tracks aren't muted."],
+  long_head: ["Long silence at the start", "Listeners wait before the song starts. Trim it unless the gap is on purpose."],
+  long_tail: ["Long silence at the end", "The next song or autoplay will be delayed. Trim it unless the gap is on purpose."],
+  abrupt_end: ["The ending may be cut off", "The audio is still playing at the very last sample. Check that the bounce covers the full tail."],
+  no_air: ["Missing top end", "Almost nothing above 16 kHz. That often means an MP3 or AAC was used somewhere in the session."],
+};
+const GROUPS = [
+  ["critical", "Fix before release"],
+  ["warning", "Worth checking"],
+  ["info", "Good to know"],
+];
 
 let report = null;
 let owned = new Set(loadOwned());
@@ -262,6 +363,7 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 const num = (v, digits = 1, signed = false) =>
   v === null || v === undefined ? "n/a" : (signed && v > 0 ? "+" : "") + v.toFixed(digits).replace("-", "−");
 const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 /* Plugin preferences */
 async function setupPlugins() {
@@ -275,18 +377,107 @@ async function setupPlugins() {
   $("plugin-list").addEventListener("change", (e) => {
     e.target.checked ? owned.add(e.target.value) : owned.delete(e.target.value);
     saveOwned();
-    if (report) renderFindings(report);
+    if (report) renderChecklist(report);
   });
 }
+
+/* Engineering detail remembers whether it was left open. */
+try { $("detail").open = localStorage.getItem("mixcheck.detail") === "open"; } catch {}
+$("detail").addEventListener("toggle", () => {
+  try { localStorage.setItem("mixcheck.detail", $("detail").open ? "open" : "closed"); } catch {}
+});
+
+/* The pool: a scrolling waveform standing on black water, with its reflection and ripples.
+   mood() raises the swell while a file is dragged in or being checked. */
+const pool = (() => {
+  const canvas = $("waves"), ctx = canvas.getContext("2d");
+  const still = matchMedia("(prefers-reduced-motion: reduce)");
+  const hex = getComputedStyle(document.documentElement).getPropertyValue("--wave").trim();
+  const [cr, cg, cb] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const rgba = (a) => `rgba(${cr},${cg},${cb},${a})`;
+  const rnd = (n) => { const s = Math.sin(n * 12.9898) * 43758.5453; return s - Math.floor(s); };
+  // A song-like envelope: slow sections, a beat every 16 bars, grainy detail.
+  const env = (n) => {
+    const e = 0.5 + 0.3 * Math.sin(n * 0.011) + 0.2 * Math.sin(n * 0.047 + 1.3);
+    return Math.max(0.12, Math.min(1, e)) * (n % 16 < 2 ? 1.2 : 1) * (0.35 + 0.65 * rnd(n));
+  };
+  let W = 0, H = 0, t = 0, scroll = 0, energy = 1, target = 1, busy = false, last = 0;
+
+  function resize() {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const r = canvas.getBoundingClientRect();
+    W = r.width; H = r.height;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (still.matches) draw();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const horizon = H * 0.5, bar = 4, maxH = H * 0.38;
+    // Waveform bars above the surface, fainter reflection below.
+    for (let x = 0; x < W; x += bar) {
+      const n = Math.floor((x + scroll) / bar);
+      const h = maxH * env(n) * (0.75 + 0.25 * energy);
+      ctx.fillStyle = rgba(0.5);
+      ctx.fillRect(x, horizon - h, bar - 1.5, h);
+      const wobble = still.matches ? 0 : Math.sin(t * 2.2 + n * 0.35) * 1.6 * energy;
+      ctx.fillStyle = rgba(0.14);
+      ctx.fillRect(x + wobble, horizon + 2, bar - 1.5, h * 0.7);
+    }
+    // Ripple lines, closer together toward the horizon for depth.
+    const lines = 18;
+    for (let i = 0; i < lines; i++) {
+      const d = (i + 1) / lines;
+      const y0 = horizon + (H - horizon) * Math.pow(d, 1.7);
+      const amp = (1 + 9 * d) * energy;
+      const k = 0.003 + 0.012 * (1 - d);
+      ctx.beginPath();
+      for (let x = 0; x <= W + 6; x += 6) {
+        const y = y0 + amp * (0.6 * Math.sin(x * k + t * 0.9 + i * 0.7)
+                            + 0.3 * Math.sin(x * k * 2.3 - t * 1.4 + i * 1.3)
+                            + 0.1 * Math.sin(x * k * 5.1 + t * 2.1));
+        x ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.strokeStyle = rgba(0.08 + 0.4 * Math.pow(d, 1.2));
+      ctx.lineWidth = 0.6 + 0.9 * d;
+      ctx.stroke();
+    }
+    // The surface itself.
+    ctx.fillStyle = rgba(0.5);
+    ctx.fillRect(0, horizon, W, 1);
+  }
+
+  function frame(now) {
+    const dt = Math.min(0.05, (now - (last || now)) / 1000);
+    last = now;
+    const goal = busy ? 1.7 + 0.5 * Math.sin(now / 180) : target;
+    energy += (goal - energy) * Math.min(1, dt * 3);
+    t += dt;
+    scroll += dt * 26 * energy;
+    draw();
+    if (!still.matches) requestAnimationFrame(frame);
+  }
+
+  new ResizeObserver(resize).observe(canvas);
+  resize();
+  if (!still.matches) requestAnimationFrame(frame);
+  still.addEventListener?.("change", () => { if (!still.matches) { last = 0; requestAnimationFrame(frame); } else draw(); });
+
+  return {
+    mood(m) { busy = m === "busy"; target = m === "drag" ? 2.3 : 1; if (still.matches) draw(); },
+    compact() { $("pool").classList.add("compact"); },
+  };
+})();
 
 /* Upload */
 const slot = $("slot");
 let dragDepth = 0;
-window.addEventListener("dragenter", (e) => { e.preventDefault(); dragDepth++; slot.classList.add("dragging"); });
-window.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; slot.classList.remove("dragging"); } });
+window.addEventListener("dragenter", (e) => { e.preventDefault(); dragDepth++; slot.classList.add("dragging"); pool.mood("drag"); });
+window.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; slot.classList.remove("dragging"); pool.mood("calm"); } });
 window.addEventListener("dragover", (e) => e.preventDefault());
 window.addEventListener("drop", (e) => {
-  e.preventDefault(); dragDepth = 0; slot.classList.remove("dragging");
+  e.preventDefault(); dragDepth = 0; slot.classList.remove("dragging"); pool.mood("calm");
   if (e.dataTransfer.files.length) analyze(e.dataTransfer.files[0]);
 });
 $("file-input").addEventListener("change", (e) => { if (e.target.files[0]) analyze(e.target.files[0]); e.target.value = ""; });
@@ -298,31 +489,34 @@ function setStatus({ title, sub, busy = false, error = "" }) {
   $("error").hidden = !error;
   $("error").textContent = error;
   $("choose").style.visibility = busy ? "hidden" : "visible";
+  pool.mood(busy ? "busy" : "calm");
 }
 
 async function analyze(file) {
   const ext = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
   if (!ACCEPTED.includes(ext)) {
     setStatus({ title: report ? "Drop another bounce to check it" : "Drop a bounce here to check it",
-                sub: "WAV, AIFF or FLAC.", error: `${file.name} isn't a supported format. Bounce to WAV, AIFF or FLAC.` });
+                sub: "WAV, AIFF, FLAC or MP3.", error: `${file.name} isn't a supported format. Bounce to WAV, AIFF, FLAC or MP3.` });
     return;
   }
-  setStatus({ title: `Analyzing ${file.name}`, sub: "Measuring loudness, peaks and stereo image.", busy: true });
+  setStatus({ title: `Checking ${file.name}`, sub: "Measuring loudness, peaks and stereo. Long songs take a few seconds.", busy: true });
   const body = new FormData();
   body.append("file", file);
   try {
     const res = await fetch("/api/analyze", { method: "POST", body });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.detail || `The server returned an error (${res.status}).`);
+    if (!res.ok) throw new Error(data.detail || `Something went wrong while checking the file (error ${res.status}).`);
     report = data;
     render(report);
-    slot.classList.add("compact");
+    pool.compact();
     setStatus({ title: "Drop another bounce to check it", sub: "Or choose a file." });
     $("choose").textContent = "Choose another file";
   } catch (err) {
-    const msg = err instanceof TypeError ? "Couldn't reach MixCheck. Make sure mixcheck-web is still running." : err.message;
+    const msg = err instanceof TypeError
+      ? "MixCheck has stopped running. Double-click MixCheck.command to start it again, then try once more."
+      : err.message;
     setStatus({ title: report ? "Drop another bounce to check it" : "Drop a bounce here to check it",
-                sub: "WAV, AIFF or FLAC.", error: msg });
+                sub: "WAV, AIFF, FLAC or MP3.", error: msg });
   }
 }
 
@@ -345,58 +539,134 @@ function render(r) {
     <span>${(f.sample_rate_hz / 1000).toFixed(1).replace(".0", "")} kHz</span>
     <span>${f.channels === 2 ? "Stereo" : "Mono"}</span>
     <span>${clock(f.duration_s)}</span>`;
-  renderMeters(r);
+  renderVerdict(r);
+  renderChecklist(r);
+  renderReadings(r);
   drawTimeline(r);
-  renderFindings(r);
-  renderSidebar(r);
+  renderDetail(r);
 }
 
-function renderMeters(r) {
-  const fl = flagMap(r), st = r.stereo || {};
-  const meters = [
-    ["Integrated", num(r.loudness.integrated_lufs), "LUFS", ["very_loud"]],
-    ["True peak", num(r.peaks.true_peak_max_dbtp, 1, true), "dBTP", ["true_peak_over", "true_peak_hot", "clipping"]],
-    ["Loudness range", num(r.loudness.loudness_range_lu), "LU", ["low_lra"]],
-    ["Peak to loudness", num(r.dynamics.plr_db), "dB", ["low_plr"]],
-    ["Correlation", st.correlation == null ? "n/a" : num(st.correlation, 2), "", ["negative_correlation", "phase_section", "wide_low_end"]],
-    ["Mono loss", st.mono_loudness_loss_db == null ? "n/a" : num(st.mono_loudness_loss_db), "dB", ["mono_loss"]],
-  ];
-  $("meters").innerHTML = meters.map(([label, value, unit, ids]) => `
-    <div class="meter" data-state="${stateFor(fl, ids)}">
-      <div><span class="value">${value}</span>${value !== "n/a" && unit ? `<span class="unit">${unit}</span>` : ""}</div>
-      <div class="label">${label}</div>
-      <div class="lamp"></div>
-    </div>`).join("");
-}
-
-function renderFindings(r) {
-  const list = $("findings");
-  if (!r.flags.length) {
-    list.innerHTML = `<li class="clean">No technical problems found. It's ready for your ears.</li>`;
-    return;
+function renderVerdict(r) {
+  const n = { critical: 0, warning: 0, info: 0 };
+  for (const f of r.flags) n[f.severity]++;
+  let state, title, sub;
+  if (n.critical) {
+    state = "critical";
+    title = `Fix ${plural(n.critical, "thing")} before release`;
+    sub = n.warning ? `Plus ${n.warning} more worth checking. Open each item below for the Pro Tools steps.`
+                    : "Open each item below for the Pro Tools steps.";
+  } else if (n.warning) {
+    state = "warning";
+    title = `Nearly there: ${plural(n.warning, "thing")} worth checking`;
+    sub = "Nothing will break on playback, but these could be better. Open each item for the fix.";
+  } else {
+    state = "ok";
+    title = "No technical problems. Ready for your ears.";
+    sub = n.info ? "A few notes below are for your information only; nothing needs fixing."
+                 : "Peaks, stereo and loudness all look healthy.";
   }
-  list.innerHTML = r.flags.map((f, i) => {
-    const optional = (f.remediation_optional || []).filter((s) => owned.has(s.needs));
-    const steps = [...f.remediation.map((t) => `<li>${esc(t)}</li>`),
-                   ...optional.map((s) => `<li class="optional">${esc(s.text)}</li>`)];
-    const linked = f.start_s !== undefined ? "linked" : "";
-    return `<li class="finding ${linked}" data-sev="${f.severity}" data-index="${i}">
-      <div class="sev">${SEV_LABEL[f.severity]}</div>
-      <p class="msg">${esc(f.message)}</p>
-      ${steps.length ? `<p class="fix-title">In Pro Tools</p><ol class="fixes">${steps.join("")}</ol>` : ""}
-    </li>`;
+  $("verdict").dataset.state = state;
+  $("verdict").innerHTML = `<h2>${esc(title)}</h2><p>${esc(sub)}</p>`;
+}
+
+function whenText(f) {
+  if (f.start_s !== undefined) return `${clock(f.start_s)}–${clock(f.end_s)}`;
+  if (f.times_s?.length) {
+    const shown = f.times_s.slice(0, 3).map(clock).join(", ");
+    return f.times_s.length > 3 ? `${shown} +${f.times_s.length - 3} more` : shown;
+  }
+  return "";
+}
+
+function renderChecklist(r) {
+  $("groups").innerHTML = GROUPS.map(([sev, heading]) => {
+    const items = r.flags.map((f, i) => [f, i]).filter(([f]) => f.severity === sev);
+    if (!items.length) return "";
+    return `<section class="group" data-sev="${sev}">
+      <h2>${heading}</h2>
+      <ul class="items">${items.map(([f, i]) => checklistItem(f, i)).join("")}</ul>
+    </section>`;
   }).join("");
 }
 
-$("findings").addEventListener("mouseover", (e) => highlight(e.target.closest(".finding.linked")?.dataset.index));
-$("findings").addEventListener("mouseleave", () => highlight(null));
+function checklistItem(f, i) {
+  const [title, why] = PLAIN[f.id] || [f.message, ""];
+  const optional = (f.remediation_optional || []).filter((s) => owned.has(s.needs));
+  const steps = [...f.remediation.map((t) => `<li>${esc(t)}</li>`),
+                 ...optional.map((s) => `<li class="optional">${esc(s.text)}</li>`)];
+  const when = whenText(f);
+  return `<li><details class="item ${f.start_s !== undefined ? "linked" : ""}" data-index="${i}" ${f.severity === "critical" ? "open" : ""}>
+    <summary>
+      <span class="title">${esc(title)}</span>
+      ${when ? `<span class="when">${esc(when)}</span>` : ""}
+      ${why ? `<span class="why">${esc(why)}</span>` : ""}
+      <span class="toggle"><span class="show">How to fix it ›</span><span class="hide">Hide steps</span></span>
+    </summary>
+    <div class="body">
+      ${steps.length ? `<p class="fix-title">In Pro Tools</p><ol class="fixes">${steps.join("")}</ol>` : ""}
+      <p class="measured">Measured: ${esc(f.message)}</p>
+    </div>
+  </details></li>`;
+}
+
+$("groups").addEventListener("mouseover", (e) => highlight(e.target.closest(".item.linked")?.dataset.index));
+$("groups").addEventListener("mouseleave", () => highlight(null));
 function highlight(index) {
   document.querySelectorAll("#timeline .phase").forEach((el) => {
-    el.setAttribute("fill-opacity", index !== undefined && index !== null && el.dataset.index === index ? "0.7" : "0.35");
+    el.setAttribute("fill-opacity", index !== undefined && index !== null && el.dataset.index === index ? "0.6" : "0.3");
   });
 }
 
-function renderSidebar(r) {
+function renderReadings(r) {
+  const fl = flagMap(r), st = r.stereo || {};
+  const lufs = r.loudness.integrated_lufs, tp = r.peaks.true_peak_max_dbtp;
+  const plr = r.dynamics.plr_db, lra = r.loudness.loudness_range_lu;
+  const corr = st.correlation, mono = st.mono_loudness_loss_db;
+  const spotify = r.streaming?.Spotify?.gain_db;
+
+  const readings = [
+    {
+      name: "Loudness", value: num(lufs), unit: "LUFS", ids: ["very_loud"],
+      status: lufs == null ? "No level" : spotify < -1 ? `Loud: streaming turns it down ${num(-spotify)} dB`
+            : spotify > 1 ? `Quiet: streaming may turn it up ${num(spotify)} dB` : "Right around streaming level",
+      explain: "How loud the whole song sounds on average. Spotify, YouTube and others play everything at about −14 LUFS, so going much louder doesn't make your song louder there; it just gets turned down.",
+    },
+    {
+      name: "Peaks", value: num(tp, 1, true), unit: "dBTP", ids: ["true_peak_over", "true_peak_hot", "clipping"],
+      status: tp > 0 ? "Over 0 dB: will distort" : tp > -1 ? "Too close to 0 dB" : "Safe headroom",
+      explain: "The highest point the waveform reaches, including between samples (\"true peak\"). Keep it at −1 dB or lower so it doesn't distort when streaming services convert your file.",
+    },
+    {
+      name: "Punch", value: num(plr), unit: "dB", ids: ["low_plr"],
+      status: plr == null ? "No level" : plr < 8 ? "Heavily limited" : plr < 12 ? "Healthy for a loud master" : "Plenty of punch",
+      explain: "Peak-to-loudness ratio: how far the hits (drums, transients) stick out above the average level. Low numbers mean heavy limiting and less impact.",
+    },
+    {
+      name: "Contrast", value: num(lra), unit: "LU", ids: ["low_lra"],
+      status: lra == null ? "Too short to measure" : lra < 4 ? "Little difference between sections" : lra > 15 ? "Very wide, like film or classical" : "Normal for a song",
+      explain: "Loudness range: how much the level changes between the quiet and loud parts. Most pop and hip-hop sits around 4–8.",
+    },
+    {
+      name: "Stereo phase", value: corr == null ? "n/a" : num(corr, 2), unit: "", ids: ["negative_correlation", "phase_section", "wide_low_end"],
+      status: corr == null ? "Mono file" : stateFor(fl, ["negative_correlation", "phase_section", "wide_low_end"]) === "ok" ? "No phase problems" : "Phase problem found",
+      explain: "How well left and right agree, from +1 (identical) to −1 (cancelling). Anything above 0 is normal; below 0 means parts will disappear in mono.",
+    },
+    {
+      name: "Mono playback", value: mono == null ? "n/a" : num(mono), unit: "dB", ids: ["mono_loss"],
+      status: mono == null ? "Mono file" : mono > 3 ? `Loses ${num(mono)} dB in mono` : "Holds up in mono",
+      explain: "How much quieter the mix gets when left and right are combined, as on phones, Bluetooth speakers and many club systems. Under 3 dB is normal.",
+    },
+  ];
+  $("readings").innerHTML = readings.map((m) => `
+    <div class="reading" data-state="${stateFor(fl, m.ids)}">
+      <div class="name">${m.name}</div>
+      <div class="status">${esc(m.status)}</div>
+      <div><span class="value">${m.value}</span>${m.value !== "n/a" && m.unit ? `<span class="unit">${m.unit}</span>` : ""}</div>
+      <details><summary>What's this?</summary><p>${esc(m.explain)}</p></details>
+    </div>`).join("");
+}
+
+function renderDetail(r) {
   $("streaming").innerHTML = r.streaming ? Object.entries(r.streaming).map(([name, s]) => `
     <tr><td>${esc(name)}</td><td>${num(s.gain_db, 1, true)} dB</td></tr>`).join("") : `<tr><td>No level to measure.</td></tr>`;
 
@@ -425,7 +695,7 @@ function drawTimeline(r) {
   const dur = r.file.duration_s;
   const pts = r.loudness.timeline;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  if (!pts.length) { svg.innerHTML = `<text x="${pad.l}" y="${H / 2}" fill="var(--ink-soft)">Too short to chart.</text>`; return; }
+  if (!pts.length) { svg.innerHTML = `<text x="${pad.l}" y="${H / 2}" class="tl-label">Too short to chart.</text>`; return; }
 
   const vals = pts.map((p) => p.lufs).filter((v) => v > -70);
   const top = Math.min(0, Math.ceil(Math.max(-14, ...vals) / 6) * 6 + 6);
@@ -435,37 +705,37 @@ function drawTimeline(r) {
   const parts = [];
 
   for (let v = top; v >= bottom; v -= 6) {
-    parts.push(`<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}" stroke="#D5DBDF"/>`);
-    parts.push(`<text x="${pad.l - 8}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="#4A5968">${String(v).replace("-", "−")}</text>`);
+    parts.push(`<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}" class="tl-grid"/>`);
+    parts.push(`<text x="${pad.l - 8}" y="${y(v) + 4}" text-anchor="end" class="tl-label">${String(v).replace("-", "−")}</text>`);
   }
   const perLabel = dur / Math.max(2, Math.floor((W - pad.l - pad.r) / 70));
   const step = [10, 15, 30, 60, 120, 300].find((s) => s >= perLabel) || 600;
   for (let t = 0; t <= dur; t += step)
-    parts.push(`<text x="${x(t)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="#4A5968">${clock(t)}</text>`);
+    parts.push(`<text x="${x(t)}" y="${H - 8}" text-anchor="middle" class="tl-label">${clock(t)}</text>`);
 
   const edges = r.edges || {};
-  if (edges.head_silence_s > 0.5) parts.push(`<rect x="${x(0)}" y="${pad.t}" width="${x(edges.head_silence_s) - x(0)}" height="${H - pad.t - pad.b}" fill="#E3E7E9"/>`);
-  if (edges.tail_silence_s > 0.5) parts.push(`<rect x="${x(dur - edges.tail_silence_s)}" y="${pad.t}" width="${x(dur) - x(dur - edges.tail_silence_s)}" height="${H - pad.t - pad.b}" fill="#E3E7E9"/>`);
-
+  if (edges.head_silence_s > 0.5) parts.push(`<rect x="${x(0)}" y="${pad.t}" width="${x(edges.head_silence_s) - x(0)}" height="${H - pad.t - pad.b}" class="tl-silence"/>`);
+  if (edges.tail_silence_s > 0.5) parts.push(`<rect x="${x(dur - edges.tail_silence_s)}" y="${pad.t}" width="${x(dur) - x(dur - edges.tail_silence_s)}" height="${H - pad.t - pad.b}" class="tl-silence"/>`);
 
   // Stepped loudness profile, each value holding for one second.
   let d = `M${x(Math.max(0, pts[0].t - 0.5))},${y(bottom)}`;
   for (const p of pts) d += ` L${x(Math.max(0, p.t - 0.5))},${y(p.lufs)} L${x(Math.min(dur, p.t + 0.5))},${y(p.lufs)}`;
   d += ` L${x(Math.min(dur, pts[pts.length - 1].t + 0.5))},${y(bottom)} Z`;
-  parts.push(`<path d="${d}" fill="#9FB3C3" stroke="#2A4A63" stroke-width="1.2" stroke-linejoin="round"/>`);
+  parts.push(`<path d="${d}" class="tl-wave"/>`);
 
   r.flags.forEach((f, i) => {
     if (f.start_s === undefined) return;
-    parts.push(`<rect class="phase" data-index="${i}" x="${x(f.start_s)}" y="${pad.t}" width="${Math.max(2, x(f.end_s) - x(f.start_s))}" height="${H - pad.t - pad.b}" fill="#C77E12" fill-opacity="0.35"><title>${esc(f.message)}</title></rect>`);
+    const title = PLAIN[f.id]?.[0] || f.message;
+    parts.push(`<rect class="phase" data-index="${i}" x="${x(f.start_s)}" y="${pad.t}" width="${Math.max(2, x(f.end_s) - x(f.start_s))}" height="${H - pad.t - pad.b}" fill-opacity="0.3"><title>${esc(title)} (${clock(f.start_s)}–${clock(f.end_s)})</title></rect>`);
   });
 
   const ref = y(-14);
-  parts.push(`<line x1="${pad.l}" x2="${W - pad.r}" y1="${ref}" y2="${ref}" stroke="#152433" stroke-width="1.4" stroke-dasharray="5 4"/>`);
+  parts.push(`<line x1="${pad.l}" x2="${W - pad.r}" y1="${ref}" y2="${ref}" class="tl-ref"/>`);
 
   const clips = [...new Set(r.flags.filter((f) => f.id === "clipping").flatMap((f) => f.times_s || []))];
-  for (const t of clips) parts.push(`<line x1="${x(t)}" x2="${x(t)}" y1="${pad.t}" y2="${pad.t + 16}" stroke="#B8322A" stroke-width="3"><title>Clipping at ${clock(t)}</title></line>`);
+  for (const t of clips) parts.push(`<line x1="${x(t)}" x2="${x(t)}" y1="${pad.t}" y2="${pad.t + 16}" class="tl-clip"><title>Clipping at ${clock(t)}</title></line>`);
 
-  parts.push(`<line id="cursor" x1="0" x2="0" y1="${pad.t}" y2="${H - pad.b}" stroke="#152433" stroke-width="1" visibility="hidden"/>`);
+  parts.push(`<line id="cursor" x1="0" x2="0" y1="${pad.t}" y2="${H - pad.b}" class="tl-cursor" visibility="hidden"/>`);
   svg.innerHTML = parts.join("");
 
   svg.onmousemove = (e) => {
@@ -476,7 +746,7 @@ function drawTimeline(r) {
     const nearest = pts.reduce((a, b) => (Math.abs(b.t - t) < Math.abs(a.t - t) ? b : a));
     const c = $("cursor");
     c.setAttribute("x1", px); c.setAttribute("x2", px); c.setAttribute("visibility", "visible");
-    $("readout").textContent = `${clock(t)}   ${num(nearest.lufs)} LUFS short-term`;
+    $("readout").textContent = `${clock(t)}   ${num(nearest.lufs)} LUFS`;
   };
   svg.onmouseleave = () => { $("cursor")?.setAttribute("visibility", "hidden"); $("readout").textContent = ""; };
 }

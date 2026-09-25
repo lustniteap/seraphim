@@ -8,3 +8,4 @@ __pycache__/
 *.flac
 reports/
 .DS_Store
+*.mp3
