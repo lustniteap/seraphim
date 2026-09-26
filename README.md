@@ -183,6 +183,10 @@ export ANTHROPIC_API_KEY=...           # or: ant auth login
 mixcheck my_mix.wav --notes
 ```
 
+In the web page, the same notes come from the **Write engineer's notes** button under the verdict. It shows
+only when the `ai` extra is installed; start MixCheck from a Terminal window where `ANTHROPIC_API_KEY` is set
+(or put the key in `~/.zprofile`). Changing the stage, style, references or setup marks the notes as out of date.
+
 How it's kept honest (`mixcheck/notes.py`, prompt in `mixcheck/prompts/notes.md`):
 
 - The engine stays the source of truth. Claude gets a trimmed copy of the report: numbers, findings and the
@@ -194,6 +198,18 @@ How it's kept honest (`mixcheck/notes.py`, prompt in `mixcheck/prompts/notes.md`
 - Model `claude-opus-5` with adaptive thinking at medium effort (`MIXCHECK_AI_MODEL` to change it), with the
   API's refusal fallback turned on. `MIXCHECK_AI=off` disables notes everywhere. Without the package or a key,
   MixCheck prints the normal report and a one-line reason.
+
+## Evaluation reports
+
+`evals/reports/` holds JSON reports from real bounces (numbers only, no audio): the inputs the notes are
+evaluated on. Before committing new ones, strip song titles:
+
+```bash
+mixcheck bounce.wav --daw pro_tools --plugins waves_essential --json evals/reports/NAME.json
+python evals/anonymize.py     # NAME.json -> song01.json, titles replaced inside too
+```
+
+Which song is which stays in `~/.mixcheck/eval-song-names.txt` on your computer.
 
 ## Fix suggestions for each user's setup
 

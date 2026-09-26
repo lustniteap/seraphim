@@ -20,6 +20,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.staticfiles import StaticFiles
 
 from .. import __version__
+from .. import notes as ai_notes
 from .. import refsets
 from ..analyze import THRESHOLDS, analyze_file
 from ..catalog import options as setup_options
@@ -55,6 +56,7 @@ def info():
         "accepted_formats": sorted(ALLOWED_SUFFIXES),
         "thresholds": THRESHOLDS,
         "max_references": MAX_REFERENCES,
+        "ai_notes": dict(zip(("available", "reason"), ai_notes.available())),
     }
 
 
@@ -114,6 +116,25 @@ async def reference(file: UploadFile = File(...)):
 @app.get("/api/reference-sets")
 def reference_sets():
     return {"sets": refsets.list_sets()}
+
+
+@app.post("/api/notes")
+async def notes(report: dict = Body(..., embed=True)):
+    """Engineer's notes for a report the page already has. Sends numbers to Claude, never audio."""
+    for key in ("flags", "loudness", "peaks", "stage", "setup", "score", "file", "dynamics"):
+        if key not in report:
+            raise HTTPException(422, f"The report is missing {key}; check the bounce again.")
+    try:
+        result = await run_in_threadpool(ai_notes.write_notes, report)
+    except ai_notes.NotesUnavailable as exc:
+        raise HTTPException(503, str(exc))
+    except (KeyError, TypeError, ValueError):
+        raise HTTPException(422, "That report couldn't be read; check the bounce again.")
+    inp = result.pop("input")
+    # Let the page show steps and findings by id without re-deriving MixCheck's numbering.
+    result["steps"] = {s["id"]: s["text"] for f in inp["findings"] for s in f["steps"] + f["other_options"]}
+    result["findings"] = {f["id"]: f["kind"] for f in inp["findings"]}
+    return result
 
 
 @app.put("/api/reference-sets")

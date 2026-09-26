@@ -453,6 +453,48 @@ def test_notes_request_and_checks():
         pass
 
 
+def test_notes_endpoint():
+    try:
+        from fastapi.testclient import TestClient
+    except ImportError:  # the web extra isn't installed
+        return
+    from mixcheck import notes
+    from mixcheck.web import server
+    report = _clipped_report()
+    client = TestClient(server.app)
+    real = notes.write_notes
+    try:
+        notes.write_notes = lambda r: (_ for _ in ()).throw(notes.NotesUnavailable("No valid Anthropic API key."))
+        res = client.post("/api/notes", json={"report": report})
+        assert res.status_code == 503 and "API key" in res.json()["detail"]
+
+        inp = notes.notes_input(report)
+        canned = {"headline": "h", "summary": "s", "listen_for": [], "strengths": [],
+                  "priorities": [{"finding_ids": ["F1"], "title": "t", "why": "w", "step_ids": ["F1.1"]}]}
+        notes.write_notes = lambda r: real(r, client=_FakeClient(canned))
+        data = client.post("/api/notes", json={"report": report}).json()
+        assert data["steps"]["F1.1"] == inp["findings"][0]["steps"][0]["text"]
+        assert data["findings"]["F1"] == report["flags"][0]["id"] and "input" not in data
+        assert client.post("/api/notes", json={"report": {"flags": []}}).status_code == 422
+    finally:
+        notes.write_notes = real
+
+
+def test_anonymize_removes_titles():
+    import importlib.util
+    import json
+    spec = importlib.util.spec_from_file_location("anonymize", os.path.join(os.path.dirname(__file__), "..", "evals", "anonymize.py"))
+    anon = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(anon)
+    report = _clipped_report()
+    report["reference"] = {"references": [{"name": "Somebody - Hit Song.mp3"}]}
+    titles = anon.scrub(report, "song07")
+    text = json.dumps(report)
+    assert "secret-song-name" not in text and "Hit Song" not in text
+    assert report["file"]["name"] == report["profile"]["name"] == "song07.wav"
+    assert titles == ["secret-song-name.wav", "Somebody - Hit Song.mp3"]
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in globals().items() if n.startswith("test_")]
     for name, fn in tests:
