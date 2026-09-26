@@ -733,7 +733,7 @@ let setup = loadSetup();   // null until the user has chosen
 let target = "";           // style the user is going for; "" means no preference
 try { target = localStorage.getItem("mixcheck.target") || ""; } catch {}
 let styleOptions = [];
-let aiInfo = { available: false, reason: "" };
+let aiInfo = { available: false, reason: "This copy of MixCheck is older than the notes feature. Restart it after updating." };
 let aiNotes = null, aiStale = false, aiBusy = false, aiError = "";
 let setupOptions = null;
 
@@ -1051,10 +1051,11 @@ async function writeNotes() {
 
 function renderNotes(r) {
   const el = $("ai-notes");
-  if (!aiInfo.available) { el.hidden = true; return; }
   el.hidden = false;
-  const button = aiBusy ? "" : `<button class="button" type="button" id="ai-write">${aiNotes ? "Rewrite notes" : "Write engineer's notes"}</button>`;
-  let body = "";
+  const button = aiBusy || !aiInfo.available ? ""
+    : `<button class="button" type="button" id="ai-write">${aiNotes ? "Rewrite notes" : "Write engineer's notes"}</button>`;
+  // Say why notes aren't available rather than hiding the panel, so the feature can be found.
+  let body = aiInfo.available ? "" : `<p class="note" style="margin-top:12px">Not available: ${esc(aiInfo.reason || "MixCheck couldn't load the AI part.")}</p>`;
   if (aiBusy) body = `<p class="note" style="margin-top:14px">Claude is reading the measurements. This takes 10–40 seconds.</p><div class="progress"><span></span></div>`;
   else if (aiError) body = `<p class="error">${esc(aiError)}</p>`;
   if (aiNotes && !aiBusy) {
