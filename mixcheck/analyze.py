@@ -46,22 +46,38 @@ THRESHOLDS = {
 # Loudness, punch, contrast and top end are style, judged in style.py against the user's target.
 
 
-def analyze_file(path, setup=None, stage="auto", target=None, references=None):
+# The stages analyze_file() reports as it finishes them, in order (the web page lights one lamp each).
+PROGRESS_STAGES = ("loudness", "peaks", "stereo", "tone", "edges", "style", "references")
+
+
+def analyze_file(path, setup=None, stage="auto", target=None, references=None, progress=None):
     """Measure a file and attach fixes for this user's setup.
 
     setup: {"daw": id, "packages": [ids]} from catalog.py.
     stage: "mix", "master", or "auto" to guess from loudness.
     target: a style id from style.TARGETS, or None for no preference.
     references: 1–3 profiles from reference.py to compare with, or None.
+    progress: called with each name in PROGRESS_STAGES as that part finishes, or None.
     """
+    done = progress or (lambda _stage: None)
     path = Path(path)
     x, fs = load_audio(path)
     if x.shape[1] > 2:
         raise ValueError(f"{x.shape[1]}-channel files aren't supported yet (mono or stereo only).")
 
     loud = measure_loudness(x, fs)
+    done("loudness")
     peaks = measure_peaks(x, fs)
+    done("peaks")
     integrated = loud["integrated_lufs"]
+    stereo = measure_stereo(x, fs)
+    done("stereo")
+    spectrum = measure_spectrum(x, fs)
+    # Kept in the report so references can be added or changed later without re-analyzing.
+    profile = safe_profile(x, fs, path.name) if math.isfinite(integrated) else None
+    done("tone")
+    edges = measure_edges(x, fs)
+    done("edges")
 
     report = {
         "schema_version": SCHEMA_VERSION,
@@ -79,12 +95,11 @@ def analyze_file(path, setup=None, stage="auto", target=None, references=None):
             "plr_db": round(peaks["true_peak_max_dbtp"] - integrated, 1)
             if math.isfinite(integrated) else None,
         },
-        "stereo": measure_stereo(x, fs),
-        "spectrum": measure_spectrum(x, fs),
-        "edges": measure_edges(x, fs),
+        "stereo": stereo,
+        "spectrum": spectrum,
+        "edges": edges,
         "streaming": streaming_adjustments(integrated),
-        # Kept in the report so references can be added or changed later without re-analyzing.
-        "profile": safe_profile(x, fs, path.name) if math.isfinite(integrated) else None,
+        "profile": profile,
     }
     detected, reason = detect_stage(report)
     stage = stage if stage in STAGES else detected
@@ -95,7 +110,9 @@ def analyze_file(path, setup=None, stage="auto", target=None, references=None):
     report["measures"] = measures(report)
     report["target"] = target
     flags = build_flags(report) + style_flags(report["measures"], target, stage)
+    done("style")
     flags, report["reference"] = apply_reference(flags, report["profile"], references, stage)
+    done("references")
     report["flags"] = attach_fixes(flags, setup, stage)
     report["score"] = score_flags(report["flags"], stage)
     report["style"] = style_match(report["measures"], target, stage)

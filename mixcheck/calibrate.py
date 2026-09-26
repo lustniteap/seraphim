@@ -289,14 +289,14 @@ def calibrate(groups, min_songs=MIN_SONGS, jobs=None, dry_run=False, out=print):
         return new_styles
     styles.update(new_styles)
     _write_json(calibration_path(), {"version": 1, "styles": styles})
-    out(f"\nSaved to {calibration_path()}. MixCheck uses these ranges from now on "
-        f"(run `mixcheck-calibrate --reset` to go back to the built-in ones).")
+    out(f"\nSaved to {calibration_path()}. Seraphim uses these ranges from now on "
+        f"(run `seraphim-calibrate --reset` to go back to the built-in ones).")
     return new_styles
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        prog="mixcheck-calibrate",
+        prog="seraphim-calibrate",
         description="Set each style's target ranges by measuring released songs in that style.",
         epilog="Folder names can be a style id or name, e.g. trap, hip-hop, edm, pop, rock, rnb, "
                "acoustic, jazz, lofi, film. Songs are measured on this computer and never copied.")
@@ -317,9 +317,9 @@ def main(argv=None):
     if args.reset:
         try:
             calibration_path().unlink()
-            print(f"Removed {calibration_path()}. MixCheck is back to its built-in ranges.")
+            print(f"Removed {calibration_path()}. Seraphim is back to its built-in ranges.")
         except FileNotFoundError:
-            print("There was no calibration to remove; MixCheck is using its built-in ranges.")
+            print("There was no calibration to remove; Seraphim is using its built-in ranges.")
         return
     if not args.folder and not args.style:
         parser.error("give a folder of style subfolders, or --style STYLE=FOLDER")

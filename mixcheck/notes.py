@@ -204,7 +204,7 @@ def _plain_error(exc):
     # With no credentials at all, the SDK raises TypeError before sending anything.
     if isinstance(exc, TypeError) and "authentication" in str(exc):
         return NotesUnavailable(
-            "No Anthropic API key found. Set ANTHROPIC_API_KEY in the Terminal window you start MixCheck from "
+            "No Anthropic API key found. Set ANTHROPIC_API_KEY in the Terminal window you start Seraphim from "
             "(or run `ant auth login`), then start it again.")
     if isinstance(exc, anthropic.AuthenticationError):
         return NotesUnavailable(

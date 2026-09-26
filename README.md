@@ -1,7 +1,26 @@
-# MixCheck
+<p align="center"><img src="mixcheck/web/static/seraphim-mark.svg" alt="Seraphim" width="180"></p>
+
+# Seraphim
+
+*Give your mix wings.*
 
 Automated technical QC for mixes and masters. Point it at a bounce and it measures
-what a mastering engineer checks before signing off, then flags problems with timestamps.
+what a mastering engineer checks before signing off, then flags problems with timestamps
+and tells you how to fix them with your own tools.
+
+The look is a futuristic throne room, taken from the descriptions in Revelation 4, Ezekiel 1 and Isaiah 6,
+in red, black and white only: a **sea of glass** (the floor under the light, a dark crystal grid with the
+waveform reflected in it), **smoke filling the temple** (haze drifting behind the glass panels), **wheels
+within wheels** set with points of light and **seven lamps of fire** while a bounce is checked (one lamp per
+stage, lit as the server finishes it), and a halo around the score that closes at 10.
+
+The name comes from the seraphim of Isaiah 6: six-winged "burning ones" around the throne, one of
+whom purifies with a coal from the altar. That's the aim here: take a rough mix and refine it until
+it's worthy. The mark is a seraph's six wings around a halo, drawn in the same red blades as before.
+
+Seraphim was called MixCheck. The Python package, the `mixcheck` commands and `~/.mixcheck` keep
+their names, so existing installs, scripts and saved settings keep working; `seraphim`,
+`seraphim-web` and `seraphim-calibrate` are the same commands under the new name.
 
 **Phase 1 (this version):** the analysis engine: measurements plus rule-based findings, output as JSON.
 **Phase 2:** an LLM turns the JSON into plain-English notes, written like a mastering engineer (started: `--notes`).
@@ -29,15 +48,15 @@ pip install -e .
 
 ## Web interface
 
-On a Mac, double-click `MixCheck.command` in Finder. The first run sets up Python packages
+On a Mac, double-click `Seraphim.command` in Finder. The first run sets up Python packages
 (about a minute); after that it opens straight to the page. Keep the Terminal window it opens
-while you use MixCheck, and close it to quit. Launching it again while it's running just reopens the page.
+while you use Seraphim, and close it to quit. Launching it again while it's running just reopens the page.
 
 Or from a terminal:
 
 ```bash
 pip install -e ".[web]"
-mixcheck-web
+seraphim-web
 ```
 
 A browser tab opens at http://127.0.0.1:8000. Drag a bounce onto the page (or choose a file) and you get:
@@ -54,7 +73,9 @@ The server only listens on 127.0.0.1, so it isn't reachable from other machines,
 deleted as soon as they're analyzed.
 
 API: `POST /api/analyze` with a multipart `file` field (plus optional `setup` JSON, `stage`, `target` and
-`references` JSON) returns the JSON report; `POST /api/fixes` with `{flags, setup, stage, target, measures,
+`references` JSON) returns the JSON report; with `progress=1` it streams newline-delimited JSON instead,
+`{"stage": ...}` as each part finishes (loudness, peaks, stereo, tone, edges, style, references), then
+`{"report": ...}` or `{"error": ...}`, which is what lights the page's seven lamps; `POST /api/fixes` with `{flags, setup, stage, target, measures,
 profile, references}` rebuilds findings and fixes without re-analyzing; `POST /api/reference` with a `file`
 returns a reference profile; `GET`/`PUT /api/reference-sets` and `DELETE /api/reference-sets/{name}` list,
 save and delete reference sets; `GET /api/info` returns the version and setup options.
@@ -62,9 +83,9 @@ save and delete reference sets; `GET /api/info` returns the version and setup op
 ## Command line
 
 ```bash
-mixcheck my_mix.wav                          # summary in the terminal
-mixcheck my_mix.wav --json reports/mix.json  # also save the full report
-mixcheck my_mix.wav --print-json             # JSON to stdout (for piping)
+seraphim my_mix.wav                          # summary in the terminal
+seraphim my_mix.wav --json reports/mix.json  # also save the full report
+seraphim my_mix.wav --print-json             # JSON to stdout (for piping)
 ```
 
 ## Validation
@@ -93,7 +114,7 @@ the report layer stays the same.
 
 ## Technical score and style match
 
-MixCheck keeps two kinds of "good" apart.
+Seraphim keeps two kinds of "good" apart.
 
 **Technical score (1.0–10.0, red → yellow → green)** counts only errors that are wrong in any genre:
 peaks and clipping, phase and mono problems, and file/edge problems. It starts at 10 and loses points
@@ -109,21 +130,21 @@ The built-in ranges in `mixcheck/style.py` are starting points from common pract
 style with real releases (below) replaces them and adds tone targets.
 
 ```bash
-mixcheck my_master.wav --style trap_hiphop
+seraphim my_master.wav --style trap_hiphop
 ```
 
 ### Calibrating styles with real releases
 
-`mixcheck-calibrate` measures released songs in each style and sets that style's ranges from them.
+`seraphim-calibrate` measures released songs in each style and sets that style's ranges from them.
 Put 10–20 songs per style in subfolders named after the styles (`trap`, `hip-hop`, `edm`, `pop`, `rock`,
 `rnb`, `acoustic`, `jazz`, `lofi`, `film`, or the style ids), then:
 
 ```bash
-mixcheck-calibrate ~/Music/refs --dry-run    # measure and show the new ranges without saving
-mixcheck-calibrate ~/Music/refs              # save them
-mixcheck-calibrate --style edm=~/Music/club  # add or redo one style
-mixcheck-calibrate --show                    # the ranges in use now, and where they came from
-mixcheck-calibrate --reset                   # back to the built-in ranges
+seraphim-calibrate ~/Music/refs --dry-run    # measure and show the new ranges without saving
+seraphim-calibrate ~/Music/refs              # save them
+seraphim-calibrate --style edm=~/Music/club  # add or redo one style
+seraphim-calibrate --show                    # the ranges in use now, and where they came from
+seraphim-calibrate --reset                   # back to the built-in ranges
 ```
 
 - Songs are measured on your computer the same way a bounce is: loudness, punch (PLR), contrast (LRA),
@@ -141,7 +162,7 @@ mixcheck-calibrate --reset                   # back to the built-in ranges
 
 ## Reference tracks
 
-Drop in 1–3 released songs you want to sound like, and MixCheck compares them with your bounce
+Drop in 1–3 released songs you want to sound like, and Seraphim compares them with your bounce
 across **loudness, punch, contrast, tone and width**. Findings and fixes then read relative to them:
 "3.3 dB lighter below 100 Hz than your reference", fixed with "In Pro-Q on the master, add a low shelf
 over the lows (below 100 Hz) and raise it about 3.5 dB".
@@ -168,8 +189,8 @@ and are shared between the web page and the command line. On the page, add songs
 by dropping them on the Reference tracks panel; the set you're using is remembered for the next bounce.
 
 ```bash
-mixcheck my_mix.wav --ref ref1.wav --ref ref2.flac --save-ref-set "Club refs"
-mixcheck my_mix.wav --ref-set "Club refs"
+seraphim my_mix.wav --ref ref1.wav --ref ref2.flac --save-ref-set "Club refs"
+seraphim my_mix.wav --ref-set "Club refs"
 ```
 
 ## Engineer's notes (optional, AI-written)
@@ -178,13 +199,13 @@ With `--notes`, Claude turns the report into short notes like a mastering engine
 what to fix first and why, which findings share a cause, and what to listen for afterwards.
 
 ```bash
-pip install -e ".[ai]"                 # the only part of MixCheck that needs the anthropic package
+pip install -e ".[ai]"                 # the only part of Seraphim that needs the anthropic package
 export ANTHROPIC_API_KEY=...           # or: ant auth login
-mixcheck my_mix.wav --notes
+seraphim my_mix.wav --notes
 ```
 
 In the web page, the same notes come from the **Write engineer's notes** button under the verdict. It shows
-only when the `ai` extra is installed; start MixCheck from a Terminal window where `ANTHROPIC_API_KEY` is set
+only when the `ai` extra is installed; start Seraphim from a Terminal window where `ANTHROPIC_API_KEY` is set
 (or put the key in `~/.zprofile`). Changing the stage, style, references or setup marks the notes as out of date.
 
 How it's kept honest (`mixcheck/notes.py`, prompt in `mixcheck/prompts/notes.md`):
@@ -197,7 +218,7 @@ How it's kept honest (`mixcheck/notes.py`, prompt in `mixcheck/prompts/notes.md`
 - The prompt is versioned (`PROMPT_VERSION`) so changes can be measured against evaluations.
 - Model `claude-opus-5` with adaptive thinking at medium effort (`MIXCHECK_AI_MODEL` to change it), with the
   API's refusal fallback turned on. `MIXCHECK_AI=off` disables notes everywhere. Without the package or a key,
-  MixCheck prints the normal report and a one-line reason.
+  Seraphim prints the normal report and a one-line reason.
 
 ## Evaluating the notes
 
@@ -238,7 +259,7 @@ and what fixed it.
 **Adding real bounces.** Save reports, then strip song titles before committing:
 
 ```bash
-mixcheck bounce.wav --daw pro_tools --plugins waves_essential --json evals/reports/NAME.json
+seraphim bounce.wav --daw pro_tools --plugins waves_essential --json evals/reports/NAME.json
 python evals/anonymize.py     # NAME.json -> song01.json, titles replaced inside too
 ```
 
@@ -262,7 +283,7 @@ Waves Essential plus S1 Imager/Shuffler, PAZ and WLM Plus, FabFilter, and iZotop
 From the command line:
 
 ```bash
-mixcheck my_mix.wav --daw logic --plugins fabfilter,izotope_ozone --stage mix
+seraphim my_mix.wav --daw logic --plugins fabfilter,izotope_ozone --stage mix
 ```
 
 `--stage auto` (the default) guesses from loudness. Use `--no-fixes` to hide the steps.
