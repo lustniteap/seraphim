@@ -1434,6 +1434,11 @@ async function readAnalysis(res) {
   // A server started before the lamps existed ignores progress=1 and sends the plain report.
   if (!(res.headers.get("content-type") || "").includes("ndjson")) return res.json();
   const reader = res.body.getReader(), decoder = new TextDecoder();
+  // Stages can finish within milliseconds of each other, so each lamp waits a moment after the one before
+  // (it still only lights once its stage has really finished), and the full row holds briefly at the end.
+  const pause = (ms) => new Promise((ok) => setTimeout(ok, ms));
+  let shown = Promise.resolve();
+  const show = (stage) => { shown = shown.then(() => { lightLamps(stage); return pause(180); }); };
   let buffer = "";
   for (;;) {
     const { value, done } = await reader.read();
@@ -1442,9 +1447,13 @@ async function readAnalysis(res) {
     buffer = done ? "" : lines.pop();  // at the end, the last line counts even without a newline
     for (const line of lines.filter((l) => l.trim())) {
       const event = JSON.parse(line);
-      if (event.stage) lightLamps(event.stage);
+      if (event.stage) show(event.stage);
       if (event.error) throw new Error(event.error);
-      if (event.report) return event.report;
+      if (event.report) {
+        await shown;
+        await pause(450);
+        return event.report;
+      }
     }
     if (done) throw new Error("The check stopped before it finished. Try once more.");
   }
