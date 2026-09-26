@@ -7,8 +7,8 @@
     python evals/notes_eval.py run --variant v1         # after changing the prompt: a new variant
     python evals/notes_eval.py summary                  # scores per variant, failures with reasons
     python evals/notes_eval.py regrade                  # re-score saved notes after a check changes (free)
-    python evals/notes_eval.py label                    # grade some notes yourself...
-    python evals/notes_eval.py agreement                # ...and see how often the judge agrees with you
+    python evals/notes_eval.py label --by sam           # grade some notes yourself...
+    python evals/notes_eval.py agreement                # ...and see how often the judge agrees with everyone
 
 Cases: every report in evals/reports (real bounces) and evals/synthetic (known problems), each
 judged three ways (scenarios.py). Results go to evals/runs/notes/<variant>/: results.jsonl (one row
@@ -255,11 +255,29 @@ def cmd_regrade(args):
 
 # ---------------------------------------------------------------- human labels
 
+def labels_file(out, who):
+    """Each person's labels in their own file, so several people can label and push without conflicts."""
+    name = "".join(ch for ch in (who or "").lower() if ch.isalnum() or ch == "-")
+    return out / (f"labels-{name}.jsonl" if name else "labels.jsonl")
+
+
+def load_labels(out, who=None):
+    """[(labeller, prompt_id, labels)] from one person's file, or from everyone's."""
+    paths = [labels_file(out, who)] if who else sorted(out.glob("labels*.jsonl"))
+    rows = []
+    for path in paths:
+        if path.exists():
+            by = path.stem[len("labels-"):] if path.stem.startswith("labels-") else "(unnamed)"
+            rows += [(by, row["prompt_id"], row["labels"])
+                     for row in map(json.loads, path.read_text().splitlines()) if row.get("labels")]
+    return rows
+
+
 def cmd_label(args):
     """Grade notes yourself on the judge's criteria, to check the judge agrees with you."""
     out = RUNS / "notes" / args.variant
     rows = load_rows(out)
-    labels_path = out / "labels.jsonl"
+    labels_path = labels_file(out, args.by)
     labelled = {json.loads(line)["prompt_id"] for line in labels_path.read_text().splitlines()} if labels_path.exists() else set()
     todo = [r for r in rows if r["prompt_id"] not in labelled and r["rep"] == 0]
     random.Random(7).shuffle(todo)
@@ -286,13 +304,15 @@ def cmd_label(args):
 
 def cmd_agreement(args):
     out = RUNS / "notes" / args.variant
-    labels = {json.loads(line)["prompt_id"]: json.loads(line)["labels"]
-              for line in (out / "labels.jsonl").read_text().splitlines()}
+    labels = load_labels(out, args.by)
+    if not labels:
+        sys.exit(f"No labels yet for {args.variant}. Run: python evals/notes_eval.py label --by <your name>")
     rows = {r["prompt_id"]: r for r in load_rows(out) if r["rep"] == 0}
-    print(f"{len(labels)} cases labelled by you\n")
-    print(f"{'criterion':20} {'agree':>7}  {'n':>3}  judge said pass/you said fail, and the reverse")
+    people = sorted({by for by, _, _ in labels})
+    print(f"{len(labels)} labelled cases from {', '.join(f'{p} ({sum(b == p for b, _, _ in labels)})' for p in people)}\n")
+    print(f"{'criterion':20} {'agree':>7}  {'n':>3}  judge said pass/person said fail, and the reverse")
     for c in CRITERIA:
-        pairs = [(lab[c], rows[pid]["grade"].get(f"judge_{c}")) for pid, lab in labels.items()
+        pairs = [(lab[c], rows[pid]["grade"].get(f"judge_{c}")) for _, pid, lab in labels
                  if c in lab and pid in rows and f"judge_{c}" in rows[pid]["grade"] and lab[c] is not None]
         if not pairs:
             print(f"{c:20} {'–':>7}")
@@ -324,8 +344,10 @@ def main():
     lab = sub.add_parser("label", help="grade notes yourself")
     lab.add_argument("--variant", default="baseline")
     lab.add_argument("-n", type=int, default=15, help="how many cases this session")
-    a = sub.add_parser("agreement", help="how often the judge agrees with your labels")
+    lab.add_argument("--by", help="your name; your labels go to labels-<name>.jsonl")
+    a = sub.add_parser("agreement", help="how often the judge agrees with people's labels")
     a.add_argument("--variant", default="baseline")
+    a.add_argument("--by", help="only this person's labels (default: everyone's)")
     args = p.parse_args()
     {"run": cmd_run, "summary": cmd_summary, "regrade": cmd_regrade, "label": cmd_label,
      "agreement": cmd_agreement}[args.cmd](args)
