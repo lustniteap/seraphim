@@ -25,10 +25,20 @@ def print_summary(r, show_fixes=True):
         print(f"  After fixing issues   {sc['if_fixed']:.1f} / 10")
     if r["style"]:
         sm = r["style"]
-        print(f"  Style match           {sm['percent']}% to {sm['name']}")
+        source = f"ranges from {sm['songs']} songs you measured" if sm.get("songs") else "built-in ranges"
+        print(f"  Style match           {sm['percent']}% to {sm['name']}  ({source})")
         for d in sm["dims"]:
-            where = "in range" if d["status"] == "in" else f"{d['off_by']:.1f} {'below' if d['status'] == 'low' else 'above'}"
-            print(f"    {d['name']:<18}{d['value']:>6.1f} {d['unit']:<7} target {d['low']:g} to {d['high']:g}  ({where})")
+            if d["id"] == "tone":
+                print("    Tone at matched volume, against typical for the style:")
+                rows = sm["tone"]
+            else:
+                rows = [d]
+            for row in rows:
+                where = "in range" if row["status"] == "in" else \
+                    f"{row['off_by']:.1f} {'below' if row['status'] == 'low' else 'above'}"
+                indent, unit = ("      ", "dB") if d["id"] == "tone" else ("    ", row["unit"])
+                print(f"{indent}{row['name']:<{22 - len(indent)}}{row['value']:>6.1f} {unit:<7} "
+                      f"target {row['low']:g} to {row['high']:g}  ({where})")
     if r.get("reference"):
         print_reference(r["reference"])
     print()

@@ -8,6 +8,8 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+# Keep the user's own reference sets and style calibration out of the tests.
+os.environ["MIXCHECK_HOME"] = __import__("tempfile").mkdtemp(prefix="mixcheck-test-")
 
 from mixcheck.analyze import analyze_file  # noqa: E402
 from mixcheck.loudness import integrated_lufs, k_weighting_coeffs  # noqa: E402
@@ -301,6 +303,76 @@ def test_reference_sets_are_saved_and_reused(tmp_path=None):
             os.environ.pop("MIXCHECK_HOME", None)
         else:
             os.environ["MIXCHECK_HOME"] = old
+
+
+def _calibrate_to(styles):
+    import json
+    from mixcheck.style import calibration_path
+    calibration_path().parent.mkdir(parents=True, exist_ok=True)
+    with open(calibration_path(), "w") as fh:
+        json.dump({"version": 1, "styles": styles}, fh)
+    os.utime(calibration_path(), ns=(0, len(json.dumps(styles))))  # so the cache sees each rewrite
+
+
+def test_calibrated_style_ranges_and_tone():
+    from mixcheck.style import calibration_path, options, style_flags, style_match, targets
+    tone = {"lows": [-24, -20], "low_mids": [-26, -22], "mids": [-17, -13], "presence": [-13, -9], "highs": [-8, -4]}
+    m = {"lufs": -7.0, "plr": 8.0, "lra": 4.0, "air_pct": 0.1,
+         "tone": {"lows": -28.0, "low_mids": -24.0, "mids": -15.0, "presence": -11.0, "highs": -10.0}}
+    try:
+        _calibrate_to({"trap_hiphop": {"songs": 12, "lufs": [-8, -5], "plr": [5, 8], "lra": [3, 6], "tone": tone},
+                       "lofi": {"songs": 6, "lufs": [-14, -9], "plr": [8, 12], "lra": [3, 8], "tone": tone},
+                       "pop": {"lufs": "loud", "tone": {"lows": [3, 1]}}})
+        t = targets()
+        assert t["trap_hiphop"]["lufs"] == (-8, -5) and t["trap_hiphop"]["songs"] == 12
+        assert t["pop"]["lufs"] == (-10.0, -7.0) and "tone" not in t["pop"]  # malformed values are ignored
+        assert t["edm"]["lufs"] == (-8.0, -5.0)  # styles that weren't calibrated keep their ranges
+        assert {o["id"]: o["songs"] for o in options()}["trap_hiphop"] == 12
+
+        sm = style_match(m, "trap_hiphop", "mix")
+        assert sm["songs"] == 12 and [d["id"] for d in sm["dims"]] == ["plr", "lra", "tone"]
+        lows = next(b for b in sm["tone"] if b["id"] == "lows")
+        assert lows["status"] == "low" and lows["off_by"] == 4.0
+        tone_flags = [f for f in style_flags(m, "trap_hiphop", "master") if f["id"] == "tone_less_than_target"]
+        assert [f["band"] for f in tone_flags] == ["lows", "highs"]
+        assert "4.0 dB lighter below 100 Hz than typical for Trap / hip-hop" in tone_flags[0]["message"]
+        # Lo-fi's dull top end is the point, not a finding.
+        lofi = [f for f in style_flags(m, "lofi", "master") if f["id"] == "tone_less_than_target"]
+        assert [f["band"] for f in lofi] == ["lows"]
+    finally:
+        calibration_path().unlink()
+    assert targets()["trap_hiphop"]["lufs"] == (-9.0, -6.0) and "tone" not in targets()["trap_hiphop"]
+
+
+def test_calibrate_builds_ranges_from_songs():
+    from mixcheck.calibrate import aliases, calibrate, collect, spread
+    from mixcheck.style import calibration_path, targets
+    # The middle 15–85% of the songs, never narrower than the minimum, rounded outward.
+    assert spread([-8.2, -7.9, -7.5, -7.1, -6.6], 2.0) == [-8.5, -6.0]
+    assert spread([-7.0] * 5, 2.0) == [-8.0, -6.0]
+    names = aliases()
+    assert names["trap"] == names["hiphop"] == names["traphiphop"] == "trap_hiphop"
+    assert names["lofi"] == "lofi" and names["rb"] == "rnb" and names["jazz"] == "acoustic"
+
+    import tempfile
+    import soundfile as sf
+    root = tempfile.mkdtemp()
+    os.makedirs(os.path.join(root, "Hip-Hop"))
+    os.makedirs(os.path.join(root, "not a style"))
+    for i in range(3):
+        sf.write(os.path.join(root, "Hip-Hop", f"s{i}.wav"), _song(seconds=31, bass_db=6.0, seed=i) * 2.5, FS)
+    sf.write(os.path.join(root, "Hip-Hop", "clip.wav"), _song(seconds=10, seed=9), FS)
+    groups, unknown = collect(root)
+    assert list(groups) == ["trap_hiphop"] and len(groups["trap_hiphop"]) == 4 and unknown == ["not a style"]
+    try:
+        assert calibrate(groups, min_songs=4, jobs=1, out=lambda *a: None) == {}  # the clip is too short to count
+        new = calibrate(groups, min_songs=3, jobs=1, out=lambda *a: None)["trap_hiphop"]
+        assert new["songs"] == 3 and len(new["tone"]) == 5
+        t = targets()["trap_hiphop"]
+        assert t["songs"] == 3 and list(t["lufs"]) == new["lufs"]
+        assert t["lufs"][1] - t["lufs"][0] >= 2.0
+    finally:
+        calibration_path().unlink()
 
 
 if __name__ == "__main__":
