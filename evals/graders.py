@@ -13,8 +13,9 @@ import re
 from mixcheck.catalog import PACKAGES, TOOLS, owned_tools
 
 # A number with a unit, as it would be quoted from the report: "-14.7 LUFS", "+0.3 dBTP", "3 dB".
+# A bare "s" only counts as seconds after a space ("30 s"): "808s" is the drum machine, not a duration.
 NUMBER_WITH_UNIT = re.compile(
-    r"(?<![\w.])([+\-−]?\d+(?:\.\d+)?)\s*(dBTP|dBFS|LUFS|LU|dB|kHz|Hz|%|ms|s\b|seconds?)")
+    r"(?<![\w.])([+\-−]?\d+(?:\.\d+)?)\s*(dBTP|dBFS|LUFS|LU|dB|kHz|Hz|%|ms|seconds?\b|(?<=\s)s\b)")
 TIME = re.compile(r"\b\d{1,2}:\d{2}\b")
 
 # Pushing loudness up is mastering's job; notes on a mix shouldn't ask for it.
