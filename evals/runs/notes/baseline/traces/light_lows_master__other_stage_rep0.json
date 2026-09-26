@@ -1,0 +1,172 @@
+{
+ "input": {
+  "stage": "mix",
+  "setup": "Logic Pro + FabFilter (Pro-L 2, Pro-Q, Pro-C 2)",
+  "duration": "0:40",
+  "channels": "stereo",
+  "score": {
+   "value": 8.3,
+   "of": 10,
+   "label": "Solid",
+   "if_fixed": 10.0
+  },
+  "measurements": {
+   "integrated_loudness_lufs": -2.68,
+   "loudness_range_lu": 3.49,
+   "true_peak_dbtp": 2.82,
+   "peak_to_loudness_db": 5.5,
+   "lr_correlation": 0.766,
+   "low_end_correlation": 0.785,
+   "mono_loss_db": 0.56,
+   "left_right_balance_db": 0.0
+  },
+  "style": null,
+  "reference": null,
+  "findings": [
+   {
+    "id": "F1",
+    "kind": "true_peak_over",
+    "severity": "critical",
+    "measured": "True peak is +2.8 dBTP, above full scale; expect distortion on playback and after lossy encoding.",
+    "steps": [
+     {
+      "id": "F1.1",
+      "text": "Put Utility › Gain first on the Stereo Out and lower Gain until peaks sit around −6 to −3 dBFS.",
+      "tool": "Gain"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F1.2",
+      "text": "Bypass any limiter or maximizer on the mix bus before you bounce for mastering. Check for: Adaptive Limiter, FabFilter Pro-L 2.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F2",
+    "kind": "very_loud",
+    "severity": "warning",
+    "measured": "Integrated loudness is -2.7 LUFS; Spotify would turn it down about 11.3 dB.",
+    "steps": [
+     {
+      "id": "F2.1",
+      "text": "Bypass any limiter or maximizer on the mix bus before you bounce for mastering. Check for: Adaptive Limiter, FabFilter Pro-L 2.",
+      "tool": null
+     },
+     {
+      "id": "F2.2",
+      "text": "Put Utility › Gain first on the Stereo Out and lower Gain until peaks sit around −6 to −3 dBFS.",
+      "tool": "Gain"
+     }
+    ],
+    "other_options": []
+   },
+   {
+    "id": "F3",
+    "kind": "low_plr",
+    "severity": "warning",
+    "measured": "Peak-to-loudness ratio is 5.5 dB; the master is heavily limited.",
+    "steps": [
+     {
+      "id": "F3.1",
+      "text": "Bypass any limiter or maximizer on the mix bus before you bounce for mastering. Check for: Adaptive Limiter, FabFilter Pro-L 2.",
+      "tool": null
+     },
+     {
+      "id": "F3.2",
+      "text": "In Pro-C 2 on the mix bus, raise Threshold or lengthen Attack until transients come through.",
+      "tool": "FabFilter Pro-C 2"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F3.3",
+      "text": "On the drum bus, use Pro-C 2 in Punch style with a slower attack (10–30 ms).",
+      "tool": "FabFilter Pro-C 2"
+     }
+    ]
+   },
+   {
+    "id": "F4",
+    "kind": "low_lra",
+    "severity": "info",
+    "measured": "Loudness range is 3.5 LU; there is little contrast between sections.",
+    "steps": [
+     {
+      "id": "F4.1",
+      "text": "Press A to show automation and draw volume so verses sit 2–3 dB below choruses.",
+      "tool": "Volume automation"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F4.2",
+      "text": "In Pro-C 2 on the mix bus, raise Threshold or lengthen Attack until transients come through.",
+      "tool": "FabFilter Pro-C 2"
+     }
+    ]
+   }
+  ]
+ },
+ "notes": {
+  "headline": "This mix is clipping hard at +2.8 dBTP and squashed to -2.7 LUFS — pull the mix bus limiting off and rebounce with headroom before anything else.",
+  "summary": "The balance side of this mix is in good shape: left/right sit dead even, correlation is healthy, and mono fold-down barely costs you anything. The problem is the output stage. You're bouncing at -2.7 LUFS with true peaks at +2.8 dBTP and only 5.5 dB of peak-to-loudness, which means something on the Stereo Out is doing heavy limiting. For a mix going to mastering that's all cost and no benefit — it distorts on playback and lossy encoding, and it removes the transient range a mastering engineer needs. Fix the output chain and this bounce scores a 10.",
+  "priorities": [
+   {
+    "finding_ids": [
+     "F1",
+     "F2",
+     "F3"
+    ],
+    "title": "Take the limiting off the mix bus and rebounce with headroom",
+    "why": "True peak at +2.8 dBTP is above full scale, so you're already hearing distortion that will get worse after MP3/AAC encoding. At -2.7 LUFS Spotify turns you down about 11.3 dB anyway, so the loudness buys nothing, and a 5.5 dB peak-to-loudness ratio means drum transients are being flattened before mastering ever sees them. These three readings are the same problem: a limiter doing work that doesn't belong at the mix stage.",
+    "step_ids": [
+     "F1.2",
+     "F1.1",
+     "F3.2"
+    ]
+   },
+   {
+    "finding_ids": [
+     "F4"
+    ],
+    "title": "Rebuild section contrast once the limiter is off",
+    "why": "Loudness range is 3.5 LU, which is very little movement between sections. Some of that will return on its own when the limiter comes off; whatever's left is worth drawing in by hand so verses and choruses read as different.",
+    "step_ids": [
+     "F4.1"
+    ]
+   }
+  ],
+  "listen_for": [
+   "Solo the drum bus after the limiter is bypassed — kick and snare transients should have attack again rather than a flat front edge.",
+   "Check the loudest section on headphones or anything with a converter that shows clipping; the crunch you may have been reading as saturation should be gone once peaks land in the −6 to −3 dBFS range.",
+   "Play the verse into the chorus back to back at a fixed monitor level and confirm the lift is audible without reaching for the fader.",
+   "Flip to mono briefly to confirm the low end still holds together after the gain change — it measured fine, so you're checking nothing broke."
+  ],
+  "strengths": [
+   "Left/right balance is 0.0 dB — nothing is pulling to one side.",
+   "Mono fold-down only costs 0.56 dB, so the mix translates to mono playback cleanly.",
+   "Low-end correlation at 0.785 means your bass is centered and phase-coherent."
+  ]
+ },
+ "issues": [],
+ "checks": {
+  "ids_valid": "all ids exist",
+  "covers_critical": "all covered",
+  "covers_warnings": "all covered",
+  "numbers_grounded": "13 quoted, all found",
+  "tools_owned": "only owned tools",
+  "stage_appropriate": "no loudness push",
+  "no_invented_problems": "the report has findings"
+ },
+ "judge": {
+  "priority_order": "The critical true-peak/loudness/PLR cluster (F1,F2,F3) is placed first and the info-level LRA issue (F4) second, matching severity ordering.",
+  "explains_impact": "Priority 1 explains distortion on playback/encoding and flattened transients before mastering, and priority 2 explains sections failing to read as different, not just citing numbers.",
+  "groups_causes": "F1, F2 and F3 are correctly merged as one limiter-caused issue while F4 (section contrast) is kept separate as its own cause.",
+  "specific": "Notes cite the exact measurements (+2.8 dBTP, -2.7 LUFS, 5.5 dB PLR, 3.5 LU, 0.785 low-end correlation) rather than generic advice.",
+  "stage_appropriate": "Notes treat the mix as heading to mastering, criticizing loudness only insofar as it signals unwanted limiting/headroom loss rather than judging it against streaming loudness targets.",
+  "faithful": "All claims (distortion risk, Spotify turn-down, transient flattening, mono/LR strengths) trace directly to the report's measurements and findings without contradiction.",
+  "concise": "Each section stays tied to a specific measurement or action with minimal repetition, and the listen_for/strengths lists are short and purposeful rather than padded."
+ }
+}

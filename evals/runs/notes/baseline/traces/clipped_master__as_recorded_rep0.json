@@ -1,0 +1,200 @@
+{
+ "input": {
+  "stage": "master",
+  "setup": "Pro Tools + Waves Essential",
+  "duration": "0:40",
+  "channels": "stereo",
+  "score": {
+   "value": 6.2,
+   "of": 10,
+   "label": "Needs work",
+   "if_fixed": 10.0
+  },
+  "measurements": {
+   "integrated_loudness_lufs": -3.56,
+   "loudness_range_lu": 5.04,
+   "true_peak_dbtp": 3.19,
+   "peak_to_loudness_db": 6.8,
+   "lr_correlation": 0.778,
+   "low_end_correlation": 0.783,
+   "mono_loss_db": 0.52,
+   "left_right_balance_db": 0.01
+  },
+  "style": null,
+  "reference": null,
+  "findings": [
+   {
+    "id": "F1",
+    "kind": "true_peak_over",
+    "severity": "critical",
+    "measured": "True peak is +3.2 dBTP, above full scale; expect distortion on playback and after lossy encoding.",
+    "steps": [
+     {
+      "id": "F1.1",
+      "text": "Insert Pro Limiter last on the Master Fader, turn on ISP, and set Ceiling to −1.0 dB.",
+      "tool": "Pro Limiter"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F1.2",
+      "text": "Set the L2's Out Ceiling to −1.5 dB; the L2 limits sample peaks, so leave margin for true peaks.",
+      "tool": "Waves L2"
+     },
+     {
+      "id": "F1.3",
+      "text": "Watch Pro Limiter's loudness meter (Integrated LUFS) while the whole song plays.",
+      "tool": "Pro Limiter"
+     }
+    ]
+   },
+   {
+    "id": "F2",
+    "kind": "clipping",
+    "severity": "warning",
+    "measured": "11368 run(s) of clipped samples, first at 0:01, 0:02, 0:03, 0:04, 0:05.",
+    "when": "0:01, 0:02, 0:03, 0:04, 0:05",
+    "steps": [
+     {
+      "id": "F2.1",
+      "text": "Go to 0:01, 0:02, 0:03 and 4 more. Clipping in a master usually means something after the limiter adds gain, or the limiter's ceiling is at 0 dB.",
+      "tool": null
+     },
+     {
+      "id": "F2.2",
+      "text": "Insert Pro Limiter last on the Master Fader, turn on ISP, and set Ceiling to −1.0 dB.",
+      "tool": "Pro Limiter"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F2.3",
+      "text": "Set the L2's Out Ceiling to −1.5 dB; the L2 limits sample peaks, so leave margin for true peaks.",
+      "tool": "Waves L2"
+     },
+     {
+      "id": "F2.4",
+      "text": "Remove or turn down anything after the limiter, such as tape or saturation plugins.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F3",
+    "kind": "very_loud",
+    "severity": "info",
+    "measured": "Integrated loudness is -3.6 LUFS; Spotify would turn it down about 10.4 dB.",
+    "steps": [
+     {
+      "id": "F3.1",
+      "text": "Lower Pro Limiter's Input by 2–4 dB and compare at matched volume.",
+      "tool": "Pro Limiter"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F3.2",
+      "text": "Raise the L2's Threshold by 2–4 dB (less limiting) and compare at matched volume.",
+      "tool": "Waves L2"
+     },
+     {
+      "id": "F3.3",
+      "text": "Streaming services turn this down to about −14 LUFS anyway, so the extra limiting only costs punch.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F4",
+    "kind": "low_plr",
+    "severity": "info",
+    "measured": "Peak-to-loudness ratio is 6.8 dB; the master is heavily limited.",
+    "steps": [
+     {
+      "id": "F4.1",
+      "text": "Lower Pro Limiter's Input by 2–4 dB and compare at matched volume.",
+      "tool": "Pro Limiter"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F4.2",
+      "text": "Raise the L2's Threshold by 2–4 dB (less limiting) and compare at matched volume.",
+      "tool": "Waves L2"
+     },
+     {
+      "id": "F4.3",
+      "text": "On the drum bus, use Renaissance Compressor with a slower attack (10–30 ms) to let the hits through.",
+      "tool": "Renaissance Compressor"
+     },
+     {
+      "id": "F4.4",
+      "text": "Ease the mix-bus compressor: raise the threshold or slow the attack so transients get through.",
+      "tool": null
+     }
+    ]
+   }
+  ]
+ },
+ "notes": {
+  "headline": "This master is running +3.2 dBTP over full scale with 11368 runs of clipped samples — it needs a proper limiter ceiling before it goes anywhere.",
+  "summary": "The biggest issue is level: true peak is +3.2 dBTP, well above full scale, and there are 11368 run(s) of clipped samples starting at 0:01. That's audible distortion now and it will get worse after MP3/AAC encoding. The two are almost certainly the same cause — nothing is holding the ceiling, or something after the limiter is adding gain. Underneath that, integrated loudness is -3.6 LUFS and peak-to-loudness is 6.8 dB, so you're pushing far harder than you need to; Spotify will turn this down about 10.4 dB regardless, and the only thing the extra limiting buys you is lost punch.",
+  "priorities": [
+   {
+    "finding_ids": [
+     "F1",
+     "F2"
+    ],
+    "title": "Set a real ceiling and stop the clipping",
+    "why": "At +3.2 dBTP the file is distorting on playback and will distort further through lossy encoding; the 11368 clipped runs from 0:01 onward are the same problem showing up sample by sample.",
+    "step_ids": [
+     "F1.1",
+     "F2.1",
+     "F2.4"
+    ]
+   },
+   {
+    "finding_ids": [
+     "F3",
+     "F4"
+    ],
+    "title": "Back off the limiting",
+    "why": "At -3.6 LUFS with a 6.8 dB peak-to-loudness ratio, streaming turns you down about 10.4 dB anyway — you're paying in transients for loudness nobody hears.",
+    "step_ids": [
+     "F3.1",
+     "F4.1"
+    ]
+   }
+  ],
+  "listen_for": [
+   "The first five seconds (0:01–0:05) on headphones — listen for crackle or grit on the loudest hits once the ceiling is set to −1.0 dB.",
+   "Snare and kick attack after lowering Pro Limiter's Input by 2–4 dB, compared at matched volume against the current version.",
+   "An MP3/AAC encode of the new bounce on a phone or laptop speaker, checking that the distortion is gone.",
+   "Pro Limiter's Integrated LUFS readout across the whole song (F1.3) to confirm where you've landed."
+  ],
+  "strengths": [
+   "Left/right balance is 0.01 dB — the image is centered.",
+   "Mono loss is only 0.52 dB, so the master holds up on mono playback.",
+   "Loudness range of 5.04 LU means the dynamics are consistent across the section."
+  ]
+ },
+ "issues": [],
+ "checks": {
+  "ids_valid": "all ids exist",
+  "covers_critical": "all covered",
+  "covers_warnings": "all covered",
+  "numbers_grounded": "18 quoted, all found",
+  "tools_owned": "only owned tools",
+  "stage_appropriate": "not a mix",
+  "no_invented_problems": "the report has findings"
+ },
+ "judge": {
+  "priority_order": "Critical+warning (F1/F2, ceiling/clipping) is placed before the two info-level findings (F3/F4) about over-limiting, matching severity order in the report.",
+  "explains_impact": "Priority 1 states distortion now and worse after lossy encoding; priority 2 states loss of transients/punch since streaming turns it down anyway.",
+  "groups_causes": "F1 (true peak) and F2 (clipping) are correctly merged as one ceiling/gain-staging cause, and F3/F4 (loudness and PLR) are merged as one over-limiting cause, matching the report's own overlapping steps.",
+  "specific": "Notes cite exact figures (-3.6 LUFS, +3.2 dBTP, 11368 runs, 6.8 dB PLR, 10.4 dB turn-down) and the 0:01 timestamp from this bounce.",
+  "stage_appropriate": "Since stage is 'master', the notes correctly judge loudness/limiting against release/streaming standards rather than treating headroom as a flaw.",
+  "faithful": "All claims (peak, clipping, loudness, PLR, mono loss, correlation) match the report's measurements without inventing new problems or causes.",
+  "concise": "The notes stay tightly focused on the two priority clusters and supporting listen-for checks without repetition or filler."
+ }
+}

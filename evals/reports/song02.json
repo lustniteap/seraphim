@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "analyzer_version": "0.1.0",
   "file": {
     "name": "song02.wav",
@@ -623,6 +623,23 @@
       "gain_db": 3.1
     }
   },
+  "profile": {
+    "version": 1,
+    "name": "song02.wav",
+    "duration_s": 136.04,
+    "loud_seconds": 129.9,
+    "loudness_lufs": -17.08,
+    "punch_db": 12.93,
+    "contrast_lu": 1.84,
+    "width_db": -6.69,
+    "tone_db": {
+      "lows": -4.76,
+      "low_mids": -5.87,
+      "mids": -3.9,
+      "presence": -14.2,
+      "highs": -16.51
+    }
+  },
   "stage": {
     "value": "mix",
     "detected": "mix",
@@ -639,9 +656,17 @@
     "lufs": -17.08,
     "plr": 12.9,
     "lra": 1.84,
-    "air_pct": 0.0035
+    "air_pct": 0.0035,
+    "tone": {
+      "lows": -4.76,
+      "low_mids": -5.87,
+      "mids": -3.9,
+      "presence": -14.2,
+      "highs": -16.51
+    }
   },
   "target": null,
+  "reference": null,
   "flags": [
     {
       "id": "no_air",

@@ -1,0 +1,240 @@
+{
+ "input": {
+  "stage": "master",
+  "setup": "Pro Tools + Waves Essential",
+  "duration": "0:40",
+  "channels": "stereo",
+  "score": {
+   "value": 7.8,
+   "of": 10,
+   "label": "Solid",
+   "if_fixed": 10.0
+  },
+  "measurements": {
+   "integrated_loudness_lufs": -2.68,
+   "loudness_range_lu": 3.49,
+   "true_peak_dbtp": 2.82,
+   "peak_to_loudness_db": 5.5,
+   "lr_correlation": 0.766,
+   "low_end_correlation": 0.785,
+   "mono_loss_db": 0.56,
+   "left_right_balance_db": 0.0
+  },
+  "style": null,
+  "reference": {
+   "songs": 1,
+   "match_percent": 97,
+   "compared": [
+    "loudness",
+    "punch",
+    "contrast",
+    "tone",
+    "width"
+   ],
+   "not_compared": []
+  },
+  "findings": [
+   {
+    "id": "F1",
+    "kind": "true_peak_over",
+    "severity": "critical",
+    "measured": "True peak is +2.8 dBTP, above full scale; expect distortion on playback and after lossy encoding.",
+    "steps": [
+     {
+      "id": "F1.1",
+      "text": "Insert Pro Limiter last on the Master Fader, turn on ISP, and set Ceiling to −1.0 dB.",
+      "tool": "Pro Limiter"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F1.2",
+      "text": "Set the L2's Out Ceiling to −1.5 dB; the L2 limits sample peaks, so leave margin for true peaks.",
+      "tool": "Waves L2"
+     },
+     {
+      "id": "F1.3",
+      "text": "Watch Pro Limiter's loudness meter (Integrated LUFS) while the whole song plays.",
+      "tool": "Pro Limiter"
+     }
+    ]
+   },
+   {
+    "id": "F2",
+    "kind": "ref_tone_less",
+    "severity": "warning",
+    "measured": "4.4 dB lighter below 100 Hz than your reference, at matched volume.",
+    "steps": [
+     {
+      "id": "F2.1",
+      "text": "Insert EQ3 7-Band on the Master Fader and use a low shelf over the lows (below 100 Hz), boosting about 4.5 dB.",
+      "tool": "EQ3 7-Band"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F2.2",
+      "text": "Add Renaissance EQ on the master and use a low shelf over the lows (below 100 Hz), boosting about 4.5 dB.",
+      "tool": "Renaissance EQ"
+     },
+     {
+      "id": "F2.3",
+      "text": "Loop the loudest section and switch between your master and the reference, at matched volume, while you set the boost.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F3",
+    "kind": "very_loud",
+    "severity": "info",
+    "measured": "Integrated loudness is -2.7 LUFS; Spotify would turn it down about 11.3 dB.",
+    "steps": [
+     {
+      "id": "F3.1",
+      "text": "Lower Pro Limiter's Input by 2–4 dB and compare at matched volume.",
+      "tool": "Pro Limiter"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F3.2",
+      "text": "Raise the L2's Threshold by 2–4 dB (less limiting) and compare at matched volume.",
+      "tool": "Waves L2"
+     },
+     {
+      "id": "F3.3",
+      "text": "Streaming services turn this down to about −14 LUFS anyway, so the extra limiting only costs punch.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F4",
+    "kind": "low_plr",
+    "severity": "info",
+    "measured": "Peak-to-loudness ratio is 5.5 dB; the master is heavily limited.",
+    "steps": [
+     {
+      "id": "F4.1",
+      "text": "Lower Pro Limiter's Input by 2–4 dB and compare at matched volume.",
+      "tool": "Pro Limiter"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F4.2",
+      "text": "Raise the L2's Threshold by 2–4 dB (less limiting) and compare at matched volume.",
+      "tool": "Waves L2"
+     },
+     {
+      "id": "F4.3",
+      "text": "On the drum bus, use Renaissance Compressor with a slower attack (10–30 ms) to let the hits through.",
+      "tool": "Renaissance Compressor"
+     },
+     {
+      "id": "F4.4",
+      "text": "Ease the mix-bus compressor: raise the threshold or slow the attack so transients get through.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F5",
+    "kind": "low_lra",
+    "severity": "info",
+    "measured": "Loudness range is 3.5 LU; there is little contrast between sections.",
+    "steps": [
+     {
+      "id": "F5.1",
+      "text": "Write volume automation (or use Clip Gain) so verses sit 2–3 dB below choruses.",
+      "tool": "Volume automation"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F5.2",
+      "text": "Use Clip Gain on the verse clips so they sit 2–3 dB below the choruses.",
+      "tool": "Clip Gain"
+     },
+     {
+      "id": "F5.3",
+      "text": "Ease the mix-bus compressor: raise the threshold or slow the attack so transients get through.",
+      "tool": null
+     }
+    ]
+   }
+  ]
+ },
+ "notes": {
+  "headline": "Your master clips at +2.8 dBTP and sits at -2.68 LUFS — pull the limiter back and set a true-peak ceiling before anything else.",
+  "summary": "This is a solid-sounding master (7.8/10, 97% match to your reference) that's been pushed far past where it needs to go. True peak is +2.8 dBTP, above full scale, so it will distort on playback and again after MP3/AAC encoding, and at -2.68 LUFS integrated Spotify will turn it down about 11.3 dB anyway — you're paying in punch for loudness nobody hears. Back the limiter off and cap the ceiling, then look at the low end, which reads 4.4 dB lighter below 100 Hz than your reference at matched volume. Your stereo picture and balance are already in good shape, so this is mostly a gain-staging pass.",
+  "priorities": [
+   {
+    "finding_ids": [
+     "F1",
+     "F3",
+     "F4"
+    ],
+    "title": "Over-limiting: peaks above full scale and no headroom left",
+    "why": "At +2.8 dBTP the file is clipping converters and lossy encoders, and a peak-to-loudness ratio of 5.5 dB means the transients are already flattened. Since streaming turns -2.7 LUFS down by about 11.3 dB, the extra limiting only costs you punch — pulling it back is free dynamics.",
+    "step_ids": [
+     "F1.1",
+     "F3.1",
+     "F4.1"
+    ]
+   },
+   {
+    "finding_ids": [
+     "F2"
+    ],
+    "title": "Low end lighter than your reference",
+    "why": "Below 100 Hz you're 4.4 dB under the reference at matched volume, so the master will feel thinner on systems with real low-end extension.",
+    "step_ids": [
+     "F2.1",
+     "F2.3"
+    ]
+   },
+   {
+    "finding_ids": [
+     "F5"
+    ],
+    "title": "Little contrast between sections",
+    "why": "Loudness range is 3.5 LU, so verses and choruses land at nearly the same level and the arrangement stops building. Easing the limiter will help, but section-level moves are what create the lift.",
+    "step_ids": [
+     "F5.1"
+    ]
+   }
+  ],
+  "listen_for": [
+   "After setting Pro Limiter's Ceiling to −1.0 dB with ISP on, listen to the loudest section for the grit and pumping that was there before — it should clean up.",
+   "With the limiter input down 2–4 dB, check kick and snare transients at matched volume; the hits should poke through rather than sit flat.",
+   "Loop the loudest section and A/B against your reference at matched volume while setting the low shelf, on whatever gives you honest sub — it's easy to overshoot 4.5 dB.",
+   "Play verse into chorus back to back and confirm the chorus actually feels like it arrives once the automation is in."
+  ],
+  "strengths": [
+   "Stereo image is stable: L/R correlation 0.766 and low-end correlation 0.785, so the bottom stays centered.",
+   "Mono fold-down only costs 0.56 dB — nothing important is cancelling.",
+   "Left/right balance is dead center at 0.0 dB, and you match your reference 97% across loudness, punch, contrast, tone and width."
+  ]
+ },
+ "issues": [],
+ "checks": {
+  "ids_valid": "all ids exist",
+  "covers_critical": "all covered",
+  "covers_warnings": "all covered",
+  "numbers_grounded": "21 quoted, all found",
+  "tools_owned": "only owned tools",
+  "stage_appropriate": "not a mix",
+  "no_invented_problems": "the report has findings"
+ },
+ "judge": {
+  "priority_order": "The critical true-peak/over-limiting group (F1,F3,F4) leads, followed by the warning-level low-end finding (F2), then the info-level LRA issue (F5), matching severity order.",
+  "explains_impact": "Each priority states real-world effect: distortion/converter clipping and lost punch for the first, thinner low end on systems with extension for F2, and stalled arrangement contrast for F5.",
+  "groups_causes": "F1, F3, and F4 are correctly merged as one over-limiting cause, while F2 (tonal) and F5 (section dynamics) are kept separate as distinct causes.",
+  "specific": "Notes cite exact figures like +2.8 dBTP, -2.68 LUFS, 4.4 dB below 100 Hz, 5.5 PLR, 3.5 LU, and the 97% reference match, all pulled from this report.",
+  "stage_appropriate": "Correctly treats this as a master and judges loudness/true-peak against release/streaming norms, consistent with the report's stage.",
+  "faithful": "The listen_for line about 'the grit and pumping that was there before — it should clean up' invents an audible artifact not stated anywhere in the report's measurements or findings.",
+  "concise": "The notes stay focused on the five findings with brief explanations and short listen-for/strengths lists, without padding or repetition."
+ }
+}

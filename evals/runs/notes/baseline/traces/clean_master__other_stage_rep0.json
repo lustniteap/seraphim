@@ -1,0 +1,61 @@
+{
+ "input": {
+  "stage": "mix",
+  "setup": "Logic Pro + FabFilter (Pro-L 2, Pro-Q, Pro-C 2)",
+  "duration": "0:40",
+  "channels": "stereo",
+  "score": {
+   "value": 10.0,
+   "of": 10,
+   "label": "Ready for mastering",
+   "if_fixed": 10.0
+  },
+  "measurements": {
+   "integrated_loudness_lufs": -10.72,
+   "loudness_range_lu": 5.15,
+   "true_peak_dbtp": -2.16,
+   "peak_to_loudness_db": 8.6,
+   "lr_correlation": 0.78,
+   "low_end_correlation": 0.78,
+   "mono_loss_db": 0.51,
+   "left_right_balance_db": -0.04
+  },
+  "style": null,
+  "reference": null,
+  "findings": []
+ },
+ "notes": {
+  "headline": "Nothing needs fixing — this bounce is clean and ready to hand off for mastering.",
+  "summary": "MixCheck found no technical problems in this 0:40 stereo mix, and it scores 10.0/10. True peak sits at -2.16 dBTP with 8.6 dB of peak-to-loudness, so there's room for a mastering engineer to work. Stereo behaviour is solid too: L/R correlation 0.78, mono loss only 0.51 dB, and the left/right balance is within -0.04 dB. Since this is going to mastering, don't chase the -10.72 LUFS integrated number — loudness is the mastering stage's job.",
+  "priorities": [],
+  "listen_for": [
+   "Check the mix in mono once more to confirm nothing hollows out — the measured mono loss of 0.51 dB says it should hold up.",
+   "Listen on a small speaker or phone to confirm the low end translates; low-end correlation of 0.78 suggests it will.",
+   "Spot-check the loudest section for anything that feels pinched, even though true peak is -2.16 dBTP."
+  ],
+  "strengths": [
+   "True peak of -2.16 dBTP with 8.6 dB peak-to-loudness leaves real headroom for mastering.",
+   "Stereo image is well behaved: 0.78 L/R correlation and only 0.51 dB mono loss.",
+   "Left/right balance is essentially centred at -0.04 dB."
+  ]
+ },
+ "issues": [],
+ "checks": {
+  "ids_valid": "all ids exist",
+  "covers_critical": "no critical findings",
+  "covers_warnings": "no warning findings",
+  "numbers_grounded": "12 quoted, all found",
+  "tools_owned": "only owned tools",
+  "stage_appropriate": "no loudness push",
+  "no_invented_problems": "no priorities, as expected"
+ },
+ "judge": {
+  "priority_order": "No findings and no priorities exist, so ordering can't be assessed.",
+  "explains_impact": "No priorities are listed in the notes.",
+  "groups_causes": "The report has no findings to group.",
+  "specific": "Notes reference the actual measurements (-2.16 dBTP, 8.6 peak-to-loudness, 0.78 correlation, 0.51 dB mono loss, -0.04 dB balance) specific to this bounce.",
+  "stage_appropriate": "Notes correctly say not to chase the -10.72 LUFS number since loudness is mastering's job, matching the mix stage.",
+  "faithful": "All claims match the report's measurements and score; no fabricated findings or contradictions.",
+  "concise": "The notes are short and proportional to a clean report with no findings, avoiding filler or hype beyond stating the clean result."
+ }
+}
