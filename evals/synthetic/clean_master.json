@@ -1,0 +1,310 @@
+{
+  "schema_version": "1.2",
+  "analyzer_version": "0.1.0",
+  "file": {
+    "name": "clean_master.wav",
+    "sample_rate_hz": 44100,
+    "channels": 2,
+    "duration_s": 40.0
+  },
+  "loudness": {
+    "integrated_lufs": -10.72,
+    "max_momentary_lufs": -8.67,
+    "max_short_term_lufs": -8.83,
+    "loudness_range_lu": 5.15,
+    "timeline": [
+      {
+        "t": 1.5,
+        "lufs": -14.8
+      },
+      {
+        "t": 2.5,
+        "lufs": -14.4
+      },
+      {
+        "t": 3.5,
+        "lufs": -14.4
+      },
+      {
+        "t": 4.5,
+        "lufs": -14.4
+      },
+      {
+        "t": 5.5,
+        "lufs": -13.4
+      },
+      {
+        "t": 6.5,
+        "lufs": -11.1
+      },
+      {
+        "t": 7.5,
+        "lufs": -9.7
+      },
+      {
+        "t": 8.5,
+        "lufs": -8.9
+      },
+      {
+        "t": 9.5,
+        "lufs": -8.9
+      },
+      {
+        "t": 10.5,
+        "lufs": -8.8
+      },
+      {
+        "t": 11.5,
+        "lufs": -8.9
+      },
+      {
+        "t": 12.5,
+        "lufs": -9.6
+      },
+      {
+        "t": 13.5,
+        "lufs": -10.9
+      },
+      {
+        "t": 14.5,
+        "lufs": -12.8
+      },
+      {
+        "t": 15.5,
+        "lufs": -13.6
+      },
+      {
+        "t": 16.5,
+        "lufs": -13.6
+      },
+      {
+        "t": 17.5,
+        "lufs": -13.6
+      },
+      {
+        "t": 18.5,
+        "lufs": -13.3
+      },
+      {
+        "t": 19.5,
+        "lufs": -11.5
+      },
+      {
+        "t": 20.5,
+        "lufs": -10.0
+      },
+      {
+        "t": 21.5,
+        "lufs": -9.0
+      },
+      {
+        "t": 22.5,
+        "lufs": -8.9
+      },
+      {
+        "t": 23.5,
+        "lufs": -8.9
+      },
+      {
+        "t": 24.5,
+        "lufs": -8.9
+      },
+      {
+        "t": 25.5,
+        "lufs": -9.2
+      },
+      {
+        "t": 26.5,
+        "lufs": -10.3
+      },
+      {
+        "t": 27.5,
+        "lufs": -11.7
+      },
+      {
+        "t": 28.5,
+        "lufs": -12.9
+      },
+      {
+        "t": 29.5,
+        "lufs": -12.9
+      },
+      {
+        "t": 30.5,
+        "lufs": -12.9
+      },
+      {
+        "t": 31.5,
+        "lufs": -12.9
+      },
+      {
+        "t": 32.5,
+        "lufs": -11.7
+      },
+      {
+        "t": 33.5,
+        "lufs": -10.2
+      },
+      {
+        "t": 34.5,
+        "lufs": -9.2
+      },
+      {
+        "t": 35.5,
+        "lufs": -8.9
+      },
+      {
+        "t": 36.5,
+        "lufs": -8.9
+      },
+      {
+        "t": 37.5,
+        "lufs": -8.9
+      },
+      {
+        "t": 38.5,
+        "lufs": -9.9
+      }
+    ]
+  },
+  "peaks": {
+    "true_peak_max_dbtp": -2.16,
+    "sample_peak_max_dbfs": -2.24,
+    "clip_events_total": 0,
+    "channels": [
+      {
+        "sample_peak_dbfs": -2.6,
+        "true_peak_dbtp": -2.31,
+        "clip_events": 0,
+        "clip_times_s": [],
+        "dc_offset_dbfs": -118.1
+      },
+      {
+        "sample_peak_dbfs": -2.24,
+        "true_peak_dbtp": -2.16,
+        "clip_events": 0,
+        "clip_times_s": [],
+        "dc_offset_dbfs": -100.9
+      }
+    ]
+  },
+  "dynamics": {
+    "plr_db": 8.6
+  },
+  "stereo": {
+    "correlation": 0.78,
+    "low_end_correlation": 0.78,
+    "low_end_cutoff_hz": 150,
+    "mono_loudness_loss_db": 0.51,
+    "side_to_mid_db": -9.1,
+    "left_right_balance_db": -0.04,
+    "negative_correlation_sections": []
+  },
+  "spectrum": {
+    "band_energy_pct": {
+      "sub": 15.96,
+      "low": 20.65,
+      "low_mid": 30.05,
+      "high_mid": 15.91,
+      "high": 17.42
+    },
+    "energy_above_16k_pct": 3.2347
+  },
+  "edges": {
+    "silent_file": false,
+    "head_silence_s": 0.0,
+    "tail_silence_s": 0.004,
+    "final_50ms_rms_dbfs": -47.3,
+    "quietest_passage_rms_dbfs": -18.7
+  },
+  "streaming": {
+    "Spotify": {
+      "target_lufs": -14.0,
+      "gain_db": -3.3
+    },
+    "Apple Music": {
+      "target_lufs": -16.0,
+      "gain_db": -5.3
+    },
+    "YouTube": {
+      "target_lufs": -14.0,
+      "gain_db": -3.3
+    },
+    "Tidal": {
+      "target_lufs": -14.0,
+      "gain_db": -3.3
+    },
+    "Amazon Music": {
+      "target_lufs": -14.0,
+      "gain_db": -3.3
+    }
+  },
+  "profile": {
+    "version": 1,
+    "name": "clean_master.wav",
+    "duration_s": 40.0,
+    "loud_seconds": 22.3,
+    "loudness_lufs": -9.39,
+    "punch_db": 7.23,
+    "contrast_lu": 5.15,
+    "width_db": -9.07,
+    "tone_db": {
+      "lows": -7.9,
+      "low_mids": -9.53,
+      "mids": -7.12,
+      "presence": -9.53,
+      "highs": -9.15
+    }
+  },
+  "stage": {
+    "value": "master",
+    "detected": "master",
+    "reason": "It measures \u221210.7 LUFS, which is master\u2212level loudness."
+  },
+  "setup": {
+    "daw": "pro_tools",
+    "packages": [
+      "waves_essential"
+    ],
+    "label": "Pro Tools + Waves Essential"
+  },
+  "measures": {
+    "lufs": -10.72,
+    "plr": 8.6,
+    "lra": 5.15,
+    "air_pct": 3.2347,
+    "tone": {
+      "lows": -7.9,
+      "low_mids": -9.53,
+      "mids": -7.12,
+      "presence": -9.53,
+      "highs": -9.15
+    }
+  },
+  "target": null,
+  "reference": null,
+  "flags": [],
+  "score": {
+    "value": 10.0,
+    "label": "Release-ready",
+    "areas": [
+      {
+        "id": "peaks",
+        "name": "Peaks & clipping",
+        "lost": 0.0
+      },
+      {
+        "id": "stereo",
+        "name": "Stereo & phase",
+        "lost": 0.0
+      },
+      {
+        "id": "file",
+        "name": "File & edges",
+        "lost": 0.0
+      }
+    ],
+    "if_fixed": 10.0
+  },
+  "style": null
+}

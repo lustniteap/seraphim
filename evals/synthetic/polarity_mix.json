@@ -1,0 +1,434 @@
+{
+  "schema_version": "1.2",
+  "analyzer_version": "0.1.0",
+  "file": {
+    "name": "polarity_mix.wav",
+    "sample_rate_hz": 44100,
+    "channels": 2,
+    "duration_s": 40.0
+  },
+  "loudness": {
+    "integrated_lufs": -14.17,
+    "max_momentary_lufs": -12.05,
+    "max_short_term_lufs": -12.17,
+    "loudness_range_lu": 5.61,
+    "timeline": [
+      {
+        "t": 1.5,
+        "lufs": -18.5
+      },
+      {
+        "t": 2.5,
+        "lufs": -18.2
+      },
+      {
+        "t": 3.5,
+        "lufs": -18.3
+      },
+      {
+        "t": 4.5,
+        "lufs": -18.3
+      },
+      {
+        "t": 5.5,
+        "lufs": -17.1
+      },
+      {
+        "t": 6.5,
+        "lufs": -14.6
+      },
+      {
+        "t": 7.5,
+        "lufs": -13.0
+      },
+      {
+        "t": 8.5,
+        "lufs": -12.2
+      },
+      {
+        "t": 9.5,
+        "lufs": -12.2
+      },
+      {
+        "t": 10.5,
+        "lufs": -12.2
+      },
+      {
+        "t": 11.5,
+        "lufs": -12.2
+      },
+      {
+        "t": 12.5,
+        "lufs": -13.0
+      },
+      {
+        "t": 13.5,
+        "lufs": -14.4
+      },
+      {
+        "t": 14.5,
+        "lufs": -16.5
+      },
+      {
+        "t": 15.5,
+        "lufs": -17.4
+      },
+      {
+        "t": 16.5,
+        "lufs": -17.4
+      },
+      {
+        "t": 17.5,
+        "lufs": -17.4
+      },
+      {
+        "t": 18.5,
+        "lufs": -17.1
+      },
+      {
+        "t": 19.5,
+        "lufs": -15.0
+      },
+      {
+        "t": 20.5,
+        "lufs": -13.4
+      },
+      {
+        "t": 21.5,
+        "lufs": -12.4
+      },
+      {
+        "t": 22.5,
+        "lufs": -12.2
+      },
+      {
+        "t": 23.5,
+        "lufs": -12.2
+      },
+      {
+        "t": 24.5,
+        "lufs": -12.2
+      },
+      {
+        "t": 25.5,
+        "lufs": -12.6
+      },
+      {
+        "t": 26.5,
+        "lufs": -13.7
+      },
+      {
+        "t": 27.5,
+        "lufs": -15.3
+      },
+      {
+        "t": 28.5,
+        "lufs": -16.6
+      },
+      {
+        "t": 29.5,
+        "lufs": -16.7
+      },
+      {
+        "t": 30.5,
+        "lufs": -16.6
+      },
+      {
+        "t": 31.5,
+        "lufs": -16.6
+      },
+      {
+        "t": 32.5,
+        "lufs": -15.3
+      },
+      {
+        "t": 33.5,
+        "lufs": -13.7
+      },
+      {
+        "t": 34.5,
+        "lufs": -12.6
+      },
+      {
+        "t": 35.5,
+        "lufs": -12.2
+      },
+      {
+        "t": 36.5,
+        "lufs": -12.2
+      },
+      {
+        "t": 37.5,
+        "lufs": -12.2
+      },
+      {
+        "t": 38.5,
+        "lufs": -13.3
+      }
+    ]
+  },
+  "peaks": {
+    "true_peak_max_dbtp": -1.41,
+    "sample_peak_max_dbfs": -1.42,
+    "clip_events_total": 0,
+    "channels": [
+      {
+        "sample_peak_dbfs": -1.42,
+        "true_peak_dbtp": -1.41,
+        "clip_events": 0,
+        "clip_times_s": [],
+        "dc_offset_dbfs": -112.1
+      },
+      {
+        "sample_peak_dbfs": -1.96,
+        "true_peak_dbtp": -1.93,
+        "clip_events": 0,
+        "clip_times_s": [],
+        "dc_offset_dbfs": -113.9
+      }
+    ]
+  },
+  "dynamics": {
+    "plr_db": 12.8
+  },
+  "stereo": {
+    "correlation": -0.78,
+    "low_end_correlation": -0.777,
+    "low_end_cutoff_hz": 150,
+    "mono_loudness_loss_db": 9.61,
+    "side_to_mid_db": 9.1,
+    "left_right_balance_db": -0.01,
+    "negative_correlation_sections": [
+      {
+        "start_s": 0.0,
+        "end_s": 40.0,
+        "min_correlation": -0.8
+      }
+    ]
+  },
+  "spectrum": {
+    "band_energy_pct": {
+      "sub": 16.8,
+      "low": 19.84,
+      "low_mid": 30.29,
+      "high_mid": 15.8,
+      "high": 17.27
+    },
+    "energy_above_16k_pct": 3.2156
+  },
+  "edges": {
+    "silent_file": false,
+    "head_silence_s": 0.0,
+    "tail_silence_s": 0.008,
+    "final_50ms_rms_dbfs": -49.3,
+    "quietest_passage_rms_dbfs": -22.4
+  },
+  "streaming": {
+    "Spotify": {
+      "target_lufs": -14.0,
+      "gain_db": 0.2
+    },
+    "Apple Music": {
+      "target_lufs": -16.0,
+      "gain_db": -1.8
+    },
+    "YouTube": {
+      "target_lufs": -14.0,
+      "gain_db": 0.2
+    },
+    "Tidal": {
+      "target_lufs": -14.0,
+      "gain_db": 0.2
+    },
+    "Amazon Music": {
+      "target_lufs": -14.0,
+      "gain_db": 0.2
+    }
+  },
+  "profile": {
+    "version": 1,
+    "name": "polarity_mix.wav",
+    "duration_s": 40.0,
+    "loud_seconds": 21.7,
+    "loudness_lufs": -12.69,
+    "punch_db": 11.27,
+    "contrast_lu": 5.61,
+    "width_db": 9.09,
+    "tone_db": {
+      "lows": -8.0,
+      "low_mids": -9.54,
+      "mids": -7.13,
+      "presence": -9.53,
+      "highs": -9.15
+    }
+  },
+  "stage": {
+    "value": "mix",
+    "detected": "mix",
+    "reason": "It isn't limited to master loudness, so it looks like a mix."
+  },
+  "setup": {
+    "daw": "pro_tools",
+    "packages": [
+      "waves_essential"
+    ],
+    "label": "Pro Tools + Waves Essential"
+  },
+  "measures": {
+    "lufs": -14.17,
+    "plr": 12.8,
+    "lra": 5.61,
+    "air_pct": 3.2156,
+    "tone": {
+      "lows": -8.0,
+      "low_mids": -9.54,
+      "mids": -7.13,
+      "presence": -9.53,
+      "highs": -9.15
+    }
+  },
+  "target": null,
+  "reference": null,
+  "flags": [
+    {
+      "id": "negative_correlation",
+      "severity": "critical",
+      "message": "Overall L/R correlation is -0.78; likely a polarity problem.",
+      "value": -0.78,
+      "base_severity": "critical",
+      "fix": {
+        "steps": [
+          {
+            "text": "The whole mix is out of polarity between left and right. Check the master and bus inserts, and the output routing, for a flip on one side.",
+            "tool": null,
+            "action": null
+          },
+          {
+            "text": "Insert Trim as multi-mono on the stereo track and click \u00d8 on one side only.",
+            "tool": "Trim",
+            "action": "flip_one_side"
+          }
+        ],
+        "more": []
+      },
+      "remediation": [
+        "The whole mix is out of polarity between left and right. Check the master and bus inserts, and the output routing, for a flip on one side.",
+        "Insert Trim as multi-mono on the stereo track and click \u00d8 on one side only."
+      ]
+    },
+    {
+      "id": "wide_low_end",
+      "severity": "critical",
+      "message": "Below 150 Hz the correlation is -0.78; bass and kick may thin out in mono.",
+      "value": -0.777,
+      "base_severity": "critical",
+      "fix": {
+        "steps": [
+          {
+            "text": "Insert F6 in M/S mode and cut the Side below 150 Hz with a high-pass band.",
+            "tool": "Waves F6",
+            "action": "mono_low_end"
+          }
+        ],
+        "more": [
+          {
+            "text": "Check the kick and bass tracks for chorus, wideners or stereo patches.",
+            "tool": null,
+            "action": null
+          }
+        ]
+      },
+      "remediation": [
+        "Insert F6 in M/S mode and cut the Side below 150 Hz with a high-pass band."
+      ]
+    },
+    {
+      "id": "mono_loss",
+      "severity": "warning",
+      "message": "The mix loses 9.6 dB when summed to mono.",
+      "value": 9.61,
+      "base_severity": "warning",
+      "fix": {
+        "steps": [
+          {
+            "text": "Sum the master to mono and listen for parts that disappear.",
+            "tool": null,
+            "action": "mono_check"
+          },
+          {
+            "text": "Reduce stereo widening (chorus, doublers, wideners, very short stereo delays) on the tracks that vanish in mono.",
+            "tool": null,
+            "action": "narrow_width"
+          }
+        ],
+        "more": []
+      },
+      "remediation": [
+        "Sum the master to mono and listen for parts that disappear.",
+        "Reduce stereo widening (chorus, doublers, wideners, very short stereo delays) on the tracks that vanish in mono."
+      ]
+    },
+    {
+      "id": "phase_section",
+      "severity": "warning",
+      "message": "Negative correlation from 0:00 to 0:40 (min -0.8).",
+      "start_s": 0.0,
+      "end_s": 40.0,
+      "min_correlation": -0.8,
+      "base_severity": "warning",
+      "fix": {
+        "steps": [
+          {
+            "text": "Solo tracks between 0:00 and 0:40 to find the source. Usual suspects: stereo wideners, a very short delay on one side, a stereo bass patch, or double-miked sources.",
+            "tool": null,
+            "action": null
+          },
+          {
+            "text": "Insert Trim as multi-mono on the stereo track and click \u00d8 on one side only.",
+            "tool": "Trim",
+            "action": "flip_one_side"
+          }
+        ],
+        "more": [
+          {
+            "text": "Watch a correlation meter while you loop 0:00\u20130:40; it should stay above 0.",
+            "tool": null,
+            "action": "correlation_meter"
+          },
+          {
+            "text": "Select the whole clip and run AudioSuite \u203a Other \u203a Invert.",
+            "tool": "Invert AudioSuite",
+            "action": "invert_track"
+          }
+        ]
+      },
+      "remediation": [
+        "Solo tracks between 0:00 and 0:40 to find the source. Usual suspects: stereo wideners, a very short delay on one side, a stereo bass patch, or double-miked sources.",
+        "Insert Trim as multi-mono on the stereo track and click \u00d8 on one side only."
+      ]
+    }
+  ],
+  "score": {
+    "value": 6.5,
+    "label": "Needs work",
+    "areas": [
+      {
+        "id": "peaks",
+        "name": "Peaks & clipping",
+        "lost": 0.0
+      },
+      {
+        "id": "stereo",
+        "name": "Stereo & phase",
+        "lost": 3.5
+      },
+      {
+        "id": "file",
+        "name": "File & edges",
+        "lost": 0.0
+      }
+    ],
+    "if_fixed": 10.0
+  },
+  "style": null
+}

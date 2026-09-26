@@ -521,6 +521,12 @@ def test_eval_checks_pass_oracle_and_fail_null_and_sloppy():
     assert scores["numbers_grounded"] == 0.0 and "3.7 LUFS" in details["numbers_grounded"]
     assert scores["tools_owned"] == 0.0 and "Ozone" in details["tools_owned"]
     assert scores["stage_appropriate"] == 0.0
+    # An invented priority on a clean report counts, even though check() hides it from the user.
+    from evals.graders import no_invented_problems
+    clean = {"findings": []}
+    dropped = [{"type": "priority_dropped", "title": "Invented"}]
+    assert no_invented_problems({"priorities": []}, clean, dropped)[0] == 0.0
+    assert no_invented_problems({"priorities": []}, clean, [])[0] == 1.0
     # On a master, pushing loudness isn't a stage error.
     assert _graded("sloppy", master)[0]["stage_appropriate"] is None
 

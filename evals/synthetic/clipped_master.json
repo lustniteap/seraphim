@@ -1,0 +1,520 @@
+{
+  "schema_version": "1.2",
+  "analyzer_version": "0.1.0",
+  "file": {
+    "name": "clipped_master.wav",
+    "sample_rate_hz": 44100,
+    "channels": 2,
+    "duration_s": 40.0
+  },
+  "loudness": {
+    "integrated_lufs": -3.56,
+    "max_momentary_lufs": -1.58,
+    "max_short_term_lufs": -1.74,
+    "loudness_range_lu": 5.04,
+    "timeline": [
+      {
+        "t": 1.5,
+        "lufs": -7.5
+      },
+      {
+        "t": 2.5,
+        "lufs": -7.2
+      },
+      {
+        "t": 3.5,
+        "lufs": -7.2
+      },
+      {
+        "t": 4.5,
+        "lufs": -7.2
+      },
+      {
+        "t": 5.5,
+        "lufs": -6.2
+      },
+      {
+        "t": 6.5,
+        "lufs": -4.0
+      },
+      {
+        "t": 7.5,
+        "lufs": -2.5
+      },
+      {
+        "t": 8.5,
+        "lufs": -1.8
+      },
+      {
+        "t": 9.5,
+        "lufs": -1.7
+      },
+      {
+        "t": 10.5,
+        "lufs": -1.8
+      },
+      {
+        "t": 11.5,
+        "lufs": -1.8
+      },
+      {
+        "t": 12.5,
+        "lufs": -2.5
+      },
+      {
+        "t": 13.5,
+        "lufs": -3.8
+      },
+      {
+        "t": 14.5,
+        "lufs": -5.6
+      },
+      {
+        "t": 15.5,
+        "lufs": -6.4
+      },
+      {
+        "t": 16.5,
+        "lufs": -6.4
+      },
+      {
+        "t": 17.5,
+        "lufs": -6.4
+      },
+      {
+        "t": 18.5,
+        "lufs": -6.1
+      },
+      {
+        "t": 19.5,
+        "lufs": -4.3
+      },
+      {
+        "t": 20.5,
+        "lufs": -2.9
+      },
+      {
+        "t": 21.5,
+        "lufs": -1.9
+      },
+      {
+        "t": 22.5,
+        "lufs": -1.8
+      },
+      {
+        "t": 23.5,
+        "lufs": -1.8
+      },
+      {
+        "t": 24.5,
+        "lufs": -1.8
+      },
+      {
+        "t": 25.5,
+        "lufs": -2.1
+      },
+      {
+        "t": 26.5,
+        "lufs": -3.1
+      },
+      {
+        "t": 27.5,
+        "lufs": -4.5
+      },
+      {
+        "t": 28.5,
+        "lufs": -5.6
+      },
+      {
+        "t": 29.5,
+        "lufs": -5.7
+      },
+      {
+        "t": 30.5,
+        "lufs": -5.7
+      },
+      {
+        "t": 31.5,
+        "lufs": -5.6
+      },
+      {
+        "t": 32.5,
+        "lufs": -4.4
+      },
+      {
+        "t": 33.5,
+        "lufs": -3.0
+      },
+      {
+        "t": 34.5,
+        "lufs": -2.0
+      },
+      {
+        "t": 35.5,
+        "lufs": -1.8
+      },
+      {
+        "t": 36.5,
+        "lufs": -1.8
+      },
+      {
+        "t": 37.5,
+        "lufs": -1.8
+      },
+      {
+        "t": 38.5,
+        "lufs": -2.8
+      }
+    ]
+  },
+  "peaks": {
+    "true_peak_max_dbtp": 3.19,
+    "sample_peak_max_dbfs": 0.0,
+    "clip_events_total": 11368,
+    "channels": [
+      {
+        "sample_peak_dbfs": 0.0,
+        "true_peak_dbtp": 3.13,
+        "clip_events": 5743,
+        "clip_times_s": [
+          1.36,
+          2.117,
+          3.68,
+          5.203,
+          6.06,
+          6.263,
+          6.595,
+          6.618,
+          6.632,
+          6.655,
+          6.657,
+          6.658,
+          6.683,
+          6.691,
+          6.706,
+          6.746,
+          6.752,
+          6.758,
+          6.768,
+          6.768
+        ],
+        "dc_offset_dbfs": -100.6
+      },
+      {
+        "sample_peak_dbfs": 0.0,
+        "true_peak_dbtp": 3.19,
+        "clip_events": 5625,
+        "clip_times_s": [
+          1.535,
+          3.389,
+          3.506,
+          6.549,
+          6.58,
+          6.596,
+          6.597,
+          6.618,
+          6.618,
+          6.619,
+          6.655,
+          6.745,
+          6.745,
+          6.745,
+          6.752,
+          6.766,
+          6.768,
+          6.768,
+          6.785,
+          6.785
+        ],
+        "dc_offset_dbfs": -85.7
+      }
+    ]
+  },
+  "dynamics": {
+    "plr_db": 6.8
+  },
+  "stereo": {
+    "correlation": 0.778,
+    "low_end_correlation": 0.783,
+    "low_end_cutoff_hz": 150,
+    "mono_loudness_loss_db": 0.52,
+    "side_to_mid_db": -9.0,
+    "left_right_balance_db": 0.01,
+    "negative_correlation_sections": []
+  },
+  "spectrum": {
+    "band_energy_pct": {
+      "sub": 16.1,
+      "low": 19.65,
+      "low_mid": 30.38,
+      "high_mid": 16.11,
+      "high": 17.76
+    },
+    "energy_above_16k_pct": 3.3302
+  },
+  "edges": {
+    "silent_file": false,
+    "head_silence_s": 0.0,
+    "tail_silence_s": 0.002,
+    "final_50ms_rms_dbfs": -41.2,
+    "quietest_passage_rms_dbfs": -11.5
+  },
+  "streaming": {
+    "Spotify": {
+      "target_lufs": -14.0,
+      "gain_db": -10.4
+    },
+    "Apple Music": {
+      "target_lufs": -16.0,
+      "gain_db": -12.4
+    },
+    "YouTube": {
+      "target_lufs": -14.0,
+      "gain_db": -10.4
+    },
+    "Tidal": {
+      "target_lufs": -14.0,
+      "gain_db": -10.4
+    },
+    "Amazon Music": {
+      "target_lufs": -14.0,
+      "gain_db": -10.4
+    }
+  },
+  "profile": {
+    "version": 1,
+    "name": "clipped_master.wav",
+    "duration_s": 40.0,
+    "loud_seconds": 22.7,
+    "loudness_lufs": -2.3,
+    "punch_db": 5.49,
+    "contrast_lu": 5.04,
+    "width_db": -9.0,
+    "tone_db": {
+      "lows": -8.06,
+      "low_mids": -9.78,
+      "mids": -7.15,
+      "presence": -9.5,
+      "highs": -9.05
+    }
+  },
+  "stage": {
+    "value": "master",
+    "detected": "master",
+    "reason": "It measures \u22123.6 LUFS, which is master\u2212level loudness."
+  },
+  "setup": {
+    "daw": "pro_tools",
+    "packages": [
+      "waves_essential"
+    ],
+    "label": "Pro Tools + Waves Essential"
+  },
+  "measures": {
+    "lufs": -3.56,
+    "plr": 6.8,
+    "lra": 5.04,
+    "air_pct": 3.3302,
+    "tone": {
+      "lows": -8.06,
+      "low_mids": -9.78,
+      "mids": -7.15,
+      "presence": -9.5,
+      "highs": -9.05
+    }
+  },
+  "target": null,
+  "reference": null,
+  "flags": [
+    {
+      "id": "true_peak_over",
+      "severity": "critical",
+      "message": "True peak is +3.2 dBTP, above full scale; expect distortion on playback and after lossy encoding.",
+      "value": 3.19,
+      "base_severity": "critical",
+      "fix": {
+        "steps": [
+          {
+            "text": "Insert Pro Limiter last on the Master Fader, turn on ISP, and set Ceiling to \u22121.0 dB.",
+            "tool": "Pro Limiter",
+            "action": "limit_true_peak"
+          }
+        ],
+        "more": [
+          {
+            "text": "Set the L2's Out Ceiling to \u22121.5 dB; the L2 limits sample peaks, so leave margin for true peaks.",
+            "tool": "Waves L2",
+            "action": "limit_true_peak"
+          },
+          {
+            "text": "Watch Pro Limiter's loudness meter (Integrated LUFS) while the whole song plays.",
+            "tool": "Pro Limiter",
+            "action": "loudness_meter"
+          }
+        ]
+      },
+      "remediation": [
+        "Insert Pro Limiter last on the Master Fader, turn on ISP, and set Ceiling to \u22121.0 dB."
+      ]
+    },
+    {
+      "id": "clipping",
+      "severity": "warning",
+      "message": "11368 run(s) of clipped samples, first at 0:01, 0:02, 0:03, 0:04, 0:05.",
+      "value": 11368,
+      "times_s": [
+        1.36,
+        1.535,
+        2.117,
+        3.389,
+        3.506,
+        3.68,
+        5.203,
+        6.06,
+        6.263,
+        6.549,
+        6.58,
+        6.595,
+        6.596,
+        6.597,
+        6.618,
+        6.619,
+        6.632,
+        6.655,
+        6.657,
+        6.658,
+        6.683,
+        6.691,
+        6.706,
+        6.745,
+        6.746,
+        6.752,
+        6.758,
+        6.766,
+        6.768,
+        6.785
+      ],
+      "base_severity": "warning",
+      "fix": {
+        "steps": [
+          {
+            "text": "Go to 0:01, 0:02, 0:03 and 4 more. Clipping in a master usually means something after the limiter adds gain, or the limiter's ceiling is at 0 dB.",
+            "tool": null,
+            "action": null
+          },
+          {
+            "text": "Insert Pro Limiter last on the Master Fader, turn on ISP, and set Ceiling to \u22121.0 dB.",
+            "tool": "Pro Limiter",
+            "action": "limit_true_peak"
+          }
+        ],
+        "more": [
+          {
+            "text": "Set the L2's Out Ceiling to \u22121.5 dB; the L2 limits sample peaks, so leave margin for true peaks.",
+            "tool": "Waves L2",
+            "action": "limit_true_peak"
+          },
+          {
+            "text": "Remove or turn down anything after the limiter, such as tape or saturation plugins.",
+            "tool": null,
+            "action": null
+          }
+        ]
+      },
+      "remediation": [
+        "Go to 0:01, 0:02, 0:03 and 4 more. Clipping in a master usually means something after the limiter adds gain, or the limiter's ceiling is at 0 dB.",
+        "Insert Pro Limiter last on the Master Fader, turn on ISP, and set Ceiling to \u22121.0 dB."
+      ]
+    },
+    {
+      "id": "very_loud",
+      "severity": "info",
+      "message": "Integrated loudness is -3.6 LUFS; Spotify would turn it down about 10.4 dB.",
+      "value": -3.56,
+      "base_severity": "info",
+      "fix": {
+        "steps": [
+          {
+            "text": "Lower Pro Limiter's Input by 2\u20134 dB and compare at matched volume.",
+            "tool": "Pro Limiter",
+            "action": "ease_limiting"
+          }
+        ],
+        "more": [
+          {
+            "text": "Raise the L2's Threshold by 2\u20134 dB (less limiting) and compare at matched volume.",
+            "tool": "Waves L2",
+            "action": "ease_limiting"
+          },
+          {
+            "text": "Streaming services turn this down to about \u221214 LUFS anyway, so the extra limiting only costs punch.",
+            "tool": null,
+            "action": null
+          }
+        ]
+      },
+      "remediation": [
+        "Lower Pro Limiter's Input by 2\u20134 dB and compare at matched volume."
+      ]
+    },
+    {
+      "id": "low_plr",
+      "severity": "info",
+      "message": "Peak-to-loudness ratio is 6.8 dB; the master is heavily limited.",
+      "value": 6.8,
+      "base_severity": "info",
+      "fix": {
+        "steps": [
+          {
+            "text": "Lower Pro Limiter's Input by 2\u20134 dB and compare at matched volume.",
+            "tool": "Pro Limiter",
+            "action": "ease_limiting"
+          }
+        ],
+        "more": [
+          {
+            "text": "Raise the L2's Threshold by 2\u20134 dB (less limiting) and compare at matched volume.",
+            "tool": "Waves L2",
+            "action": "ease_limiting"
+          },
+          {
+            "text": "On the drum bus, use Renaissance Compressor with a slower attack (10\u201330 ms) to let the hits through.",
+            "tool": "Renaissance Compressor",
+            "action": "restore_transients"
+          },
+          {
+            "text": "Ease the mix-bus compressor: raise the threshold or slow the attack so transients get through.",
+            "tool": null,
+            "action": "ease_bus_comp"
+          }
+        ]
+      },
+      "remediation": [
+        "Lower Pro Limiter's Input by 2\u20134 dB and compare at matched volume."
+      ]
+    }
+  ],
+  "score": {
+    "value": 6.2,
+    "label": "Needs work",
+    "areas": [
+      {
+        "id": "peaks",
+        "name": "Peaks & clipping",
+        "lost": 3.8
+      },
+      {
+        "id": "stereo",
+        "name": "Stereo & phase",
+        "lost": 0.0
+      },
+      {
+        "id": "file",
+        "name": "File & edges",
+        "lost": 0.0
+      }
+    ],
+    "if_fixed": 10.0
+  },
+  "style": null
+}

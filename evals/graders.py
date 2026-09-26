@@ -110,11 +110,12 @@ def covers(notes, inp, severities):
     return 1 - len(missed) / len(wanted), ("missed " + ", ".join(missed) if missed else "all covered")
 
 
-def no_invented_problems(notes, inp):
-    """With nothing to fix, there are no priorities."""
+def no_invented_problems(notes, inp, issues=()):
+    """With nothing to fix, there are no priorities. Counts what the model wrote, including priorities
+    notes.check() already dropped for pointing at nothing, so an invention the user never sees still counts."""
     if inp["findings"]:
         return None, "the report has findings"
-    n = len(notes["priorities"])
+    n = len(notes["priorities"]) + sum(i["type"] == "priority_dropped" for i in issues)
     return (0.0 if n else 1.0), (f"{n} priorities for a clean report" if n else "no priorities, as expected")
 
 
@@ -185,6 +186,6 @@ def grade(result, inp, setup):
         "numbers_grounded": numbers_grounded(notes, inp),
         "tools_owned": tools_owned(notes, inp, setup),
         "stage_appropriate": stage_appropriate(notes, inp),
-        "no_invented_problems": no_invented_problems(notes, inp),
+        "no_invented_problems": no_invented_problems(notes, inp, issues),
     }
     return {k: v[0] for k, v in checks.items()}, {k: v[1] for k, v in checks.items()}

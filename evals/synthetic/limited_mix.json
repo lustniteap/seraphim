@@ -1,0 +1,426 @@
+{
+  "schema_version": "1.2",
+  "analyzer_version": "0.1.0",
+  "file": {
+    "name": "limited_mix.wav",
+    "sample_rate_hz": 44100,
+    "channels": 2,
+    "duration_s": 40.0
+  },
+  "loudness": {
+    "integrated_lufs": -1.19,
+    "max_momentary_lufs": 0.02,
+    "max_short_term_lufs": -0.09,
+    "loudness_range_lu": 2.67,
+    "timeline": [
+      {
+        "t": 1.5,
+        "lufs": -3.2
+      },
+      {
+        "t": 2.5,
+        "lufs": -3.0
+      },
+      {
+        "t": 3.5,
+        "lufs": -3.0
+      },
+      {
+        "t": 4.5,
+        "lufs": -3.0
+      },
+      {
+        "t": 5.5,
+        "lufs": -2.5
+      },
+      {
+        "t": 6.5,
+        "lufs": -1.4
+      },
+      {
+        "t": 7.5,
+        "lufs": -0.6
+      },
+      {
+        "t": 8.5,
+        "lufs": -0.1
+      },
+      {
+        "t": 9.5,
+        "lufs": -0.1
+      },
+      {
+        "t": 10.5,
+        "lufs": -0.1
+      },
+      {
+        "t": 11.5,
+        "lufs": -0.1
+      },
+      {
+        "t": 12.5,
+        "lufs": -0.5
+      },
+      {
+        "t": 13.5,
+        "lufs": -1.2
+      },
+      {
+        "t": 14.5,
+        "lufs": -2.1
+      },
+      {
+        "t": 15.5,
+        "lufs": -2.5
+      },
+      {
+        "t": 16.5,
+        "lufs": -2.5
+      },
+      {
+        "t": 17.5,
+        "lufs": -2.4
+      },
+      {
+        "t": 18.5,
+        "lufs": -2.3
+      },
+      {
+        "t": 19.5,
+        "lufs": -1.5
+      },
+      {
+        "t": 20.5,
+        "lufs": -0.8
+      },
+      {
+        "t": 21.5,
+        "lufs": -0.2
+      },
+      {
+        "t": 22.5,
+        "lufs": -0.1
+      },
+      {
+        "t": 23.5,
+        "lufs": -0.1
+      },
+      {
+        "t": 24.5,
+        "lufs": -0.1
+      },
+      {
+        "t": 25.5,
+        "lufs": -0.3
+      },
+      {
+        "t": 26.5,
+        "lufs": -0.9
+      },
+      {
+        "t": 27.5,
+        "lufs": -1.5
+      },
+      {
+        "t": 28.5,
+        "lufs": -2.1
+      },
+      {
+        "t": 29.5,
+        "lufs": -2.1
+      },
+      {
+        "t": 30.5,
+        "lufs": -2.1
+      },
+      {
+        "t": 31.5,
+        "lufs": -2.1
+      },
+      {
+        "t": 32.5,
+        "lufs": -1.5
+      },
+      {
+        "t": 33.5,
+        "lufs": -0.8
+      },
+      {
+        "t": 34.5,
+        "lufs": -0.3
+      },
+      {
+        "t": 35.5,
+        "lufs": -0.1
+      },
+      {
+        "t": 36.5,
+        "lufs": -0.1
+      },
+      {
+        "t": 37.5,
+        "lufs": -0.1
+      },
+      {
+        "t": 38.5,
+        "lufs": -1.0
+      }
+    ]
+  },
+  "peaks": {
+    "true_peak_max_dbtp": 2.99,
+    "sample_peak_max_dbfs": -1.5,
+    "clip_events_total": 0,
+    "channels": [
+      {
+        "sample_peak_dbfs": -1.5,
+        "true_peak_dbtp": 2.99,
+        "clip_events": 0,
+        "clip_times_s": [],
+        "dc_offset_dbfs": -68.6
+      },
+      {
+        "sample_peak_dbfs": -1.5,
+        "true_peak_dbtp": 2.66,
+        "clip_events": 0,
+        "clip_times_s": [],
+        "dc_offset_dbfs": -64.6
+      }
+    ]
+  },
+  "dynamics": {
+    "plr_db": 4.2
+  },
+  "stereo": {
+    "correlation": 0.744,
+    "low_end_correlation": 0.768,
+    "low_end_cutoff_hz": 150,
+    "mono_loudness_loss_db": 0.63,
+    "side_to_mid_db": -8.3,
+    "left_right_balance_db": -0.01,
+    "negative_correlation_sections": []
+  },
+  "spectrum": {
+    "band_energy_pct": {
+      "sub": 14.91,
+      "low": 19.2,
+      "low_mid": 29.72,
+      "high_mid": 16.7,
+      "high": 19.48
+    },
+    "energy_above_16k_pct": 3.7258
+  },
+  "edges": {
+    "silent_file": false,
+    "head_silence_s": 0.0,
+    "tail_silence_s": 0.001,
+    "final_50ms_rms_dbfs": -33.2,
+    "quietest_passage_rms_dbfs": -7.1
+  },
+  "streaming": {
+    "Spotify": {
+      "target_lufs": -14.0,
+      "gain_db": -12.8
+    },
+    "Apple Music": {
+      "target_lufs": -16.0,
+      "gain_db": -14.8
+    },
+    "YouTube": {
+      "target_lufs": -14.0,
+      "gain_db": -12.8
+    },
+    "Tidal": {
+      "target_lufs": -14.0,
+      "gain_db": -12.8
+    },
+    "Amazon Music": {
+      "target_lufs": -14.0,
+      "gain_db": -12.8
+    }
+  },
+  "profile": {
+    "version": 1,
+    "name": "limited_mix.wav",
+    "duration_s": 40.0,
+    "loud_seconds": 36.9,
+    "loudness_lufs": -1.11,
+    "punch_db": 4.11,
+    "contrast_lu": 2.67,
+    "width_db": -8.32,
+    "tone_db": {
+      "lows": -8.44,
+      "low_mids": -10.22,
+      "mids": -7.41,
+      "presence": -9.51,
+      "highs": -8.76
+    }
+  },
+  "stage": {
+    "value": "mix",
+    "detected": "master",
+    "reason": "It measures \u22121.2 LUFS, which is master\u2212level loudness."
+  },
+  "setup": {
+    "daw": "pro_tools",
+    "packages": [
+      "waves_essential"
+    ],
+    "label": "Pro Tools + Waves Essential"
+  },
+  "measures": {
+    "lufs": -1.19,
+    "plr": 4.2,
+    "lra": 2.67,
+    "air_pct": 3.7258,
+    "tone": {
+      "lows": -8.44,
+      "low_mids": -10.22,
+      "mids": -7.41,
+      "presence": -9.51,
+      "highs": -8.76
+    }
+  },
+  "target": null,
+  "reference": null,
+  "flags": [
+    {
+      "id": "true_peak_over",
+      "severity": "critical",
+      "message": "True peak is +3.0 dBTP, above full scale; expect distortion on playback and after lossy encoding.",
+      "value": 2.99,
+      "base_severity": "critical",
+      "fix": {
+        "steps": [
+          {
+            "text": "Insert Trim first on the Master Fader and lower Gain until peaks sit around \u22126 to \u22123 dBFS.",
+            "tool": "Trim",
+            "action": "master_headroom"
+          }
+        ],
+        "more": [
+          {
+            "text": "Bypass any limiter or maximizer on the mix bus before you bounce for mastering. Check for: Pro Limiter, Waves L2.",
+            "tool": null,
+            "action": "remove_mix_limiting"
+          }
+        ]
+      },
+      "remediation": [
+        "Insert Trim first on the Master Fader and lower Gain until peaks sit around \u22126 to \u22123 dBFS."
+      ]
+    },
+    {
+      "id": "very_loud",
+      "severity": "warning",
+      "message": "Integrated loudness is -1.2 LUFS; Spotify would turn it down about 12.8 dB.",
+      "value": -1.19,
+      "base_severity": "info",
+      "fix": {
+        "steps": [
+          {
+            "text": "Bypass any limiter or maximizer on the mix bus before you bounce for mastering. Check for: Pro Limiter, Waves L2.",
+            "tool": null,
+            "action": "remove_mix_limiting"
+          },
+          {
+            "text": "Insert Trim first on the Master Fader and lower Gain until peaks sit around \u22126 to \u22123 dBFS.",
+            "tool": "Trim",
+            "action": "master_headroom"
+          }
+        ],
+        "more": []
+      },
+      "remediation": [
+        "Bypass any limiter or maximizer on the mix bus before you bounce for mastering. Check for: Pro Limiter, Waves L2.",
+        "Insert Trim first on the Master Fader and lower Gain until peaks sit around \u22126 to \u22123 dBFS."
+      ]
+    },
+    {
+      "id": "low_plr",
+      "severity": "warning",
+      "message": "Peak-to-loudness ratio is 4.2 dB; the master is heavily limited.",
+      "value": 4.2,
+      "base_severity": "info",
+      "fix": {
+        "steps": [
+          {
+            "text": "Bypass any limiter or maximizer on the mix bus before you bounce for mastering. Check for: Pro Limiter, Waves L2.",
+            "tool": null,
+            "action": "remove_mix_limiting"
+          },
+          {
+            "text": "Ease the mix-bus compressor: raise the threshold or slow the attack so transients get through.",
+            "tool": null,
+            "action": "ease_bus_comp"
+          }
+        ],
+        "more": [
+          {
+            "text": "On the drum bus, use Renaissance Compressor with a slower attack (10\u201330 ms) to let the hits through.",
+            "tool": "Renaissance Compressor",
+            "action": "restore_transients"
+          }
+        ]
+      },
+      "remediation": [
+        "Bypass any limiter or maximizer on the mix bus before you bounce for mastering. Check for: Pro Limiter, Waves L2.",
+        "Ease the mix-bus compressor: raise the threshold or slow the attack so transients get through."
+      ]
+    },
+    {
+      "id": "low_lra",
+      "severity": "info",
+      "message": "Loudness range is 2.7 LU; there is little contrast between sections.",
+      "value": 2.67,
+      "base_severity": "info",
+      "fix": {
+        "steps": [
+          {
+            "text": "Write volume automation (or use Clip Gain) so verses sit 2\u20133 dB below choruses.",
+            "tool": "Volume automation",
+            "action": "volume_automation"
+          }
+        ],
+        "more": [
+          {
+            "text": "Use Clip Gain on the verse clips so they sit 2\u20133 dB below the choruses.",
+            "tool": "Clip Gain",
+            "action": "volume_automation"
+          },
+          {
+            "text": "Ease the mix-bus compressor: raise the threshold or slow the attack so transients get through.",
+            "tool": null,
+            "action": "ease_bus_comp"
+          }
+        ]
+      },
+      "remediation": [
+        "Write volume automation (or use Clip Gain) so verses sit 2\u20133 dB below choruses."
+      ]
+    }
+  ],
+  "score": {
+    "value": 8.3,
+    "label": "Solid",
+    "areas": [
+      {
+        "id": "peaks",
+        "name": "Peaks & clipping",
+        "lost": 1.7
+      },
+      {
+        "id": "stereo",
+        "name": "Stereo & phase",
+        "lost": 0.0
+      },
+      {
+        "id": "file",
+        "name": "File & edges",
+        "lost": 0.0
+      }
+    ],
+    "if_fixed": 10.0
+  },
+  "style": null
+}
