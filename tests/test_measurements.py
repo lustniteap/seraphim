@@ -375,6 +375,84 @@ def test_calibrate_builds_ranges_from_songs():
         calibration_path().unlink()
 
 
+class _FakeClient:
+    """Stands in for anthropic.Anthropic(): records the request and returns canned notes."""
+
+    def __init__(self, notes, stop_reason="end_turn"):
+        from types import SimpleNamespace as NS
+        self.calls = []
+        parsed = NS(model_dump=lambda: notes) if notes is not None else None
+        response = NS(parsed_output=parsed, stop_reason=stop_reason, model="fake-model",
+                      usage=NS(input_tokens=3000, output_tokens=600, cache_read_input_tokens=0))
+
+        def parse(**kwargs):
+            self.calls.append(kwargs)
+            return response
+        self.beta = NS(messages=NS(parse=parse))
+
+
+def _clipped_report():
+    import tempfile
+    from scipy.io import wavfile
+    path = os.path.join(tempfile.mkdtemp(), "secret-song-name.wav")
+    wavfile.write(path, FS, (stereo(np.clip(sine(220, 2.0), -1, 1)) * 32767).astype(np.int16))
+    return analyze_file(path, setup={"daw": "logic", "packages": ["fabfilter"]}, stage="master")
+
+
+def test_notes_input_is_trimmed_and_pointable():
+    import json
+    from mixcheck.notes import notes_input
+    report = _clipped_report()
+    inp = notes_input(report)
+    text = json.dumps(inp)
+    assert "secret-song-name" not in text and "timeline" not in text  # no file name, no bulk
+    assert inp["stage"] == "master" and inp["setup"] == "Logic Pro + FabFilter (Pro-L 2, Pro-Q, Pro-C 2)"
+    ids = [f["id"] for f in inp["findings"]]
+    assert ids == [f"F{i}" for i in range(1, len(report["flags"]) + 1)]
+    clip = next(f for f in inp["findings"] if f["kind"] == "clipping")
+    assert clip["steps"][0]["id"] == f"{clip['id']}.1" and clip["when"]
+    assert len(text) < 12000  # a few thousand tokens at most
+
+
+def test_notes_request_and_checks():
+    from mixcheck.notes import FALLBACK_BETA, NotesUnavailable, format_notes, notes_input, write_notes
+    report = _clipped_report()
+    inp = notes_input(report)
+    crit = [f["id"] for f in inp["findings"] if f["severity"] == "critical"]
+    clip = next(f for f in inp["findings"] if f["kind"] == "clipping")
+    notes = {
+        "headline": "Clipping is the one thing to fix.", "summary": "It clips.",
+        "priorities": [
+            {"finding_ids": [clip["id"], "F99"], "title": "Stop the clipping", "why": "It crackles.",
+             "step_ids": [clip["steps"][0]["id"], "F99.1"]},
+            {"finding_ids": ["F42"], "title": "Invented", "why": "Not real.", "step_ids": []},
+        ],
+        "listen_for": ["The first chorus on earbuds."], "strengths": [],
+    }
+    client = _FakeClient(notes)
+    result = write_notes(report, client=client, model_id="claude-opus-5")
+
+    call = client.calls[0]
+    assert call["model"] == "claude-opus-5" and call["thinking"] == {"type": "adaptive"}
+    assert call["fallbacks"] == "default" and call["betas"] == [FALLBACK_BETA]
+    assert call["system"][0]["cache_control"] == {"type": "ephemeral"}
+    assert "secret-song-name" not in call["messages"][0]["content"]
+
+    # Ids that don't exist are dropped and recorded; a priority with nothing real left goes.
+    kinds = {(i["type"], i.get("id")) for i in result["issues"]}
+    assert {("unknown_finding", "F99"), ("unknown_step", "F99.1"), ("unknown_finding", "F42")} <= kinds
+    assert [p["title"] for p in result["notes"]["priorities"]] == ["Stop the clipping"]
+    assert result["notes"]["priorities"][0]["finding_ids"] == [clip["id"]]
+    assert {("missed_critical", c) for c in crit if c != clip["id"]} <= kinds
+    assert clip["steps"][0]["text"] in format_notes(result)
+
+    try:
+        write_notes(report, client=_FakeClient(None, stop_reason="refusal"))
+        raise AssertionError("a refusal should not produce notes")
+    except NotesUnavailable:
+        pass
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in globals().items() if n.startswith("test_")]
     for name, fn in tests:

@@ -4,7 +4,7 @@ Automated technical QC for mixes and masters. Point it at a bounce and it measur
 what a mastering engineer checks before signing off, then flags problems with timestamps.
 
 **Phase 1 (this version):** the analysis engine: measurements plus rule-based findings, output as JSON.
-**Phase 2:** an LLM turns the JSON into plain-English notes, written like a mastering engineer.
+**Phase 2:** an LLM turns the JSON into plain-English notes, written like a mastering engineer (started: `--notes`).
 **Phase 3:** web interface (done), a bounce-folder watcher, and later a JUCE plugin (AU/AAX).
 
 ## What it measures
@@ -171,6 +171,29 @@ by dropping them on the Reference tracks panel; the set you're using is remember
 mixcheck my_mix.wav --ref ref1.wav --ref ref2.flac --save-ref-set "Club refs"
 mixcheck my_mix.wav --ref-set "Club refs"
 ```
+
+## Engineer's notes (optional, AI-written)
+
+With `--notes`, Claude turns the report into short notes like a mastering engineer would write: the headline,
+what to fix first and why, which findings share a cause, and what to listen for afterwards.
+
+```bash
+pip install -e ".[ai]"                 # the only part of MixCheck that needs the anthropic package
+export ANTHROPIC_API_KEY=...           # or: ant auth login
+mixcheck my_mix.wav --notes
+```
+
+How it's kept honest (`mixcheck/notes.py`, prompt in `mixcheck/prompts/notes.md`):
+
+- The engine stays the source of truth. Claude gets a trimmed copy of the report: numbers, findings and the
+  fix steps already chosen for your tools, each with an id (F1, F1.1...). No audio and no file name are sent.
+- The notes come back in a fixed structure (Pydantic, via structured outputs) and point at findings and steps
+  by id instead of inventing fixes. Ids that don't exist are dropped and recorded as issues, and a critical
+  finding the notes skip is flagged too.
+- The prompt is versioned (`PROMPT_VERSION`) so changes can be measured against evaluations.
+- Model `claude-opus-5` with adaptive thinking at medium effort (`MIXCHECK_AI_MODEL` to change it), with the
+  API's refusal fallback turned on. `MIXCHECK_AI=off` disables notes everywhere. Without the package or a key,
+  MixCheck prints the normal report and a one-line reason.
 
 ## Fix suggestions for each user's setup
 
