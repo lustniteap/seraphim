@@ -689,6 +689,11 @@ const PLAIN_MIX = {
 };
 function plainFor(id, stage, f) {
   const ref = (f?.references || 1) > 1 ? "your references" : "your reference";
+  if (id === "tone_more_than_target" || id === "tone_less_than_target") {
+    const word = f?.word || (id === "tone_more_than_target" ? "more" : "less");
+    return [`${word[0].toUpperCase()}${word.slice(1)} ${f?.phrase || "in one range"} than your style`,
+            `Compared with typical ${f?.style || "songs in this style"} at matched volume, so this is tone, not level.`];
+  }
   if (id === "ref_tone_more" || id === "ref_tone_less") {
     const word = f?.word || (id === "ref_tone_more" ? "more" : "less");
     return [`${word[0].toUpperCase()}${word.slice(1)} ${f?.phrase || "in one range"} than ${ref}`,
@@ -1265,33 +1270,45 @@ function renderStyle(r) {
     el.className = "style-match style-empty";
     el.innerHTML = `
       <h3>What are you going for?</h3>
-      <p>Loudness, punch and contrast depend on the style. Pick one to see how this ${r.stage.value} compares.</p>
+      <p>Loudness, punch, contrast and tone depend on the style. Pick one to see how this ${r.stage.value} compares.</p>
       <div class="choices">${styleOptions.map((o) => `<button type="button" data-target="${esc(o.id)}">${esc(o.name)}</button>`).join("")}</div>`;
     return;
   }
   el.className = "style-match";
   el.style.setProperty("--match-color", scoreColor(1 + (sm.percent / 100) * 9));
-  const rows = sm.dims.map((d) => {
+  // One row on the style's scale; tone rows show how far the band sits from the middle of its typical range.
+  const row = (d, name, unit, cls = "", words = null) => {
     const lo = d.low - d.tolerance, hi = d.high + d.tolerance, span = hi - lo;
     const pos = (v) => `${Math.min(100, Math.max(0, ((v - lo) / span) * 100))}%`;
     const where = d.status === "in" ? "In range"
-      : `${d.off_by.toFixed(1)} ${d.status === "low" ? "below" : "above"}`;
-    return `<li>
-      <span>${esc(d.name)}</span>
-      <span class="val">${num(d.value)}<small>${esc(d.unit)}</small></span>
-      <span class="range" title="Typical: ${num(d.low, 1)} to ${num(d.high, 1)} ${esc(d.unit)}">
+      : `${d.off_by.toFixed(1)} ${words ? `${unit} ${words[d.status === "high" ? 0 : 1]}` : d.status === "low" ? "below" : "above"}`;
+    const off = d.value - (d.low + d.high) / 2;
+    const val = words ? num(Math.abs(off) < 0.05 ? 0 : off, 1, true) : num(d.value);
+    return `<li class="${cls}">
+      <span>${esc(name)}</span>
+      <span class="val">${val}<small>${esc(unit)}</small></span>
+      <span class="range" title="Typical: ${num(d.low, 1)} to ${num(d.high, 1)} ${esc(unit)}">
         <span class="zone" style="left:${pos(d.low)};width:calc(${pos(d.high)} - ${pos(d.low)})"></span>
         <span class="dot" style="left:${pos(d.value)};background:${scoreColor(1 + d.match * 9)}"></span>
       </span>
-      <span class="where">${where}</span>
+      <span class="where">${esc(where)}</span>
     </li>`;
-  }).join("");
-  const skipped = sm.stage === "mix" ? " Loudness isn't compared for a mix; mastering sets it." : "";
+  };
+  const rows = sm.dims.map((d) => d.id !== "tone" ? row(d, d.name, d.unit) :
+    `<li><span>Tone</span><span class="val"></span><span class="note tone-note">Each band at matched volume</span>
+      <span class="where">${d.status === "in" ? "In range" : "See bands"}</span></li>` +
+    (sm.tone || []).map((b) => row(b, b.name, "dB", "band", b.words)).join("")).join("");
+  const notes = [
+    sm.songs ? `Ranges measured from ${sm.songs} ${sm.name} songs you calibrated with.`
+             : "The shaded zone is typical for this style.",
+    sm.stage === "mix" ? "Loudness isn't compared for a mix; mastering sets it." : "",
+    !sm.songs ? "Tone is compared once you calibrate this style with real releases (mixcheck-calibrate)." : "",
+  ].filter(Boolean).join(" ");
   el.innerHTML = `
     <div><div class="pct">${sm.percent}%</div><p class="pct-label">style match</p></div>
     <div>
       <h3>${esc(sm.name)}</h3>
-      <p class="note">The shaded zone is typical for this style.${skipped}</p>
+      <p class="note">${esc(notes)}</p>
       <ul class="dims">${rows}</ul>
     </div>`;
 }

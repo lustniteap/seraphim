@@ -99,6 +99,22 @@ FIXES = {
             "backing vocals and effects returns.", more=True),
     ],
     "ref_wider": [do("narrow_width"), do("mono_check", more=True)],
+    "tone_more_than_target": {
+        "master": [do("eq_cut_band")],
+        "mix": [
+            say("Solo the parts that fill {band} in the loud sections and turn down or EQ the one doing the most; "
+                "fixing it at the source beats EQ on the whole mix."),
+            do("eq_cut_band", more=True),
+        ],
+    },
+    "tone_less_than_target": {
+        "master": [do("eq_boost_band")],
+        "mix": [
+            say("Find the parts that should carry {band} in the loud sections and bring them up or EQ them there; "
+                "fixing it at the source beats EQ on the whole mix."),
+            do("eq_boost_band", more=True),
+        ],
+    },
     "ref_tone_more": {
         "master": [do("eq_cut_band"), say("Loop the loudest section and switch between your master and the reference, "
                                           "at matched volume, while you set the cut.", more=True)],

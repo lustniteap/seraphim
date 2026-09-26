@@ -105,12 +105,39 @@ Trap / hip-hop, EDM, Pop, Rock / metal, R&B / soul, Acoustic / jazz, Lo-fi, or F
 A −6 LUFS master is right for trap and wrong for jazz, so these never cost technical points. For a mix,
 loudness isn't compared (mastering sets it) and punch is judged against looser ranges. Lo-fi doesn't
 flag a dull top end. Findings like "Louder than your style" come with fix steps for the user's tools.
-The ranges in `mixcheck/style.py` are starting points from common practice; tune them against real
-releases. Tone (bass/treble balance) isn't judged by genre: that comes with reference tracks.
+The built-in ranges in `mixcheck/style.py` are starting points from common practice. Calibrating a
+style with real releases (below) replaces them and adds tone targets.
 
 ```bash
 mixcheck my_master.wav --style trap_hiphop
 ```
+
+### Calibrating styles with real releases
+
+`mixcheck-calibrate` measures released songs in each style and sets that style's ranges from them.
+Put 10–20 songs per style in subfolders named after the styles (`trap`, `hip-hop`, `edm`, `pop`, `rock`,
+`rnb`, `acoustic`, `jazz`, `lofi`, `film`, or the style ids), then:
+
+```bash
+mixcheck-calibrate ~/Music/refs --dry-run    # measure and show the new ranges without saving
+mixcheck-calibrate ~/Music/refs              # save them
+mixcheck-calibrate --style edm=~/Music/club  # add or redo one style
+mixcheck-calibrate --show                    # the ranges in use now, and where they came from
+mixcheck-calibrate --reset                   # back to the built-in ranges
+```
+
+- Songs are measured on your computer the same way a bounce is: loudness, punch (PLR), contrast (LRA),
+  and tone in five bands on the loudest sections at matched volume. Audio is never copied or kept.
+- Each range is the middle of the songs (15th to 85th percentile), widened to a minimum width
+  (2 LU loudness, 2 dB punch, 3 LU contrast, 3 dB per tone band) and rounded outward to 0.5.
+- A style needs at least 5 usable songs (`--min-songs` to change it); songs under 30 s are skipped.
+  Styles you don't calibrate keep their current ranges.
+- The report shows old and new ranges side by side, and names songs that fall outside the new ranges on
+  two or more measures, in case they're in the wrong folder.
+- Calibrated styles are also judged on **tone**: "5.7 dB lighter below 100 Hz than typical for Trap /
+  hip-hop", with an EQ step for your tools. Lo-fi still isn't flagged for a dark top end.
+- Results go to `~/.mixcheck/style_targets.json` (or `$MIXCHECK_HOME`) and apply straight away in the web
+  page and the command line. Measurements are cached, so re-running after adding songs is quick.
 
 ## Reference tracks
 

@@ -58,8 +58,8 @@ ACTIONS = {
     "glue_compression": "Add gentle bus compression (1.5:1 to 2:1, slow attack, auto or medium release) for 1–2 dB of gain reduction.",
     "tame_contrast": "Ride the quietest sections up 1–2 dB with volume automation so the song holds together at one listening level.",
     "loudness_meter": "Before bouncing, play the whole song through a loudness meter and check integrated LUFS and true peak.",
-    "eq_cut_band": "On the master bus, use a broad EQ ({shape}) to lower {band} by about {amount} dB, then compare with the reference at matched volume.",
-    "eq_boost_band": "On the master bus, use a broad EQ ({shape}) to raise {band} by about {amount} dB, then compare with the reference at matched volume.",
+    "eq_cut_band": "On the master bus, use a broad EQ ({shape}) to lower {band} by about {amount} dB, then A/B it at matched volume.",
+    "eq_boost_band": "On the master bus, use a broad EQ ({shape}) to raise {band} by about {amount} dB, then A/B it at matched volume.",
     "widen_image": "Widen the loud sections a little with a stereo imager on the pads, guitars and backing vocals (or gently on the master), keeping everything below about 150 Hz mono.",
 }
 
@@ -280,8 +280,8 @@ TOOLS = {
         "widen_image": (3, "In Ozone Imager, go multiband and raise Width on the upper bands only; keep the lowest band at 0 or below."),
     }},
     "ozone_eq": {"name": "Ozone EQ", "in": ["izotope_ozone"], "can": {
-        "eq_cut_band": (3, "In Ozone's Equalizer, add a {shape} over {band} and cut about {amount} dB; use Gain Match to compare with the reference."),
-        "eq_boost_band": (3, "In Ozone's Equalizer, add a {shape} over {band} and boost about {amount} dB; use Gain Match to compare with the reference."),
+        "eq_cut_band": (3, "In Ozone's Equalizer, add a {shape} over {band} and cut about {amount} dB; use Gain Match to A/B it at matched volume."),
+        "eq_boost_band": (3, "In Ozone's Equalizer, add a {shape} over {band} and boost about {amount} dB; use Gain Match to A/B it at matched volume."),
     }},
     "insight": {"name": "Insight 2", "in": ["izotope_insight"], "can": {
         "loudness_meter": (3, "Put Insight 2 on the master and read Integrated loudness and True Peak over the whole song."),
