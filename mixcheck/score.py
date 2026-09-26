@@ -2,12 +2,14 @@
 
 It counts only errors that are wrong in any genre: peaks and clipping, phase and
 mono problems, and file/edge problems. Loudness, punch, contrast and top end are
-style choices, rated separately against the user's target in style.py.
+style choices, rated separately against the user's target in style.py, and
+comparisons with reference tracks (reference.py) are rated there too.
 
 Start at 10 and subtract points per finding, scaled by how bad the measurement is.
 Each area has a cap so one kind of problem can't sink the whole score. The stage
 matters: a peak just under 0 dB costs points on a master but not on a mix.
 """
+from .reference import REFERENCE_IDS
 from .style import STYLE_IDS
 
 AREAS = {
@@ -61,8 +63,8 @@ def score_flags(flags, stage):
     lost = {a: 0.0 for a in AREAS}
     kept = {a: 0.0 for a in AREAS}  # what's left after fixing everything but notes
     for f in flags:
-        if f["id"] in STYLE_IDS:
-            continue  # style is rated against the target, not here
+        if f["id"] in STYLE_IDS or f["id"] in REFERENCE_IDS:
+            continue  # style is rated against the target or the references, not here
         area, pts = _points(f, stage)
         pts = max(0.0, pts)
         lost[area] += pts

@@ -13,14 +13,17 @@ import time
 import urllib.request
 import webbrowser
 from pathlib import Path
+from typing import Optional
 
 from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.staticfiles import StaticFiles
 
 from .. import __version__
+from .. import refsets
 from ..analyze import THRESHOLDS, analyze_file
 from ..catalog import options as setup_options
+from ..reference import MAX_REFERENCES, apply_reference, profile_file, sanitize_profile
 from ..remediation import STAGES, attach_fixes, describe_setup, normalize_setup
 from ..score import score_flags
 from ..style import apply_style, style_match
@@ -51,19 +54,18 @@ def info():
         "style_options": style_options(),
         "accepted_formats": sorted(ALLOWED_SUFFIXES),
         "thresholds": THRESHOLDS,
+        "max_references": MAX_REFERENCES,
     }
 
 
-@app.post("/api/analyze")
-async def analyze(file: UploadFile = File(...), setup: str = Form("{}"), stage: str = Form("auto"),
-                  target: str = Form("")):
+async def with_upload(file, work):
+    """Stream an upload to a temporary file, run work(path) in a thread, and always delete the file."""
     name = file.filename or "upload"
-    user_setup = parse_setup(setup)
     suffix = Path(name).suffix.lower()
     if suffix not in ALLOWED_SUFFIXES:
-        raise HTTPException(415, f"{name} isn't a supported format. Bounce to WAV, AIFF, FLAC or MP3.")
+        raise HTTPException(415, f"{name} isn't a supported format. Use WAV, AIFF, FLAC or MP3.")
 
-    # Stream the upload to a temporary file so large bounces don't sit in memory.
+    # Stream to disk so large bounces don't sit in memory.
     fd, tmp_path = tempfile.mkstemp(suffix=suffix)
     try:
         size = 0
@@ -77,7 +79,7 @@ async def analyze(file: UploadFile = File(...), setup: str = Form("{}"), stage: 
             raise HTTPException(400, f"{name} is empty.")
 
         try:
-            report = await run_in_threadpool(analyze_file, tmp_path, user_setup, stage, target or None)
+            return await run_in_threadpool(work, tmp_path)
         except (ValueError, RuntimeError) as exc:
             raise HTTPException(422, str(exc))
         except Exception:
@@ -88,37 +90,101 @@ async def analyze(file: UploadFile = File(...), setup: str = Form("{}"), stage: 
         except OSError:
             pass
 
+
+@app.post("/api/analyze")
+async def analyze(file: UploadFile = File(...), setup: str = Form("{}"), stage: str = Form("auto"),
+                  target: str = Form(""), references: str = Form("[]")):
+    name = file.filename or "upload"
+    user_setup = parse_setup(setup)
+    refs = parse_references(parse_json(references, "references", []))
+    report = await with_upload(file, lambda p: analyze_file(p, user_setup, stage, target or None, refs))
     report["file"]["name"] = name  # show the real name, not the temp file's
+    if report.get("profile"):
+        report["profile"]["name"] = name
     return report
+
+
+@app.post("/api/reference")
+async def reference(file: UploadFile = File(...)):
+    """Measure a reference song and return its profile. The audio isn't kept."""
+    name = file.filename or "reference"
+    return await with_upload(file, lambda p: profile_file(p, name))
+
+
+@app.get("/api/reference-sets")
+def reference_sets():
+    return {"sets": refsets.list_sets()}
+
+
+@app.put("/api/reference-sets")
+def save_reference_set(name: str = Body(...), references: list = Body(...)):
+    try:
+        return refsets.save_set(name, references)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(422, str(exc))
+    except OSError:
+        raise HTTPException(500, "Couldn't save the reference set on this computer.")
+
+
+@app.delete("/api/reference-sets/{name}")
+def delete_reference_set(name: str):
+    try:
+        refsets.delete_set(name)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    except KeyError as exc:
+        raise HTTPException(404, exc.args[0])
+    return {"deleted": name}
 
 
 @app.post("/api/fixes")
 def fixes(flags: list = Body(...), setup: dict = Body({}), stage: str = Body("mix"),
-          target: str = Body(""), measures: dict = Body({})):
-    """Rebuild findings, fixes and scores for a new setup, stage or target, without re-analyzing."""
+          target: str = Body(""), measures: dict = Body({}), profile: Optional[dict] = Body(None),
+          references: list = Body([])):
+    """Rebuild findings, fixes and scores for a new setup, stage, target or set of
+    references, without re-analyzing."""
     if stage not in STAGES:
         raise HTTPException(422, f"stage must be one of {', '.join(STAGES)}")
     for f in flags:
         if not isinstance(f, dict) or "id" not in f or "severity" not in f:
             raise HTTPException(422, "Each finding needs an id and a severity.")
     user_setup = normalize_setup(setup)
-    flags = attach_fixes(apply_style(flags, measures, target, stage), user_setup, stage)
+    refs = parse_references(references)
+    mine = parse_references([profile])[0] if profile else None
+    flags, comparison = apply_reference(apply_style(flags, measures, target, stage), mine, refs, stage)
+    flags = attach_fixes(flags, user_setup, stage)
     return {
         "flags": flags,
         "score": score_flags(flags, stage),
         "style": style_match(measures, target, stage),
+        "reference": comparison,
         "target": target or None,
         "setup": {**user_setup, "label": describe_setup(user_setup)},
         "stage": stage,
     }
 
 
-def parse_setup(raw):
+def parse_json(raw, what, default):
     try:
-        value = json.loads(raw or "{}")
+        value = json.loads(raw) if raw else default
     except ValueError:
-        raise HTTPException(422, "setup must be JSON.")
-    return value if isinstance(value, dict) else {}
+        raise HTTPException(422, f"{what} must be JSON.")
+    return value if isinstance(value, type(default)) else default
+
+
+def parse_setup(raw):
+    return parse_json(raw, "setup", {})
+
+
+def parse_references(refs):
+    if not isinstance(refs, list):
+        raise HTTPException(422, "references must be a list.")
+    if len(refs) > MAX_REFERENCES:
+        raise HTTPException(422, f"Use up to {MAX_REFERENCES} reference songs.")
+    try:
+        return [sanitize_profile(r) for r in refs]
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
 
 
 # Mounted last so the /api routes above take priority.

@@ -98,8 +98,9 @@ def _finding_ids():
     import inspect
     import re
     from mixcheck import analyze
+    from mixcheck.reference import REFERENCE_IDS
     from mixcheck.style import STYLE_IDS
-    return set(re.findall(r'flag\("(\w+)"', inspect.getsource(analyze.build_flags))) | STYLE_IDS
+    return set(re.findall(r'flag\("(\w+)"', inspect.getsource(analyze.build_flags))) | STYLE_IDS | REFERENCE_IDS
 
 
 def test_every_finding_has_a_fix():
@@ -193,8 +194,9 @@ def test_every_finding_is_scored():
                "low_lra": 3.0, "negative_correlation": -0.3, "mono_loss": 4.0, "wide_low_end": 0.2,
                "imbalance": 2.0, "dc_offset": -40.0, "long_head": 3.0, "long_tail": 6.0, "abrupt_end": -20.0,
                "no_air": 0.001, "phase_section": None}
+    from mixcheck.reference import REFERENCE_IDS
     from mixcheck.style import STYLE_IDS
-    for fid in _finding_ids() - {"silent"} - STYLE_IDS:
+    for fid in _finding_ids() - {"silent"} - STYLE_IDS - REFERENCE_IDS:
         flag = {"id": fid, "severity": "warning", "value": typical[fid]}
         assert max(_points(flag, st)[1] for st in ("mix", "master")) > 0, f"{fid} is never scored"
 
@@ -217,6 +219,88 @@ def test_style_is_judged_against_the_target():
     flags = [{"id": "clipping", "severity": "warning"}] + style_flags(loud, "acoustic", "master")
     swapped = apply_style(flags, loud, "trap_hiphop", "master")
     assert [f["id"] for f in swapped] == ["clipping", "no_air"]
+
+
+def _song(seconds=30, bass_db=0.0, width=0.3, seed=1):
+    """Noise 'song': a quiet first half, a loud second half, with adjustable lows and width."""
+    rng = np.random.default_rng(seed)
+    n = FS * seconds
+    mid, side = rng.standard_normal(n), width * rng.standard_normal(n)
+    x = 0.1 * np.column_stack([mid + side, mid - side])
+    spec, f = np.fft.rfft(x, axis=0), np.fft.rfftfreq(n, 1 / FS)
+    spec[(f >= 20) & (f < 100)] *= 10 ** (bass_db / 20)
+    x = np.fft.irfft(spec, n=n, axis=0)
+    x[: n // 2] *= 0.3
+    return x
+
+
+def test_reference_profile_is_matched_volume():
+    # Turning a song down changes its loudness and nothing else.
+    from mixcheck.reference import measure_profile
+    a, b = measure_profile(_song(), FS), measure_profile(_song() * 0.5, FS)
+    assert abs(a["loudness_lufs"] - b["loudness_lufs"] - 6.02) < 0.05
+    for key in ("punch_db", "contrast_lu", "width_db"):
+        assert abs(a[key] - b[key]) < 0.05, key
+    assert all(abs(a["tone_db"][k] - b["tone_db"][k]) < 0.05 for k in a["tone_db"])
+
+
+def test_reference_uses_the_loudest_sections():
+    # A long, quiet, bass-only intro shouldn't change the tone of the loud part.
+    from mixcheck.reference import measure_profile
+    loud = _song(seconds=20)[FS * 10:]
+    intro = np.column_stack([sine(60, -40, seconds=30)] * 2)
+    alone, with_intro = measure_profile(loud, FS), measure_profile(np.vstack([intro, loud]), FS)
+    assert abs(with_intro["loud_seconds"] - alone["loud_seconds"]) < 2.0
+    assert all(abs(alone["tone_db"][k] - with_intro["tone_db"][k]) < 0.5 for k in alone["tone_db"])
+
+
+def test_reference_findings_are_relative():
+    from mixcheck.reference import compare, measure_profile, reference_flags
+    from mixcheck.remediation import attach_fixes
+    ref = measure_profile(_song(seed=2), FS, "Ref")
+    same = compare(measure_profile(_song(seed=3), FS), [ref], "master")
+    assert same["percent"] == 100 and not reference_flags(same)
+
+    light = compare(measure_profile(_song(bass_db=-3.5, width=0.15, seed=3) * 0.4, FS), [ref], "master")
+    flags = {f["id"]: f for f in reference_flags(light)}
+    assert set(flags) == {"ref_tone_less", "ref_narrower", "ref_quieter"}
+    assert flags["ref_tone_less"]["band"] == "lows" and -4.0 < flags["ref_tone_less"]["diff"] < -2.8
+    assert "lighter below 100 Hz than your reference" in flags["ref_tone_less"]["message"]
+    assert light["percent"] < 70
+    fix = attach_fixes([flags["ref_tone_less"]], {"daw": "ableton", "packages": ["fabfilter"]}, "master")[0]["fix"]
+    assert "the lows (below 100 Hz)" in fix["steps"][0]["text"] and fix["steps"][0]["tool"] == "FabFilter Pro-Q"
+
+    # A mix isn't compared on loudness, and reference findings never cost technical points.
+    mix = compare(measure_profile(_song(seed=3) * 0.2, FS), [ref], "mix")
+    assert "loudness" in mix["skipped"] and "loudness" not in {d["id"] for d in mix["dims"]}
+    from mixcheck.score import score_flags
+    assert score_flags(reference_flags(light), "master")["value"] == 10.0
+
+
+def test_reference_sets_are_saved_and_reused(tmp_path=None):
+    import tempfile
+    from mixcheck import refsets
+    from mixcheck.reference import measure_profile
+    old = os.environ.get("MIXCHECK_HOME")
+    os.environ["MIXCHECK_HOME"] = str(tmp_path or tempfile.mkdtemp())
+    try:
+        prof = measure_profile(_song(seconds=10), FS, "Ref A")
+        refsets.save_set("  Trap   refs ", [prof])
+        assert [s["name"] for s in refsets.list_sets()] == ["Trap refs"]
+        assert refsets.get_set("Trap refs")["references"][0]["tone_db"] == prof["tone_db"]
+        for bad in ([], [prof] * 4, [{"name": "no numbers"}]):
+            try:
+                refsets.save_set("Bad", bad)
+                raise AssertionError("bad set was saved")
+            except ValueError:
+                pass
+        refsets.delete_set("Trap refs")
+        assert refsets.list_sets() == []
+    finally:
+        if old is None:
+            os.environ.pop("MIXCHECK_HOME", None)
+        else:
+            os.environ["MIXCHECK_HOME"] = old
 
 
 if __name__ == "__main__":

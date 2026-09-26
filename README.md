@@ -45,6 +45,7 @@ A browser tab opens at http://127.0.0.1:8000. Drag a bounce onto the page (or ch
 - a loudness timeline across the whole track, with phase problems and clipping marked where they happen
 - meter readouts for integrated loudness, true peak, loudness range, PLR, correlation and mono loss
 - a verdict and checklist of findings, with fix steps written for your DAW and plugins
+- a comparison with up to three reference songs, if you add them (see below)
 - streaming normalization, stereo details and tonal balance
 
 On first launch it asks which DAW and plugins you use; change it any time from the top of the page.
@@ -52,9 +53,11 @@ It also guesses whether the file is a mix or a master, and you can switch with o
 The server only listens on 127.0.0.1, so it isn't reachable from other machines, and uploads are
 deleted as soon as they're analyzed.
 
-API: `POST /api/analyze` with a multipart `file` field (plus optional `setup` JSON and `stage`) returns
-the JSON report; `POST /api/fixes` with `{flags, setup, stage}` rebuilds fixes without re-analyzing;
-`GET /api/info` returns the version and setup options.
+API: `POST /api/analyze` with a multipart `file` field (plus optional `setup` JSON, `stage`, `target` and
+`references` JSON) returns the JSON report; `POST /api/fixes` with `{flags, setup, stage, target, measures,
+profile, references}` rebuilds findings and fixes without re-analyzing; `POST /api/reference` with a `file`
+returns a reference profile; `GET`/`PUT /api/reference-sets` and `DELETE /api/reference-sets/{name}` list,
+save and delete reference sets; `GET /api/info` returns the version and setup options.
 
 ## Command line
 
@@ -79,9 +82,10 @@ polarity inversion, and the expected 3 dB mono loss of uncorrelated noise.
 ## Design
 
 ```
-audio file ──► analysis engine ──► JSON report (schema v1.0) ──► terminal summary (cli.py)
-                                                            ├──► web UI (web/server.py + static/index.html)
-                                                            └──► AI report (Phase 2), plugin (later)
+audio file ──► analysis engine ──► JSON report (schema v1.2) ──► terminal summary (cli.py)
+                     ▲                                      ├──► web UI (web/server.py + static/index.html)
+reference songs ──► profiles (reference.py)                 └──► AI report (Phase 2), plugin (later)
+                     └─ saved as reference sets (refsets.py)
 ```
 
 The JSON report is the contract between layers. When the engine is ported to C++ for a plugin,
@@ -106,6 +110,39 @@ releases. Tone (bass/treble balance) isn't judged by genre: that comes with refe
 
 ```bash
 mixcheck my_master.wav --style trap_hiphop
+```
+
+## Reference tracks
+
+Drop in 1–3 released songs you want to sound like, and MixCheck compares them with your bounce
+across **loudness, punch, contrast, tone and width**. Findings and fixes then read relative to them:
+"3.3 dB lighter below 100 Hz than your reference", fixed with "In Pro-Q on the master, add a low shelf
+over the lows (below 100 Hz) and raise it about 3.5 dB".
+
+How the comparison stays fair (`mixcheck/reference.py`):
+
+- **Loudest sections.** Each song is measured where its short-term loudness is within 3 LU of its
+  near-loudest level: the chorus or drop, where people actually compare songs. A quiet intro or
+  breakdown doesn't skew the result.
+- **Matched volume.** Tone is each band's level relative to the song's own loudness, so a quieter
+  bounce isn't called "lighter" just for being quieter. Punch (peak over the loud sections), contrast
+  (loudness range) and width (side vs mid) don't depend on level either. Only loudness itself does.
+- **Several references.** Values are compared with the references' average; anywhere within their
+  spread, plus a tolerance, counts as a match. The reference match (%) averages the five dimensions.
+- **Mix or master.** A mix isn't compared on loudness, and it's expected to keep 2–6 dB more punch
+  than the finished masters it's compared with.
+
+Tone uses five bands: lows (below 100 Hz), low mids (100–300 Hz), mids (300 Hz–2 kHz), presence
+(2–6 kHz) and highs (above 6 kHz). Like style, reference findings never cost technical points.
+
+Only a small profile of numbers is kept for each reference, never the audio, so a **reference set** can
+be saved under a name and reused. Sets live in `~/.mixcheck/reference_sets.json` (or `$MIXCHECK_HOME`)
+and are shared between the web page and the command line. On the page, add songs with the button or
+by dropping them on the Reference tracks panel; the set you're using is remembered for the next bounce.
+
+```bash
+mixcheck my_mix.wav --ref ref1.wav --ref ref2.flac --save-ref-set "Club refs"
+mixcheck my_mix.wav --ref-set "Club refs"
 ```
 
 ## Fix suggestions for each user's setup

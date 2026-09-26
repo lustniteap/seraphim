@@ -3,8 +3,10 @@ import argparse
 import json
 import sys
 
+from . import refsets
 from .analyze import analyze_file
 from .catalog import DAWS, PACKAGES
+from .reference import MAX_REFERENCES, profile_file
 from .style import TARGETS
 
 ICONS = {"critical": "[!!]", "warning": "[! ]", "info": "[i ]"}
@@ -27,6 +29,8 @@ def print_summary(r, show_fixes=True):
         for d in sm["dims"]:
             where = "in range" if d["status"] == "in" else f"{d['off_by']:.1f} {'below' if d['status'] == 'low' else 'above'}"
             print(f"    {d['name']:<18}{d['value']:>6.1f} {d['unit']:<7} target {d['low']:g} to {d['high']:g}  ({where})")
+    if r.get("reference"):
+        print_reference(r["reference"])
     print()
     print(f"  Integrated loudness   {fmt(lo['integrated_lufs'], ' LUFS')}")
     print(f"  Loudness range        {fmt(lo['loudness_range_lu'], ' LU')}")
@@ -62,6 +66,49 @@ def print_summary(r, show_fixes=True):
     print("  Timestamps are measured from the start of the bounced file.\n")
 
 
+def print_reference(ref):
+    names = ", ".join(x["name"] for x in ref["references"])
+    print(f"  Reference match       {ref['percent']}% to {names}")
+    for d in ref["dims"]:
+        if d["id"] == "tone":
+            continue
+        where = "in line" if d["status"] == "in" else f"{d['diff']:+.1f} {d['unit']} vs reference"
+        print(f"    {d['name']:<18}{d['value']:>6.1f} {d['unit']:<5} reference {d['ref']:.1f}  ({where})")
+    if ref["tone"]:
+        print("    Tone at matched volume, against the reference:")
+    for b in ref["tone"]:
+        print(f"      {b['name']:<16}{b['diff']:>+6.1f} dB  ({'in line' if b['status'] == 'in' else 'off'})")
+    if "loudness" in ref["skipped"]:
+        print("    (Loudness isn't compared for a mix; mastering sets it.)")
+
+
+def load_references(args, parser):
+    """Profiles from --ref files and/or a saved --ref-set, in that order."""
+    refs = []
+    if args.ref_set:
+        try:
+            refs += refsets.get_set(args.ref_set)["references"]
+        except (KeyError, ValueError) as exc:
+            names = ", ".join(s["name"] for s in refsets.list_sets()) or "none saved yet"
+            parser.error(f"{exc.args[0]} Saved sets: {names}.")
+    for path in args.ref or []:
+        try:
+            refs.append(profile_file(path))
+        except Exception as exc:
+            print(f"mixcheck: reference {path}: {exc}", file=sys.stderr)
+            sys.exit(1)
+    if len(refs) > MAX_REFERENCES:
+        parser.error(f"use up to {MAX_REFERENCES} reference songs (got {len(refs)})")
+    if args.save_ref_set:
+        if not refs:
+            parser.error("--save-ref-set needs --ref files to save")
+        try:
+            refsets.save_set(args.save_ref_set, refs)
+        except (ValueError, OSError) as exc:
+            parser.error(f"couldn't save the reference set: {exc}")
+    return refs
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="mixcheck", description="Technical QC for mixes and masters.")
     parser.add_argument("file", help="Audio file (WAV; AIFF/FLAC/MP3 with soundfile installed)")
@@ -75,6 +122,10 @@ def main(argv=None):
                         help="Is this a mix or a master? (default: guess from loudness)")
     parser.add_argument("--style", default=None, choices=sorted(TARGETS),
                         help="What you're going for, so loudness, punch and contrast are judged against that style")
+    parser.add_argument("--ref", action="append", metavar="FILE",
+                        help=f"A song you want to sound like (repeat for up to {MAX_REFERENCES})")
+    parser.add_argument("--ref-set", metavar="NAME", help="Compare with a saved reference set")
+    parser.add_argument("--save-ref-set", metavar="NAME", help="Save the --ref songs as a reference set for later")
     parser.add_argument("--no-fixes", action="store_true", help="Hide fix suggestions in the summary")
     args = parser.parse_args(argv)
 
@@ -82,9 +133,10 @@ def main(argv=None):
     unknown = [p for p in packages if p not in PACKAGES]
     if unknown:
         parser.error(f"unknown plugin package(s): {', '.join(unknown)}. Choose from: {', '.join(sorted(PACKAGES))}")
+    references = load_references(args, parser)
     try:
         report = analyze_file(args.file, setup={"daw": args.daw, "packages": packages},
-                              stage=args.stage, target=args.style)
+                              stage=args.stage, target=args.style, references=references)
     except Exception as exc:  # show a clean message rather than a traceback
         print(f"mixcheck: {exc}", file=sys.stderr)
         sys.exit(1)
