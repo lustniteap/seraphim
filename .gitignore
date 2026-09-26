@@ -6,7 +6,7 @@ __pycache__/
 *.aif
 *.aiff
 *.flac
-reports/
+/reports/
 .DS_Store
 *.mp3
 evals/runs/notes-fake-*/
