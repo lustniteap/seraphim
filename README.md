@@ -2,7 +2,7 @@
 
 # Seraphim
 
-*Refined by fire, for His glory.*
+*Give your mix wings.*
 
 Automated technical QC for mixes and masters. Point it at a bounce and it measures
 what a mastering engineer checks before signing off, then flags problems with timestamps
