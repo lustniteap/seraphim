@@ -495,6 +495,61 @@ def test_anonymize_removes_titles():
     assert titles == ["secret-song-name.wav", "Somebody - Hit Song.mp3"]
 
 
+def _graded(writer, report, setup=None):
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+    from evals.fakes import FakeClient
+    from evals.graders import grade
+    from mixcheck.notes import write_notes
+    result = write_notes(report, client=FakeClient(writer))
+    return grade(result, result["input"], setup or report["setup"])
+
+
+def test_eval_checks_pass_oracle_and_fail_null_and_sloppy():
+    from evals.scenarios import rejudge
+    master = _clipped_report()
+    mix = rejudge(master, stage="mix")
+
+    for report in (master, mix):
+        scores, details = _graded("oracle", report)
+        assert all(v == 1.0 for v in scores.values() if v is not None), details
+
+    scores, details = _graded("null", master)
+    assert scores["covers_critical"] == 0.0 and scores["ids_valid"] == 1.0
+
+    scores, details = _graded("sloppy", mix)
+    assert scores["ids_valid"] == 0.0 and "F99" in details["ids_valid"]
+    assert scores["numbers_grounded"] == 0.0 and "3.7 LUFS" in details["numbers_grounded"]
+    assert scores["tools_owned"] == 0.0 and "Ozone" in details["tools_owned"]
+    assert scores["stage_appropriate"] == 0.0
+    # On a master, pushing loudness isn't a stage error.
+    assert _graded("sloppy", master)[0]["stage_appropriate"] is None
+
+
+def test_eval_scenarios_rejudge_like_the_page():
+    from evals.scenarios import cases_for, rejudge
+    report = _clipped_report()
+    mix = rejudge(report, stage="mix", setup={"daw": "ableton", "packages": []})
+    assert mix["stage"]["value"] == "mix" and mix["setup"]["label"] == "Ableton Live"
+    # Same finding, re-rated and re-fixed for a mix: gain staging, not a limiter.
+    tp = next(f for f in mix["flags"] if f["id"] == "true_peak_over")
+    assert "Utility" in tp["fix"]["steps"][0]["text"]
+    ids = [c[0] for c in cases_for("song01", report)]
+    assert ids == ["song01__as_recorded", "song01__other_stage", "song01__trap_target"]
+
+
+def test_eval_number_check_is_fair_to_rounding_but_not_to_invention():
+    from evals.graders import numbers_grounded
+    inp = {"measurements": {"integrated_loudness_lufs": -14.23, "true_peak_dbtp": -0.3},
+           "findings": [{"id": "F1", "measured": "Peaks at 0:42 and 1:05.", "steps": [], "other_options": []}]}
+    notes = lambda text: {"headline": text, "summary": "", "priorities": [], "listen_for": [], "strengths": []}
+    assert numbers_grounded(notes("It sits at −14.2 LUFS, about −14 LUFS."), inp)[0] == 1.0
+    assert numbers_grounded(notes("True peak is 0.3 dB under full scale."), inp)[0] == 1.0
+    assert numbers_grounded(notes("It sits at −12.5 LUFS."), inp)[0] == 0.0
+    assert numbers_grounded(notes("−14.2 dB"), inp)[0] == 0.0  # right number, wrong quantity
+    assert numbers_grounded(notes("Check 0:42, then 2:10."), inp)[0] == 0.0
+    assert numbers_grounded(notes("No numbers."), inp)[0] is None
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in globals().items() if n.startswith("test_")]
     for name, fn in tests:

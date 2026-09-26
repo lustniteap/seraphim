@@ -199,10 +199,43 @@ How it's kept honest (`mixcheck/notes.py`, prompt in `mixcheck/prompts/notes.md`
   API's refusal fallback turned on. `MIXCHECK_AI=off` disables notes everywhere. Without the package or a key,
   MixCheck prints the normal report and a one-line reason.
 
-## Evaluation reports
+## Evaluating the notes
 
-`evals/reports/` holds JSON reports from real bounces (numbers only, no audio): the inputs the notes are
-evaluated on. Before committing new ones, strip song titles:
+`evals/` measures how good the engineer's notes are, so prompt changes are decided by numbers rather than by
+reading a couple of outputs.
+
+**Cases.** Every report in `evals/reports/` (real bounces, numbers only) and `evals/synthetic/` (bounces built
+to trigger known problems, from `evals/make_synthetic.py`), each judged three ways (`evals/scenarios.py`): as
+recorded, as the other stage with a different toolset, and against a style target.
+
+**Checks** (`evals/graders.py`, free and exact):
+
+| check | passes when |
+|---|---|
+| `ids_valid` | the notes only point at findings and fix steps that exist |
+| `covers_critical` / `covers_warnings` | every critical / warning finding is in some priority |
+| `numbers_grounded` | every number-with-unit quoted appears in the report with that unit (honest rounding allowed) |
+| `tools_owned` | every plugin or brand named is one the user owns |
+| `stage_appropriate` | a mix isn't told to push its loudness or limiting |
+| `no_invented_problems` | a clean report gets no priorities |
+
+**Judge** (`evals/judge.py`, optional, `--judge`): a different model grades priority order, whether each
+priority explains its impact, grouping of shared causes, specificity, stage fit, faithfulness and concision,
+with a fixed rubric and structured output. `label` and `agreement` check it against your own grades.
+
+```bash
+python evals/notes_eval.py run --fake oracle   # harness self-test: should pass (no key, no cost)
+python evals/notes_eval.py run --fake null     # harness self-test: coverage should fail
+python evals/notes_eval.py run --limit 6       # pilot with Claude (asks before spending)
+python evals/notes_eval.py run --judge         # the full baseline
+python evals/notes_eval.py summary             # scores with 95% intervals, and every failure with its reason
+```
+
+Results land in `evals/runs/notes/<variant>/` (per-case rows, full traces, errors kept apart from scores);
+each prompt change is a new `--variant` (v1, v2...), and `evals/FAILURE_LOG.md` records what failed, why,
+and what fixed it.
+
+**Adding real bounces.** Save reports, then strip song titles before committing:
 
 ```bash
 mixcheck bounce.wav --daw pro_tools --plugins waves_essential --json evals/reports/NAME.json
