@@ -480,6 +480,33 @@ def test_notes_endpoint():
         notes.write_notes = real
 
 
+def test_analyze_streams_progress():
+    try:
+        from fastapi.testclient import TestClient
+    except ImportError:  # the web extra isn't installed
+        return
+    import io
+    import json
+    from scipy.io import wavfile
+    from mixcheck.analyze import PROGRESS_STAGES
+    from mixcheck.web import server
+    buf = io.BytesIO()
+    wavfile.write(buf, FS, (stereo(sine(220, -12, seconds=4)) * 32767).astype(np.int16))
+    client = TestClient(server.app)
+    res = client.post("/api/analyze", data={"progress": "1"},
+                      files={"file": ("my song.wav", buf.getvalue(), "audio/wav")})
+    events = [json.loads(line) for line in res.text.splitlines()]
+    assert [e["stage"] for e in events[:-1]] == list(PROGRESS_STAGES)
+    assert events[-1]["report"]["file"]["name"] == "my song.wav"
+    # A file that isn't audio ends the stream with an error the page can show.
+    bad = client.post("/api/analyze", data={"progress": "1"}, files={"file": ("x.wav", b"not audio", "audio/wav")})
+    error = json.loads(bad.text.splitlines()[-1])["error"]
+    assert "couldn't be read as audio" in error and "/tmp" not in error
+    assert "/tmp" not in client.post("/api/analyze", files={"file": ("x.wav", b"not audio", "audio/wav")}).json()["detail"]
+    # Without progress=1, the plain JSON report as before.
+    assert "flags" in client.post("/api/analyze", files={"file": ("a.wav", buf.getvalue(), "audio/wav")}).json()
+
+
 def test_anonymize_removes_titles():
     import importlib.util
     import json

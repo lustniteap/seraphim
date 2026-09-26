@@ -8,6 +8,12 @@ Automated technical QC for mixes and masters. Point it at a bounce and it measur
 what a mastering engineer checks before signing off, then flags problems with timestamps
 and tells you how to fix them with your own tools.
 
+The look is a futuristic throne room, taken from the descriptions in Revelation 4, Ezekiel 1 and Isaiah 6,
+in red, black and white only: a **sea of glass** (the floor under the light, a dark crystal grid with the
+waveform reflected in it), **smoke filling the temple** (haze drifting behind the glass panels), **wheels
+within wheels** set with points of light and **seven lamps of fire** while a bounce is checked (one lamp per
+stage, lit as the server finishes it), and a halo around the score that closes at 10.
+
 The name comes from the seraphim of Isaiah 6: six-winged "burning ones" around the throne, one of
 whom purifies with a coal from the altar. That's the aim here: take a rough mix and refine it until
 it's worthy. The mark is a seraph's six wings around a halo, drawn in the same red blades as before.
@@ -67,7 +73,9 @@ The server only listens on 127.0.0.1, so it isn't reachable from other machines,
 deleted as soon as they're analyzed.
 
 API: `POST /api/analyze` with a multipart `file` field (plus optional `setup` JSON, `stage`, `target` and
-`references` JSON) returns the JSON report; `POST /api/fixes` with `{flags, setup, stage, target, measures,
+`references` JSON) returns the JSON report; with `progress=1` it streams newline-delimited JSON instead,
+`{"stage": ...}` as each part finishes (loudness, peaks, stereo, tone, edges, style, references), then
+`{"report": ...}` or `{"error": ...}`, which is what lights the page's seven lamps; `POST /api/fixes` with `{flags, setup, stage, target, measures,
 profile, references}` rebuilds findings and fixes without re-analyzing; `POST /api/reference` with a `file`
 returns a reference profile; `GET`/`PUT /api/reference-sets` and `DELETE /api/reference-sets/{name}` list,
 save and delete reference sets; `GET /api/info` returns the version and setup options.

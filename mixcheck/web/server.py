@@ -5,6 +5,7 @@ Run:  mixcheck-web            (then open http://127.0.0.1:8000)
 """
 import json
 import os
+import queue
 import socket
 import sys
 import tempfile
@@ -17,6 +18,7 @@ from typing import Optional
 
 from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from .. import __version__
@@ -60,14 +62,12 @@ def info():
     }
 
 
-async def with_upload(file, work):
-    """Stream an upload to a temporary file, run work(path) in a thread, and always delete the file."""
+async def save_upload(file):
+    """Stream an upload to a temporary file (large bounces never sit in memory). Returns its path."""
     name = file.filename or "upload"
     suffix = Path(name).suffix.lower()
     if suffix not in ALLOWED_SUFFIXES:
         raise HTTPException(415, f"{name} isn't a supported format. Use WAV, AIFF, FLAC or MP3.")
-
-    # Stream to disk so large bounces don't sit in memory.
     fd, tmp_path = tempfile.mkstemp(suffix=suffix)
     try:
         size = 0
@@ -79,31 +79,75 @@ async def with_upload(file, work):
                 out.write(chunk)
         if size == 0:
             raise HTTPException(400, f"{name} is empty.")
+    except BaseException:
+        remove(tmp_path)
+        raise
+    return tmp_path
 
-        try:
-            return await run_in_threadpool(work, tmp_path)
-        except (ValueError, RuntimeError) as exc:
-            raise HTTPException(422, str(exc))
-        except Exception:
-            raise HTTPException(422, f"{name} couldn't be read as audio. Try re-bouncing it as a WAV.")
+
+def remove(path):
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+
+
+def audio_error(exc, name):
+    """What to tell the user when a file couldn't be analyzed."""
+    # Our own errors are written for users. The audio library's are not (they include the temp file's path).
+    if isinstance(exc, (ValueError, RuntimeError)) and type(exc).__module__.split(".")[0] != "soundfile":
+        return str(exc)
+    return f"{name} couldn't be read as audio. Try re-bouncing it as a WAV."
+
+
+async def with_upload(file, work):
+    """Save an upload, run work(path) in a thread, and always delete the file."""
+    tmp_path = await save_upload(file)
+    try:
+        return await run_in_threadpool(work, tmp_path)
+    except Exception as exc:
+        raise HTTPException(422, audio_error(exc, file.filename or "upload"))
     finally:
-        try:
-            os.remove(tmp_path)
-        except OSError:
-            pass
+        remove(tmp_path)
 
 
-@app.post("/api/analyze")
-async def analyze(file: UploadFile = File(...), setup: str = Form("{}"), stage: str = Form("auto"),
-                  target: str = Form(""), references: str = Form("[]")):
-    name = file.filename or "upload"
-    user_setup = parse_setup(setup)
-    refs = parse_references(parse_json(references, "references", []))
-    report = await with_upload(file, lambda p: analyze_file(p, user_setup, stage, target or None, refs))
+def with_real_name(report, name):
     report["file"]["name"] = name  # show the real name, not the temp file's
     if report.get("profile"):
         report["profile"]["name"] = name
     return report
+
+
+@app.post("/api/analyze")
+async def analyze(file: UploadFile = File(...), setup: str = Form("{}"), stage: str = Form("auto"),
+                  target: str = Form(""), references: str = Form("[]"), progress: str = Form("")):
+    """The report as JSON. With progress=1, newline-delimited JSON instead: {"stage": ...} as each
+    part of the analysis finishes (see analyze.PROGRESS_STAGES), then {"report": ...} or {"error": ...}."""
+    name = file.filename or "upload"
+    user_setup = parse_setup(setup)
+    refs = parse_references(parse_json(references, "references", []))
+    run = lambda path, done=None: analyze_file(path, user_setup, stage, target or None, refs, progress=done)
+    if progress != "1":
+        return with_real_name(await with_upload(file, run), name)
+
+    tmp_path = await save_upload(file)
+    events = queue.Queue()
+
+    def work():
+        try:
+            events.put({"report": with_real_name(run(tmp_path, lambda st: events.put({"stage": st})), name)})
+        except Exception as exc:
+            events.put({"error": audio_error(exc, name)})
+        finally:
+            remove(tmp_path)
+            events.put(None)
+
+    threading.Thread(target=work, daemon=True).start()
+
+    def lines():
+        while (event := events.get()) is not None:
+            yield json.dumps(event) + "\n"
+    return StreamingResponse(lines(), media_type="application/x-ndjson")
 
 
 @app.post("/api/reference")
