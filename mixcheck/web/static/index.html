@@ -1431,14 +1431,16 @@ function setStatus({ title, sub, busy = false, error = "" }) {
 
 /* Read the analysis as it streams: {"stage"} lines as each part finishes, then {"report"} or {"error"}. */
 async function readAnalysis(res) {
+  // A server started before the lamps existed ignores progress=1 and sends the plain report.
+  if (!(res.headers.get("content-type") || "").includes("ndjson")) return res.json();
   const reader = res.body.getReader(), decoder = new TextDecoder();
   let buffer = "";
   for (;;) {
     const { value, done } = await reader.read();
     buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
     const lines = buffer.split("\n");
-    buffer = lines.pop();
-    for (const line of lines.filter(Boolean)) {
+    buffer = done ? "" : lines.pop();  // at the end, the last line counts even without a newline
+    for (const line of lines.filter((l) => l.trim())) {
       const event = JSON.parse(line);
       if (event.stage) lightLamps(event.stage);
       if (event.error) throw new Error(event.error);
