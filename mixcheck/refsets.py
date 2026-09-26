@@ -8,15 +8,15 @@ import json
 import os
 import tempfile
 import time
-from pathlib import Path
 
 from .reference import MAX_REFERENCES, sanitize_profile
+from .util import mixcheck_home
 
 MAX_NAME = 60
 
 
 def store_path():
-    return Path(os.environ.get("MIXCHECK_HOME") or Path.home() / ".mixcheck") / "reference_sets.json"
+    return mixcheck_home() / "reference_sets.json"
 
 
 def _load():

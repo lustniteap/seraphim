@@ -20,6 +20,7 @@ import math
 import numpy as np
 
 from .audio_io import load_audio
+from .bands import BAND_IDS, TONE_BANDS
 from .loudness import ABS_GATE, block_mean_squares, k_weight, loudness_range, to_lufs
 from .peaks import true_peak
 from .style import MIX_PLR_SHIFT
@@ -33,16 +34,6 @@ LOUD_PERCENTILE = 95
 LOUD_WITHIN_LU = 3.0
 ST_WINDOW_S, ST_HOP_S = 3.0, 0.1  # the hop EBU Tech 3342 uses for loudness range, so one pass serves both
 
-# id, low Hz, high Hz, short name, how fixes name it, how findings phrase it,
-# words for (more, less), EQ shape to fix it with.
-TONE_BANDS = [
-    ("lows", 20, 100, "Lows", "the lows (below 100 Hz)", "below 100 Hz", ("heavier", "lighter"), "low shelf"),
-    ("low_mids", 100, 300, "Low mids", "the low mids (100–300 Hz)", "at 100–300 Hz", ("heavier", "lighter"), "wide bell"),
-    ("mids", 300, 2000, "Mids", "the mids (300 Hz–2 kHz)", "at 300 Hz–2 kHz", ("fuller", "thinner"), "wide bell"),
-    ("presence", 2000, 6000, "Presence", "the presence range (2–6 kHz)", "at 2–6 kHz", ("more forward", "further back"), "wide bell"),
-    ("highs", 6000, 20000, "Highs", "the highs (above 6 kHz)", "above 6 kHz", ("brighter", "duller"), "high shelf"),
-]
-BAND_IDS = [b[0] for b in TONE_BANDS]
 
 # id -> (name, unit, profile key, how far from the references still counts as a match)
 DIMS = {

@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import numpy as np
 
 TINY = 1e-20
@@ -16,3 +19,8 @@ def fmt_time(seconds):
     """83.4 -> '1:23'"""
     m, s = divmod(int(round(seconds)), 60)
     return f"{m}:{s:02d}"
+
+
+def mixcheck_home():
+    """Where MixCheck keeps its own files (reference sets, calibration): ~/.mixcheck or $MIXCHECK_HOME."""
+    return Path(os.environ.get("MIXCHECK_HOME") or Path.home() / ".mixcheck")
