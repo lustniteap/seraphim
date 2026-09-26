@@ -6,6 +6,7 @@
     python evals/notes_eval.py run --judge              # ...plus the LLM judge
     python evals/notes_eval.py run --variant v1         # after changing the prompt: a new variant
     python evals/notes_eval.py summary                  # scores per variant, failures with reasons
+    python evals/notes_eval.py regrade                  # re-score saved notes after a check changes (free)
     python evals/notes_eval.py label                    # grade some notes yourself...
     python evals/notes_eval.py agreement                # ...and see how often the judge agrees with you
 
@@ -180,12 +181,16 @@ def summarize(flow):
     lines = [f"# Engineer's notes eval: {flow.name}", ""]
     for name, rows in data.items():
         run = json.loads((flow / name / "run.json").read_text()) if (flow / name / "run.json").exists() else {}
-        errors = len((flow / name / "errors.jsonl").read_text().splitlines()) if (flow / name / "errors.jsonl").exists() else 0
+        # An error only counts while that (case, rep) has no result: a later successful run supersedes it.
+        done = {(r["prompt_id"], r["rep"]) for r in rows}
+        err_path = flow / name / "errors.jsonl"
+        err_rows = [json.loads(line) for line in err_path.read_text().splitlines()] if err_path.exists() else []
+        errors = len({(e["prompt_id"], e["rep"]) for e in err_rows} - done)
         ok = [r for r in rows if r["status"] == "ok"]
         spend = sum(r.get("cost_usd", 0) + r.get("judge_cost_usd", 0) for r in rows)
         change = (flow / name / "change.md")
         lines.append(f"**{name}**: {run.get('model', '?')}, prompt {run.get('prompt_version', '?')}, "
-                     f"{len(ok)} ok / {len(rows) - len(ok)} truncated / {errors} errors, ${spend:.2f}"
+                     f"{len(ok)} ok / {len(rows) - len(ok)} truncated / {errors} unresolved errors, ${spend:.2f}"
                      + (f"; median {median(r['latency_s'] for r in ok):.1f} s, {median(r['words'] for r in ok):.0f} words" if ok else "")
                      + (f". {change.read_text().strip().splitlines()[0]}" if change.exists() else ""))
     lines += ["", "| metric | " + " | ".join(data) + " |", "|---|" + "---|" * len(data)]
@@ -217,6 +222,35 @@ def summarize(flow):
 
 def cmd_summary(args):
     summarize(RUNS / (f"notes-fake-{args.fake}" if args.fake else "notes"))
+
+
+def cmd_regrade(args):
+    """Re-score saved notes with the current checks, without calling Claude (free). Use after a check changes:
+    stored grades are from the checks as they were when the notes were written."""
+    flow = RUNS / (f"notes-fake-{args.fake}" if args.fake else "notes")
+    setups = {c["id"]: c["report"]["setup"] for c in load_cases()}
+    for vdir in sorted(d for d in flow.iterdir() if d.is_dir() and (d / "results.jsonl").exists()):
+        rows, changed = load_rows(vdir), 0
+        for r in rows:
+            trace_path = vdir / "traces" / f"{r['prompt_id']}_rep{r['rep']}.json"
+            if not trace_path.exists() or r["prompt_id"] not in setups:
+                continue
+            trace = json.loads(trace_path.read_text())
+            grade, details = graders.grade({"notes": trace["notes"], "issues": trace["issues"]},
+                                           trace["input"], setups[r["prompt_id"]])
+            new = {**{k: v for k, v in r["grade"].items() if k.startswith("judge_")},
+                   **{k: v for k, v in grade.items() if v is not None}}
+            if new != r["grade"]:
+                changed += 1
+                print(f"  {vdir.name} {r['prompt_id']}: " + ", ".join(
+                    f"{k} {r['grade'].get(k)} -> {new.get(k)}" for k in sorted(set(new) | set(r["grade"]))
+                    if new.get(k) != r["grade"].get(k)))
+            r["grade"], r["details"] = new, details
+            trace["checks"] = details
+            trace_path.write_text(json.dumps(trace, indent=1, ensure_ascii=False))
+        (vdir / "results.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows))
+        print(f"{vdir.name}: {changed} of {len(rows)} rows changed")
+    summarize(flow)
 
 
 # ---------------------------------------------------------------- human labels
@@ -285,13 +319,16 @@ def main():
     r.add_argument("--yes", action="store_true", help="don't ask before spending")
     s = sub.add_parser("summary", help="scores per variant")
     s.add_argument("--fake", choices=["oracle", "null", "sloppy"])
+    rg = sub.add_parser("regrade", help="re-score saved notes with the current checks (free)")
+    rg.add_argument("--fake", choices=["oracle", "null", "sloppy"])
     lab = sub.add_parser("label", help="grade notes yourself")
     lab.add_argument("--variant", default="baseline")
     lab.add_argument("-n", type=int, default=15, help="how many cases this session")
     a = sub.add_parser("agreement", help="how often the judge agrees with your labels")
     a.add_argument("--variant", default="baseline")
     args = p.parse_args()
-    {"run": cmd_run, "summary": cmd_summary, "label": cmd_label, "agreement": cmd_agreement}[args.cmd](args)
+    {"run": cmd_run, "summary": cmd_summary, "regrade": cmd_regrade, "label": cmd_label,
+     "agreement": cmd_agreement}[args.cmd](args)
 
 
 if __name__ == "__main__":

@@ -23,6 +23,13 @@ found by running stand-in writers (`--fake oracle|null|sloppy`) through the whol
    (±0.005 for two decimals, ±0.5 for whole numbers, so honest rounding still passes). Numbers are also matched
    by unit, so "14 LUFS" can't be justified by an unrelated "14 dB".
 
+3. **"808s" was read as 808 seconds.** Found in the first real pilot (`song01__trap_target`, notes-v1): the only
+   failure was `numbers_grounded` on notes that said to let "the 808s" carry the low end, the drum machine, not a
+   duration. The number pattern accepted a bare "s" straight after a number as seconds. Fix: a bare "s" only
+   counts after a space ("30 s"). Pilot: numbers_grounded 83% → 100% on the same saved notes (`regrade`, no new
+   calls); the oracle and sloppy stand-ins score as before. Lesson: read every failure before trusting a score;
+   the model's first "mistake" was the grader's.
+
 ## Entry template
 
 ### N. Short name of the failure

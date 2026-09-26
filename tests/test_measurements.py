@@ -581,6 +581,9 @@ def test_eval_number_check_is_fair_to_rounding_but_not_to_invention():
     assert numbers_grounded(notes("−14.2 dB"), inp)[0] == 0.0  # right number, wrong quantity
     assert numbers_grounded(notes("Check 0:42, then 2:10."), inp)[0] == 0.0
     assert numbers_grounded(notes("No numbers."), inp)[0] is None
+    # Found in the first real pilot: "808s" (the drum machine) was read as 808 seconds.
+    assert numbers_grounded(notes("Let the 808s carry the low end."), inp)[0] is None
+    assert numbers_grounded(notes("Trim the last 30 s."), inp)[0] == 0.0
 
 
 if __name__ == "__main__":
