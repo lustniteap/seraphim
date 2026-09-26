@@ -94,15 +94,129 @@ def test_full_report_on_file(tmp_path=None):
     assert "clipping" in ids and "abrupt_end" in ids
 
 
-def test_every_finding_has_a_fix():
+def _finding_ids():
     import inspect
     import re
     from mixcheck import analyze
-    from mixcheck.remediation import PROFILES
-    ids = set(re.findall(r'flag\("(\w+)"', inspect.getsource(analyze.build_flags)))
-    for name, profile in PROFILES.items():
-        missing = ids - set(profile)
-        assert not missing, f"{name} has no remediation for {missing}"
+    from mixcheck.style import STYLE_IDS
+    return set(re.findall(r'flag\("(\w+)"', inspect.getsource(analyze.build_flags))) | STYLE_IDS
+
+
+def test_every_finding_has_a_fix():
+    from mixcheck.remediation import FIXES, STAGES, steps_for
+    ids = _finding_ids()
+    assert not ids - set(FIXES), f"no fix for {ids - set(FIXES)}"
+    for fid in ids:
+        for stage in STAGES:
+            assert any(not s["more"] for s in steps_for(fid, stage)), f"{fid} has no main step for a {stage}"
+
+
+def test_catalog_is_consistent():
+    from mixcheck.catalog import ACTIONS, DAWS, PACKAGES, TOOLS
+    from mixcheck.remediation import FIXES, STAGES, steps_for
+    for tid, tool in TOOLS.items():
+        assert set(tool["in"]) <= set(DAWS) | set(PACKAGES), f"{tid} is in an unknown package"
+        assert set(tool["can"]) <= set(ACTIONS), f"{tid} can do an unknown action"
+    for fid in FIXES:
+        for stage in STAGES:
+            for step in steps_for(fid, stage):
+                assert "say" in step or step["do"] in ACTIONS, f"{fid} uses unknown action {step.get('do')}"
+
+
+def test_every_fix_renders_for_every_setup():
+    # Formatting every step with every tool catches typos in {placeholders}.
+    from mixcheck.catalog import DAWS, PACKAGES
+    from mixcheck.remediation import STAGES, attach_fixes
+    everything = list(PACKAGES)
+    for daw in DAWS:
+        for packages in ([], everything):
+            for stage in STAGES:
+                flags = [{"id": fid, "severity": "warning", "message": "", "value": -0.5,
+                          "times_s": [1.0, 1.2, 14.0, 20.0, 31.0], "start_s": 6.0, "end_s": 8.0}
+                         for fid in _finding_ids()]
+                for f in attach_fixes(flags, {"daw": daw, "packages": packages}, stage):
+                    assert f["fix"]["steps"], f"{f['id']} has no steps for {daw}/{stage}"
+                    texts = [s["text"] for s in f["fix"]["steps"] + f["fix"]["more"]]
+                    assert not any("{" in t or "}" in t for t in texts), f"unfilled placeholder in {f['id']}"
+
+
+def test_best_owned_tool_wins():
+    from mixcheck.remediation import attach_fixes
+    flag = lambda: [{"id": "true_peak_over", "severity": "critical", "message": "", "value": 1.2}]
+    stock = attach_fixes(flag(), {"daw": "pro_tools", "packages": []}, "master")[0]["fix"]
+    assert stock["steps"][0]["tool"] == "Pro Limiter"
+    pro = attach_fixes(flag(), {"daw": "pro_tools", "packages": ["fabfilter", "waves_essential"]}, "master")[0]["fix"]
+    assert pro["steps"][0]["tool"] == "FabFilter Pro-L 2"
+    assert {"Pro Limiter", "Waves L2"} <= {s["tool"] for s in pro["more"]}
+    generic = attach_fixes(flag(), {"daw": "other", "packages": []}, "master")[0]["fix"]
+    assert generic["steps"][0]["tool"] is None and "true-peak limiter" in generic["steps"][0]["text"]
+
+
+def test_stage_changes_the_fix_and_rating():
+    from mixcheck.remediation import attach_fixes
+    flag = lambda: [{"id": "true_peak_hot", "severity": "warning", "message": "", "value": -0.4}]
+    master = attach_fixes(flag(), {"daw": "logic"}, "master")[0]
+    mix = attach_fixes(flag(), {"daw": "logic"}, "mix")[0]
+    assert master["severity"] == "warning" and mix["severity"] == "info"
+    assert "Adaptive Limiter" in master["fix"]["steps"][0]["text"]
+    assert "Gain" in mix["fix"]["steps"][0]["text"] and "−6" in mix["fix"]["steps"][0]["text"]
+    # Switching back restores the engine's rating.
+    assert attach_fixes([mix], {"daw": "logic"}, "master")[0]["severity"] == "warning"
+
+
+def test_score_rewards_clean_and_scales_with_severity():
+    from mixcheck.score import score_flags
+    assert score_flags([], "master")["value"] == 10.0
+    assert score_flags([{"id": "silent", "severity": "critical"}], "mix")["value"] == 1.0
+    over = lambda tp: score_flags([{"id": "true_peak_over", "severity": "critical", "value": tp}], "master")["value"]
+    assert 10.0 > over(0.2) > over(3.0) >= 1.0
+    # A peak just under 0 dB matters for a master, not for a mix.
+    hot = [{"id": "true_peak_hot", "severity": "warning", "value": -0.4}]
+    assert score_flags(hot, "master")["value"] < score_flags(hot, "mix")["value"] == 10.0
+    # Area caps stop one kind of problem from sinking the score.
+    many = [{"id": "phase_section", "severity": "warning"}] * 20
+    assert score_flags(many, "mix")["value"] == 6.5
+    # Style findings never cost technical points.
+    style = [{"id": "very_loud", "severity": "info", "value": -5.0},
+             {"id": "quieter_than_target", "severity": "warning", "value": -14.0}]
+    assert score_flags(style, "master")["value"] == 10.0
+    # "If fixed" keeps only the notes.
+    s = score_flags([{"id": "clipping", "severity": "warning", "value": 4},
+                     {"id": "dc_offset", "severity": "info", "value": -40.0}], "master")
+    assert s["value"] < s["if_fixed"] == 9.6
+
+
+def test_every_finding_is_scored():
+    from mixcheck.score import _points
+    # Realistic values for each finding; every one must cost points on at least one stage.
+    typical = {"true_peak_over": 0.5, "true_peak_hot": -0.5, "clipping": 3, "very_loud": -7.0, "low_plr": 6.0,
+               "low_lra": 3.0, "negative_correlation": -0.3, "mono_loss": 4.0, "wide_low_end": 0.2,
+               "imbalance": 2.0, "dc_offset": -40.0, "long_head": 3.0, "long_tail": 6.0, "abrupt_end": -20.0,
+               "no_air": 0.001, "phase_section": None}
+    from mixcheck.style import STYLE_IDS
+    for fid in _finding_ids() - {"silent"} - STYLE_IDS:
+        flag = {"id": fid, "severity": "warning", "value": typical[fid]}
+        assert max(_points(flag, st)[1] for st in ("mix", "master")) > 0, f"{fid} is never scored"
+
+
+def test_style_is_judged_against_the_target():
+    from mixcheck.style import apply_style, style_flags, style_match
+    loud = {"lufs": -7.0, "plr": 8.0, "lra": 4.0, "air_pct": 0.001}
+    trap, jazz = style_match(loud, "trap_hiphop", "master"), style_match(loud, "acoustic", "master")
+    assert trap["percent"] == 100 and jazz["percent"] < 50
+    assert {f["id"] for f in style_flags(loud, "acoustic", "master")} >= {"louder_than_target", "more_limited_than_target"}
+    # Lo-fi is dull on purpose; other styles still get the note.
+    assert "no_air" not in {f["id"] for f in style_flags(loud, "lofi", "master")}
+    assert "no_air" in {f["id"] for f in style_flags(loud, "pop", "master")}
+    # A mix isn't judged on loudness.
+    assert "lufs" not in {d["id"] for d in style_match(loud, "acoustic", "mix")["dims"]}
+    # No target: the neutral notes, and no match.
+    assert style_match(loud, None, "master") is None
+    assert "very_loud" in {f["id"] for f in style_flags(loud, None, "master")}
+    # Changing target swaps the style findings and leaves the rest alone.
+    flags = [{"id": "clipping", "severity": "warning"}] + style_flags(loud, "acoustic", "master")
+    swapped = apply_style(flags, loud, "trap_hiphop", "master")
+    assert [f["id"] for f in swapped] == ["clipping", "no_air"]
 
 
 if __name__ == "__main__":

@@ -1,138 +1,208 @@
-"""Turn findings into fixes for a specific studio setup.
+"""Turn findings into short fixes for one user's setup and stage.
 
-Each finding id maps to steps written for Pro Tools + Waves Essential.
-Steps marked with `needs` only appear if you list that plugin in
-EXTRA_PLUGINS (plugins you own that may not be in Waves Essential).
+Each finding id maps to a list of steps, either the same for mixes and masters
+or split by stage. A step is one of:
 
-To support another setup later (e.g. Logic + stock plugins), add a new
-profile to PROFILES with the same finding ids.
+    do("action")    an action from catalog.ACTIONS; rendered with the best tool
+                    the user owns, or the generic wording if they own none
+    say("text")     advice that doesn't depend on tools
+
+Steps marked more=True go under "More options"; the rest are the short list
+the user sees first. The user's other tools for a primary action also go
+under "More options".
+
+Stage matters: clipping in a mix headed for mastering is fixed with gain
+staging, not a limiter. STAGE_SEVERITY re-rates findings that mean something
+different for a mix.
 """
+from .catalog import ACTIONS, DAWS, PACKAGES, owned_tools
+from .util import fmt_time
 
-# Plugins you own beyond Waves Essential. Add names exactly as used below,
-# e.g. {"S1 Stereo Imager", "WLM Plus", "PAZ Analyzer"}.
-EXTRA_PLUGINS = set()
+STAGES = ("mix", "master")
+DEFAULT_SETUP = {"daw": "other", "packages": []}
 
-PT_WAVES = {
-    "true_peak_over": [
-        "On your master chain, set the Waves L2's Out Ceiling to -1.5 dB or lower. The L2 limits sample peaks, "
-        "so leave extra headroom for inter-sample overs (measured: {value:+.1f} dBTP).",
-        "Or finish with Avid Pro Limiter with inter-sample peak (ISP) detection on, ceiling at -1.0 dBTP.",
-        {"needs": "WLM Plus", "text": "Confirm with WLM Plus in true-peak mode before bouncing."},
-    ],
-    "true_peak_hot": [
-        "Set the L2 Out Ceiling to -1.5 dB. You're {over:.1f} dB over the -1.0 dBTP target, and the extra "
-        "margin covers inter-sample peaks the L2 doesn't see.",
-        "Or use Pro Limiter with ISP detection as the last insert, ceiling -1.0 dBTP.",
-    ],
-    "clipping": [
-        "Jump to the timestamps below in Pro Tools and check the master fader and any bus clip indicators.",
-        "If the clips come from the final limiter, lower the L2 Threshold input or pull down a Trim placed "
-        "before it. If they're in the source, use Clip Gain on the offending region.",
-        "Make sure nothing after the L2 (like a tape emulation such as Kramer Master Tape) adds gain.",
-    ],
-    "very_loud": [
-        "Streaming will turn this down, so the extra limiting costs punch without adding loudness. "
-        "Try easing the L2 Threshold back 2-4 dB and compare level-matched.",
-    ],
-    "low_plr": [
-        "Ease the L2 Threshold and let some transients through; check whether the SSL E-Channel "
-        "compressor or any bus compression is also clamping the peaks.",
-        "For drums, a Renaissance Compressor with a slower attack on the drum bus can restore punch before the limiter.",
-    ],
-    "low_lra": [
-        "Contrast between sections is very small. Consider volume automation or Clip Gain so verses sit "
-        "a bit lower than choruses, and lighten master-bus compression.",
-    ],
+# A mix above this integrated loudness is almost certainly already mastered.
+MASTER_LUFS = -13.0
+
+
+def do(action, more=False):
+    return {"do": action, "more": more}
+
+
+def say(text, more=False):
+    return {"say": text, "more": more}
+
+
+FIXES = {
+    "true_peak_over": {
+        "master": [do("limit_true_peak"), do("loudness_meter", more=True)],
+        "mix": [do("master_headroom"), do("remove_mix_limiting", more=True)],
+    },
+    "true_peak_hot": {
+        "master": [do("limit_true_peak"), do("loudness_meter", more=True)],
+        "mix": [do("master_headroom")],
+    },
+    "clipping": {
+        "master": [
+            say("Go to {times}. Clipping in a master usually means something after the limiter adds gain, "
+                "or the limiter's ceiling is at 0 dB."),
+            do("limit_true_peak"),
+            say("Remove or turn down anything after the limiter, such as tape or saturation plugins.", more=True),
+        ],
+        "mix": [
+            say("Go to {times} and watch the clip indicators to find which track or bus clips."),
+            do("clip_gain"),
+            do("master_headroom", more=True),
+        ],
+    },
+    "very_loud": {
+        "master": [
+            do("ease_limiting"),
+            say("Streaming services turn this down to about −14 LUFS anyway, so the extra limiting only costs punch.", more=True),
+        ],
+        "mix": [do("remove_mix_limiting"), do("master_headroom")],
+    },
+    "low_plr": {
+        "master": [do("ease_limiting"), do("restore_transients", more=True), do("ease_bus_comp", more=True)],
+        "mix": [do("remove_mix_limiting"), do("ease_bus_comp"), do("restore_transients", more=True)],
+    },
+    "low_lra": [do("volume_automation"), do("ease_bus_comp", more=True)],
+    # Relative to the style the user is going for (style.py).
+    "louder_than_target": [do("ease_limiting")],
+    "quieter_than_target": [do("push_limiting"), do("loudness_meter", more=True)],
+    "more_limited_than_target": {
+        "master": [do("ease_limiting"), do("restore_transients", more=True)],
+        "mix": [do("remove_mix_limiting"), do("ease_bus_comp")],
+    },
+    "more_dynamic_than_target": {
+        "master": [do("glue_compression"), do("push_limiting")],
+        "mix": [do("glue_compression")],
+    },
+    "less_contrast_than_target": [do("volume_automation"), do("ease_bus_comp", more=True)],
+    "more_contrast_than_target": [do("tame_contrast"), do("glue_compression", more=True)],
     "negative_correlation": [
-        "The whole mix is out of polarity between left and right. Check the master fader and bus inserts "
-        "for a flipped Trim, and check output routing.",
-        "To test, put a Trim plugin on the master as multi-mono, flip polarity (Ø) on one side only, and check "
-        "whether the problem clears.",
+        say("The whole mix is out of polarity between left and right. Check the master and bus inserts, "
+            "and the output routing, for a flip on one side."),
+        do("flip_one_side"),
     ],
     "phase_section": [
-        "Solo tracks in this range to find the source. Common culprits are stereo widening, "
-        "an H-Delay with a very short time on one side, a stereo bass patch, and double-miked sources.",
-        "On a stereo track, insert Trim as multi-mono and flip Ø on one side to test. "
-        "For a track that's inverted throughout, the Invert AudioSuite plugin fixes it permanently.",
-        {"needs": "PAZ Analyzer", "text": "Watch PAZ Analyzer's position/correlation display while you loop this range."},
-        {"needs": "S1 Stereo Imager", "text": "S1 Imager's Rotation and Asymmetry controls can re-center a lopsided stereo source."},
+        say("Solo tracks between {start} and {end} to find the source. Usual suspects: stereo wideners, "
+            "a very short delay on one side, a stereo bass patch, or double-miked sources."),
+        do("flip_one_side"),
+        do("correlation_meter", more=True),
+        do("invert_track", more=True),
     ],
-    "mono_loss": [
-        "Audition in mono on the master. Find the tracks that disappear and back off their widening "
-        "(chorus, doubler, short stereo delays with H-Delay).",
-        {"needs": "S1 Stereo Imager", "text": "Use S1 Imager on the master with Width at 0 as a quick mono check."},
-    ],
+    "mono_loss": [do("mono_check"), do("narrow_width")],
     "wide_low_end": [
-        "Make the bass and kick mono: check for chorus, widening or a stereo patch on those tracks.",
-        "For a stereo synth bass, duplicate it: put a low-pass at ~150 Hz on a mono copy (EQ3 7-Band or "
-        "Renaissance EQ), and a high-pass at the same frequency on the stereo copy.",
-        {"needs": "S1 Shuffler", "text": "S1 Shuffler can narrow just the lows on a stereo source."},
+        do("mono_low_end"),
+        say("Check the kick and bass tracks for chorus, wideners or stereo patches.", more=True),
     ],
     "imbalance": [
-        "Check pans on the loudest elements and any stereo reverb/delay returns that lean one way.",
-        "Verify the master fader's stereo output isn't unbalanced, and look for a mono-inserted plugin on only one side.",
+        do("recenter_image"),
+        say("Check that the master's output isn't unbalanced and that no plugin is inserted on one side only.", more=True),
     ],
-    "dc_offset": [
-        "Run the DC Offset Removal AudioSuite plugin on source tracks with offset (often old samples or "
-        "recordings from a faulty interface).",
-        "Or add a gentle high-pass at 20-25 Hz with Renaissance EQ or EQ3 on the master.",
-    ],
-    "silent": [
-        "Check the Bounce Mix source: the output bus may not match the master fader's path.",
-    ],
-    "long_head": [
-        "Tighten the timeline selection before File > Bounce Mix so it starts closer to the first note "
-        "(about {value:.1f} s of silence now). Leave a few hundred milliseconds if you want a pre-roll.",
-    ],
-    "long_tail": [
-        "Shorten the bounce selection; there's about {value:.1f} s of silence after the last sound.",
-    ],
-    "abrupt_end": [
-        "Extend the timeline selection past the last reverb and delay tails before bouncing, "
-        "then add a short fade-out on the final region, or on a new track, before bouncing again.",
-    ],
+    "dc_offset": [do("remove_dc")],
+    "silent": [say("Check that the bounce or export source is your main output and that no tracks are muted.")],
+    "long_head": [do("trim_silence")],
+    "long_tail": [do("trim_silence")],
+    "abrupt_end": [do("include_tail"), do("fade_out", more=True)],
     "no_air": [
-        "Check the session for MP3/AAC files, such as samples or references imported into the session.",
-        "Look for a low-pass on the master or a bus (EQ3, Renaissance EQ, PuigTec) cutting the top end.",
+        say("Check the session for MP3 or AAC files, such as samples or imported references."),
+        do("find_lowpass"),
     ],
 }
 
-PROFILES = {"protools_waves_essential": PT_WAVES}
-DEFAULT_PROFILE = "protools_waves_essential"
+# How a finding should be rated when the file is a mix rather than a master.
+STAGE_SEVERITY = {
+    "mix": {
+        "true_peak_hot": "info",   # fine for a mix; mastering sets the final ceiling
+        "very_loud": "warning",    # a limited mix leaves mastering nothing to work with
+        "low_plr": "warning",
+    },
+}
+SEVERITY_ORDER = {"critical": 0, "warning": 1, "info": 2}
+
+# Actions about *any* tool of a kind (e.g. "turn off your limiters"): name every
+# owned tool that fits instead of picking one.
+ANY_OWNED = {"remove_mix_limiting": "Check for"}
+
+
+def detect_stage(report):
+    """Guess mix or master from loudness; the user can override it."""
+    lufs = report["loudness"]["integrated_lufs"]
+    if lufs is not None and lufs > MASTER_LUFS:
+        return "master", f"It measures {lufs:.1f} LUFS, which is master-level loudness.".replace("-", "−")
+    return "mix", "It isn't limited to master loudness, so it looks like a mix."
+
+
+def normalize_setup(setup):
+    setup = setup or {}
+    daw = setup.get("daw") if setup.get("daw") in DAWS else DEFAULT_SETUP["daw"]
+    packages = [p for p in setup.get("packages", []) if p in PACKAGES]
+    return {"daw": daw, "packages": packages}
+
+
+def describe_setup(setup):
+    parts = [DAWS[setup["daw"]]] + [PACKAGES[p]["name"] for p in setup["packages"]]
+    return " + ".join(parts)
 
 
 def _context(flag):
-    value = flag.get("value")
-    number = value if isinstance(value, (int, float)) else 0.0
-    return {"value": number, "over": number + 1.0}
+    times = list(dict.fromkeys(fmt_time(t) for t in flag.get("times_s") or []))  # one per second
+    shown = ", ".join(times[:3]) + (f" and {len(times) - 3} more" if len(times) > 3 else "")
+    return {
+        "value": flag.get("value") if isinstance(flag.get("value"), (int, float)) else 0.0,
+        "times": shown or "the marked spots",
+        "start": fmt_time(flag["start_s"]) if "start_s" in flag else "the marked section",
+        "end": fmt_time(flag["end_s"]) if "end_s" in flag else "",
+    }
 
 
-def steps_for(flag, profile=DEFAULT_PROFILE, extras=None):
-    """Fix steps as plain strings, keeping optional ones only for owned plugins."""
-    extras = EXTRA_PLUGINS if extras is None else extras
-    return [s["text"] for s in all_steps_for(flag, profile)
-            if s["needs"] is None or s["needs"] in extras]
+def _ranked(action, tools):
+    """Tools that can do an action, best first."""
+    found = [(t["can"][action][0], tid, t) for tid, t in tools.items() if action in t["can"]]
+    return [(tid, t) for _, tid, t in sorted(found, key=lambda x: -x[0])]
 
 
-def all_steps_for(flag, profile=DEFAULT_PROFILE):
-    """Every step as {"text", "needs"}; needs is None for steps anyone can follow."""
-    ctx, out = _context(flag), []
-    for step in PROFILES[profile].get(flag["id"], []):
-        if isinstance(step, dict):
-            out.append({"text": step["text"].format(**ctx), "needs": step["needs"]})
-        else:
-            out.append({"text": step.format(**ctx), "needs": None})
-    return out
+def steps_for(flag_id, stage):
+    spec = FIXES.get(flag_id, [])
+    return spec[stage] if isinstance(spec, dict) else spec
 
 
-def optional_plugins(profile=DEFAULT_PROFILE):
-    """Names of plugins that unlock extra steps in this profile."""
-    names = {s["needs"] for steps in PROFILES[profile].values() for s in steps if isinstance(s, dict)}
-    return sorted(names)
+def build_fix(flag, setup, stage):
+    """{"steps": [...], "more": [...]}; each step is {"text", "tool", "action"}."""
+    tools, ctx = owned_tools(setup), _context(flag)
+    fix = {"steps": [], "more": []}
+    for step in steps_for(flag["id"], stage):
+        target = fix["more"] if step["more"] else fix["steps"]
+        if "say" in step:
+            target.append({"text": step["say"].format(**ctx), "tool": None, "action": None})
+            continue
+        action = step["do"]
+        ranked = _ranked(action, tools)
+        if not ranked:
+            target.append({"text": ACTIONS[action].format(**ctx), "tool": None, "action": action})
+            continue
+        if action in ANY_OWNED:
+            names = ", ".join(t["name"] for _, t in ranked)
+            target.append({"text": f"{ACTIONS[action]} {ANY_OWNED[action]}: {names}.", "tool": None, "action": action})
+            continue
+        (best_id, best), *others = ranked
+        target.append({"text": best["can"][action][1].format(**ctx), "tool": best["name"], "action": action})
+        # Other tools the user owns for the same job are alternatives, not extra steps.
+        for _, t in others:
+            fix["more"].append({"text": t["can"][action][1].format(**ctx), "tool": t["name"], "action": action})
+    return fix
 
 
-def attach_remediation(flags, profile=DEFAULT_PROFILE, extras=None):
+def attach_fixes(flags, setup=None, stage="mix"):
+    """Rate each finding for the stage and attach fixes for the user's tools."""
+    setup = normalize_setup(setup)
     for f in flags:
-        f["remediation"] = steps_for(f, profile, extras)
-        f["remediation_optional"] = [s for s in all_steps_for(f, profile) if s["needs"]]
+        base = f.setdefault("base_severity", f["severity"])
+        f["severity"] = STAGE_SEVERITY.get(stage, {}).get(f["id"], base)
+        f["fix"] = build_fix(f, setup, stage)
+        f["remediation"] = [s["text"] for s in f["fix"]["steps"]]
+        f.pop("remediation_optional", None)
+    flags.sort(key=lambda f: SEVERITY_ORDER[f["severity"]])
     return flags

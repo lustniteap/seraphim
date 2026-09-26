@@ -14,13 +14,17 @@ import urllib.request
 import webbrowser
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.staticfiles import StaticFiles
 
 from .. import __version__
 from ..analyze import THRESHOLDS, analyze_file
-from ..remediation import DEFAULT_PROFILE, optional_plugins
+from ..catalog import options as setup_options
+from ..remediation import STAGES, attach_fixes, describe_setup, normalize_setup
+from ..score import score_flags
+from ..style import apply_style, style_match
+from ..style import options as style_options
 
 STATIC_DIR = Path(__file__).parent / "static"
 ALLOWED_SUFFIXES = {".wav", ".wave", ".aif", ".aiff", ".flac", ".mp3"}
@@ -43,16 +47,18 @@ def info():
     """What the page needs to set itself up."""
     return {
         "version": __version__,
-        "profile": DEFAULT_PROFILE,
-        "optional_plugins": optional_plugins(),
+        "setup_options": setup_options(),
+        "style_options": style_options(),
         "accepted_formats": sorted(ALLOWED_SUFFIXES),
         "thresholds": THRESHOLDS,
     }
 
 
 @app.post("/api/analyze")
-async def analyze(file: UploadFile = File(...)):
+async def analyze(file: UploadFile = File(...), setup: str = Form("{}"), stage: str = Form("auto"),
+                  target: str = Form("")):
     name = file.filename or "upload"
+    user_setup = parse_setup(setup)
     suffix = Path(name).suffix.lower()
     if suffix not in ALLOWED_SUFFIXES:
         raise HTTPException(415, f"{name} isn't a supported format. Bounce to WAV, AIFF, FLAC or MP3.")
@@ -71,7 +77,7 @@ async def analyze(file: UploadFile = File(...)):
             raise HTTPException(400, f"{name} is empty.")
 
         try:
-            report = await run_in_threadpool(analyze_file, tmp_path)
+            report = await run_in_threadpool(analyze_file, tmp_path, user_setup, stage, target or None)
         except (ValueError, RuntimeError) as exc:
             raise HTTPException(422, str(exc))
         except Exception:
@@ -84,6 +90,35 @@ async def analyze(file: UploadFile = File(...)):
 
     report["file"]["name"] = name  # show the real name, not the temp file's
     return report
+
+
+@app.post("/api/fixes")
+def fixes(flags: list = Body(...), setup: dict = Body({}), stage: str = Body("mix"),
+          target: str = Body(""), measures: dict = Body({})):
+    """Rebuild findings, fixes and scores for a new setup, stage or target, without re-analyzing."""
+    if stage not in STAGES:
+        raise HTTPException(422, f"stage must be one of {', '.join(STAGES)}")
+    for f in flags:
+        if not isinstance(f, dict) or "id" not in f or "severity" not in f:
+            raise HTTPException(422, "Each finding needs an id and a severity.")
+    user_setup = normalize_setup(setup)
+    flags = attach_fixes(apply_style(flags, measures, target, stage), user_setup, stage)
+    return {
+        "flags": flags,
+        "score": score_flags(flags, stage),
+        "style": style_match(measures, target, stage),
+        "target": target or None,
+        "setup": {**user_setup, "label": describe_setup(user_setup)},
+        "stage": stage,
+    }
+
+
+def parse_setup(raw):
+    try:
+        value = json.loads(raw or "{}")
+    except ValueError:
+        raise HTTPException(422, "setup must be JSON.")
+    return value if isinstance(value, dict) else {}
 
 
 # Mounted last so the /api routes above take priority.

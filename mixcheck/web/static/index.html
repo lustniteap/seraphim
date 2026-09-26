@@ -6,7 +6,8 @@
 <title>MixCheck</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..800;1,62..125,400..800&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
   :root {
     color-scheme: dark;
@@ -18,15 +19,17 @@
     --ink-soft: #8C99A3;
     --rule: #232C32;
     --grid: #151B1F;
-    --critical: #F2665E;
-    --critical-bg: rgba(242, 102, 94, 0.10);
+    /* Aurapharm: red, black and white. Red means "look here"; white means "all good". */
+    --brand: #F00418;
+    --critical: #FF3A4F;
+    --critical-bg: rgba(255, 58, 79, 0.11);
     --warning: #F2AA3F;
     --warning-bg: rgba(242, 170, 63, 0.10);
-    --note: #62B6DC;
-    --ok: #4FC28F;
-    --ok-bg: rgba(79, 194, 143, 0.09);
-    --wave: #9ADDF3;
-    --wave-fill: rgba(154, 221, 243, 0.22);
+    --note: #D2468C;
+    --ok: #F4F6F7;
+    --ok-bg: rgba(255, 255, 255, 0.06);
+    --wave: #F00418;
+    --wave-fill: rgba(240, 4, 24, 0.22);
     --font: "Archivo", "Helvetica Neue", Arial, sans-serif;
   }
   * { box-sizing: border-box; }
@@ -52,18 +55,138 @@
   :focus-visible { outline: 2px solid var(--note); outline-offset: 3px; }
 
   /* Header */
-  header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-  header p { margin: 0; color: var(--ink-soft); font-size: 14px; }
-  details.plugins { position: relative; font-size: 14px; }
-  details.plugins summary { color: var(--ink-soft); }
-  details.plugins .menu {
-    position: absolute; right: 0; top: 30px; z-index: 5; width: 270px;
-    background: var(--card); border: 1px solid var(--card-edge); padding: 14px 16px; border-radius: 6px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  header p { margin: 4px 0 0; color: var(--ink-soft); font-size: 14px; }
+
+  /* Brand: the MixCheck mark (aura streaks rising into a check) + wordmark, by AuraPharm */
+  .mark { display: block; height: 100%; width: auto; fill: var(--brand); overflow: visible; }
+  .brand { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .brand [data-mark] { height: 24px; }
+  .wordmark {
+    margin: 0; font-style: italic; font-weight: 800; letter-spacing: -0.01em; line-height: 1;
+    font-variation-settings: "wdth" 100; font-size: 26px; color: var(--ink);
   }
-  .menu p { margin: 0 0 10px; color: var(--ink-soft); }
-  .menu label { display: flex; gap: 8px; align-items: center; padding: 3px 0; cursor: pointer; }
-  .menu input { accent-color: var(--wave); }
+  .by { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; color: var(--ink-soft); }
+  .by img { height: 15px; width: auto; display: block; }
+
+  /* Intro: the mark rises out of the pool, then settles into the header */
+  #intro {
+    position: fixed; inset: 0; z-index: 20; cursor: pointer;
+    display: grid; place-items: center;
+    /* a pocket of still, dark water so the mark reads over the waves */
+    background: radial-gradient(ellipse 60% 42% at 50% 50%, rgba(5, 6, 7, 0.92) 0, rgba(5, 6, 7, 0.7) 45%, transparent 100%);
+    transition: opacity 1s ease, transform 1.2s cubic-bezier(.6, 0, .2, 1);
+  }
+  .intro-lockup { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 0 16px; }
+  .intro-lockup [data-mark] { height: clamp(90px, 16vw, 150px); }
+  .intro-lockup .wordmark { font-size: clamp(44px, 8vw, 84px); }
+  .intro-lockup .by { font-size: 15px; gap: 10px; }
+  .intro-lockup .by img { height: clamp(20px, 3vw, 28px); }
+  .mark polygon { transform-box: fill-box; transform-origin: 50% 100%; }
+  /* Streaks rise 0.4–2.4s, name 2.1–3.2s, AuraPharm 2.8–3.8s, then the prompt waits for the user. */
+  body.intro #intro .mark polygon { animation: rise 0.9s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 110ms + 400ms); }
+  body.intro #intro .wordmark { animation: fade-up 1.1s ease 2.1s both; }
+  body.intro #intro .by { animation: fade-up 1s ease 2.8s both; }
+  .continue { margin: 28px 0 0; font-size: 14px; letter-spacing: 0.06em; color: var(--ink-soft); }
+  body.intro #intro .continue { animation: fade-up 0.8s ease 3.9s both, breathe 2.4s ease-in-out 4.7s infinite; }
+  @keyframes breathe { 50% { opacity: 0.35; } }
+  body.intro-out #intro { pointer-events: none; }
+  @keyframes rise { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+  @keyframes fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  body.intro-out #intro { opacity: 0; transform: translateY(-34vh) scale(0.35); }
+
+  /* The page itself waits for the intro, then fades up */
+  header, .pool .slot { transition: opacity 1s ease 0.2s, transform 1s ease 0.2s; }
+  .pool canvas { transition: opacity 1.2s ease; }
+  body.intro header { opacity: 0; transform: translateY(-8px); }
+  body.intro .pool .slot { opacity: 0; transform: translateY(18px); }
+  body.intro .pool canvas { opacity: 0.3; }
+  .setup-chip {
+    display: inline-flex; align-items: center; gap: 10px; cursor: pointer;
+    background: transparent; color: var(--ink-soft); font-size: 14px;
+    border: 1px solid var(--card-edge); border-radius: 999px; padding: 6px 14px;
+  }
+  .setup-chip b { color: var(--ink); font-weight: 600; }
+  .setup-chip span { color: var(--brand); font-weight: 600; }
+  .setup-chip:hover { border-color: var(--brand); }
+
+  /* Setup dialog */
+  dialog.setup {
+    width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto;
+    background: var(--card); color: var(--ink); border: 1px solid var(--card-edge); border-radius: 12px;
+    padding: 28px 28px 24px; box-shadow: 0 40px 120px rgba(0, 0, 0, 0.8);
+  }
+  dialog.setup::backdrop { background: rgba(0, 0, 0, 0.72); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+  .setup h2 { font-size: 24px; margin: 0; }
+  .setup .lede { color: var(--ink-soft); margin: 6px 0 22px; }
+  .setup fieldset { border: 0; margin: 0 0 22px; padding: 0; }
+  .setup legend { font-weight: 700; margin-bottom: 10px; padding: 0; }
+  .setup legend small { font-weight: 400; color: var(--ink-soft); margin-left: 6px; }
+  .setup .group-name { font-size: 13px; color: var(--ink-soft); margin: 12px 0 6px; }
+  .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+  .choice { position: relative; }
+  .choice input { position: absolute; opacity: 0; pointer-events: none; }
+  .choice span {
+    display: inline-block; cursor: pointer; padding: 9px 14px; border-radius: 8px;
+    border: 1px solid var(--card-edge); background: #0A0D0F; color: var(--ink-soft); font-size: 15px;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .choice span:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .choice input:checked + span { border-color: var(--brand); color: var(--ink); background: rgba(240, 4, 24, 0.14); }
+  .choice input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .setup .actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+  .setup .actions p { margin: 0; font-size: 13px; color: var(--ink-soft); max-width: 36ch; }
+
+  /* Mix / master switch */
+  .stage { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 14px; font-size: 14px; color: var(--ink-soft); }
+  .segmented { display: inline-flex; border: 1px solid var(--card-edge); border-radius: 8px; overflow: hidden; }
+  .segmented button {
+    background: transparent; color: var(--ink-soft); border: 0; padding: 7px 16px; cursor: pointer; font-weight: 600;
+  }
+  .segmented button + button { border-left: 1px solid var(--card-edge); }
+  .segmented button[aria-pressed="true"] { background: var(--brand); color: #FFFFFF; }
+  .stage .why { flex-basis: 100%; font-size: 13px; }
+  .going-for { display: inline-flex; align-items: center; gap: 8px; margin-left: 8px; }
+  .going-for select {
+    background: var(--card); color: var(--ink); border: 1px solid var(--card-edge); border-radius: 8px;
+    padding: 7px 10px; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .going-for select:hover, .going-for select:focus-visible { border-color: var(--brand); }
+
+  /* Style match: how close loudness, punch and contrast are to the chosen style */
+  .style-match {
+    --match-color: var(--ink);
+    display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px 32px; align-items: start;
+    background: var(--card); border: 1px solid var(--card-edge); border-radius: 10px; padding: 20px 26px; margin-bottom: 14px;
+  }
+  .style-match .pct { font-size: 44px; line-height: 1; font-weight: 800; font-style: italic; color: var(--match-color); font-variant-numeric: tabular-nums; }
+  .style-match .pct-label { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); }
+  .style-match h3 { margin: 0 0 2px; font-size: 17px; font-weight: 750; font-variation-settings: "wdth" 115; }
+  .style-match .note { margin: 0 0 12px; font-size: 13px; color: var(--ink-soft); }
+  .dims { list-style: none; margin: 0; padding: 0; }
+  .dims li { display: grid; grid-template-columns: 84px 110px minmax(0, 1fr) 130px; gap: 12px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--rule); font-size: 14px; }
+  .dims li:last-child { border-bottom: 0; }
+  .dims .val { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .dims .val small { color: var(--ink-soft); font-weight: 400; margin-left: 3px; }
+  .range { position: relative; height: 8px; border-radius: 4px; background: var(--grid); }
+  .range .zone { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: rgba(255, 255, 255, 0.22); }
+  .range .dot { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; transform: translate(-50%, -50%); border: 2px solid var(--panel); }
+  .dims .where { font-size: 13px; color: var(--ink-soft); text-align: right; }
+  .style-empty { display: block; }
+  .style-empty p { margin: 0 0 12px; color: var(--ink-soft); }
+  .style-empty .choices { gap: 6px; }
+  .style-empty button {
+    background: #0A0D0F; color: var(--ink-soft); border: 1px solid var(--card-edge); border-radius: 8px;
+    padding: 7px 12px; cursor: pointer; font-size: 14px;
+  }
+  .style-empty button:hover { border-color: var(--brand); color: var(--ink); }
+  @media (max-width: 700px) {
+    .style-match { grid-template-columns: 1fr; }
+    .dims li { grid-template-columns: 1fr auto; }
+    .dims .range { grid-column: 1 / -1; order: 3; }
+    .dims .where { grid-column: 1 / -1; order: 4; text-align: left; }
+  }
+  @media (min-width: 700px) { .stage .why { flex-basis: auto; } }
 
   /* The pool: full-bleed black water of waveforms, with the slot floating on it */
   .pool {
@@ -89,14 +212,14 @@
     display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
     background: var(--recess);
     -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-    border: 1px solid rgba(154, 221, 243, 0.16);
+    border: 1px solid rgba(240, 4, 24, 0.22);
     border-radius: 10px;
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
     padding: 40px 40px;
     transition: border-color 0.2s, box-shadow 0.2s, padding 0.4s;
   }
   .pool.compact .slot { padding: 16px 22px; width: min(1132px, 100%); }
-  .slot.dragging { border-color: var(--wave); box-shadow: 0 0 0 1px var(--wave), 0 0 60px rgba(154, 221, 243, 0.25); }
+  .slot.dragging { border-color: var(--wave); box-shadow: 0 0 0 1px var(--wave), 0 0 60px rgba(240, 4, 24, 0.35); }
   .slot-title {
     font-size: clamp(26px, 4.2vw, 44px); font-weight: 750; line-height: 1.08;
     font-variation-settings: "wdth" 118; margin: 0;
@@ -110,7 +233,7 @@
     display: inline-block; cursor: pointer; border: 0; border-radius: 6px;
     background: var(--ink); color: var(--panel); padding: 12px 22px; font-weight: 650;
   }
-  .button:hover { background: #FFFFFF; }
+  .button:hover { background: var(--brand); color: #FFFFFF; }
   .progress { height: 3px; background: var(--rule); margin-top: 16px; overflow: hidden; border-radius: 2px; width: min(420px, 100%); }
   .progress span { display: block; height: 100%; width: 35%; background: var(--wave); animation: slide 1.1s ease-in-out infinite; }
   @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
@@ -121,6 +244,48 @@
   #report[hidden] { display: none; }
   .fileline { display: flex; gap: 20px; flex-wrap: wrap; color: var(--ink-soft); font-size: 14px; margin-bottom: 12px; }
   .fileline strong { color: var(--ink); font-size: 16px; }
+
+  /* Technical score: red (1) through yellow (5.5) to green (10) */
+  .score {
+    --score-color: var(--ink);
+    display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 300px); gap: 12px 32px; align-items: center;
+    background: var(--card); border: 1px solid var(--card-edge); border-radius: 10px; padding: 22px 26px; margin-bottom: 14px;
+  }
+  .score-num { display: flex; align-items: baseline; gap: 4px; }
+  .score-num .value {
+    font-size: 72px; line-height: 0.9; font-weight: 800; font-style: italic; color: var(--score-color);
+    font-variation-settings: "wdth" 90; font-variant-numeric: tabular-nums;
+  }
+  .score-num .of { font-size: 20px; color: var(--ink-soft); font-weight: 600; }
+  .score-label { margin: 0; font-size: 22px; font-weight: 750; font-variation-settings: "wdth" 118; color: var(--score-color); }
+  .score-kind { margin: 2px 0 12px; font-size: 13px; color: var(--ink-soft); }
+  .score-scale {
+    position: relative; height: 8px; border-radius: 4px;
+    background: linear-gradient(90deg, #F00418 0%, #F5C518 50%, #22C55E 100%);
+  }
+  .score-scale .marker {
+    position: absolute; top: 50%; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--panel); border: 3px solid var(--ink); transform: translate(-50%, -50%);
+    transition: left 0.8s cubic-bezier(.2, .8, .2, 1);
+  }
+  .score-scale .ghost { position: absolute; top: 50%; width: 10px; height: 10px; border-radius: 50%; border: 2px dashed var(--ink); transform: translate(-50%, -50%); opacity: 0.7; }
+  .score-next { margin: 12px 0 0; font-size: 14px; color: var(--ink-soft); }
+  .score-next b { color: var(--ink); }
+  .score-areas { list-style: none; margin: 0; padding: 0; font-size: 14px; }
+  .score-areas li { display: grid; grid-template-columns: 1fr 64px 40px; gap: 10px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--rule); }
+  .score-areas li:last-child { border-bottom: 0; }
+  .score-areas .bar { height: 6px; border-radius: 3px; background: var(--grid); overflow: hidden; }
+  .score-areas .bar span { display: block; height: 100%; background: var(--critical); }
+  .score-areas .pts { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+  .score-areas li.clean .pts { color: var(--ink-soft); opacity: 0.6; }
+  @media (max-width: 900px) {
+    .score { grid-template-columns: auto minmax(0, 1fr); }
+    .score-areas { grid-column: 1 / -1; }
+  }
+  @media (max-width: 520px) {
+    .score { padding: 18px; gap: 10px 20px; }
+    .score-num .value { font-size: 56px; }
+  }
 
   /* Verdict */
   .verdict { border-left: 6px solid var(--ok); background: var(--ok-bg); padding: 20px 24px; border-radius: 0 6px 6px 0; }
@@ -151,7 +316,12 @@
   .fix-title { font-size: 13px; color: var(--ink-soft); margin: 0 0 4px; font-weight: 600; }
   .fixes { margin: 0; padding-left: 20px; max-width: 72ch; }
   .fixes li { margin-bottom: 5px; }
-  .fixes li.optional::marker { color: var(--note); }
+  .fixes li::marker { color: var(--brand); font-weight: 700; }
+  .more { margin-top: 10px; }
+  .more summary { font-size: 13px; color: var(--note); font-weight: 600; }
+  .more ul { margin: 8px 0 0; padding-left: 18px; max-width: 72ch; color: var(--ink-soft); }
+  .more li { margin-bottom: 5px; }
+  .tool { display: inline-block; font-size: 12px; color: var(--ink); border: 1px solid var(--card-edge); border-radius: 4px; padding: 0 6px; margin-right: 6px; }
   .measured { margin: 10px 0 0; font-size: 13px; color: var(--ink-soft); }
   .item.linked:hover .title { text-decoration: underline; text-decoration-color: var(--ink-soft); }
   .item summary:hover .toggle { color: var(--wave); }
@@ -219,6 +389,8 @@
     .item .when { grid-row: auto; grid-column: 1; }
   }
   @media (prefers-reduced-motion: reduce) {
+    header, .pool .slot, .pool canvas, #intro { transition: none; }
+    #intro, #intro * { animation: none !important; }
     .progress span { animation: none; width: 100%; opacity: 0.5; }
     .slot, .pool { transition: none; }
   }
@@ -234,21 +406,46 @@
   .phase { fill: var(--warning); }
 </style>
 </head>
-<body>
+<body class="intro">
+<div id="intro" aria-hidden="true">
+  <div class="intro-lockup">
+    <span data-mark></span>
+    <p class="wordmark">MixCheck</p>
+    <p class="by">by <img src="aurapharm-logo.png" alt=""></p>
+    <p class="continue" id="intro-continue">Click anywhere or press any key to continue</p>
+  </div>
+</div>
 <div class="wrap">
   <header>
     <div>
-      <h1>MixCheck</h1>
-      <p>Checks a mix or master for technical problems and tells you how to fix them in Pro Tools.</p>
-    </div>
-    <details class="plugins">
-      <summary>Plugins I own beyond Waves Essential</summary>
-      <div class="menu">
-        <p>Fix suggestions that use these plugins only appear if you own them.</p>
-        <div id="plugin-list"></div>
+      <div class="brand">
+        <span data-mark></span>
+        <h1 class="wordmark">MixCheck</h1>
+        <span class="by">by <img src="aurapharm-logo.png" alt="AuraPharm"></span>
       </div>
-    </details>
+      <p>Checks a mix or master for problems and tells you how to fix them with your own tools.</p>
+    </div>
+    <button class="setup-chip" id="setup-chip" type="button">Fixes for <b id="setup-label">your setup</b> <span>Change</span></button>
   </header>
+
+  <dialog class="setup" id="setup-dialog" aria-labelledby="setup-title">
+    <form method="dialog" id="setup-form">
+      <h2 id="setup-title">What do you work with?</h2>
+      <p class="lede">MixCheck writes every fix for your DAW and the plugins you own, so the steps use controls you actually have.</p>
+      <fieldset>
+        <legend>Your DAW</legend>
+        <div class="choices" id="daw-choices"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Plugins you own <small>Optional. Stock tools are always covered.</small></legend>
+        <div id="package-choices"></div>
+      </fieldset>
+      <div class="actions">
+        <p>Saved on this computer. Change it any time from the top of the page.</p>
+        <button class="button" type="submit" value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
 
   <section class="pool" id="pool">
   <canvas id="waves" aria-hidden="true"></canvas>
@@ -257,7 +454,7 @@
       <p class="slot-title" id="slot-title">Drop a bounce here to check it</p>
       <p class="slot-sub" id="slot-sub">WAV, AIFF, FLAC or MP3 (use a WAV for final QC). The file is analyzed on this computer and isn't stored.</p>
       <ol class="steps">
-        <li><b>1</b>In Pro Tools, File › Bounce Mix as a WAV</li>
+        <li><b>1</b><span id="bounce-hint">Bounce or export your mix as a WAV</span></li>
         <li><b>2</b>Drag the file onto this page</li>
         <li><b>3</b>Get a checklist of anything to fix</li>
       </ol>
@@ -271,6 +468,19 @@
 
   <main id="report" hidden aria-live="polite">
     <div class="fileline" id="fileline"></div>
+    <div class="stage" id="stage">
+      <span>This is a</span>
+      <span class="segmented" role="group" aria-label="Mix or master">
+        <button type="button" data-stage="mix" aria-pressed="false">Mix</button>
+        <button type="button" data-stage="master" aria-pressed="false">Master</button>
+      </span>
+      <label class="going-for">Going for
+        <select id="target-select" aria-label="What style you're going for"><option value="">No preference</option></select>
+      </label>
+      <span class="why" id="stage-why"></span>
+    </div>
+    <section class="score" id="score" aria-label="Technical score"></section>
+    <section class="style-match" id="style-match" aria-label="Style match"></section>
     <div class="verdict" id="verdict"></div>
     <div class="groups" id="groups"></div>
 
@@ -319,9 +529,62 @@
 
 <script>
 const $ = (id) => document.getElementById(id);
+
+/* The MixCheck mark: aura streaks rising into a check (same shape as mixcheck-mark.svg). */
+const MARK = ["0,104 9,104 18.5,74", "17,104 26,104 31.5,82", "34,104 43,104 44.5,90", "51,104 60,104 59.5,96",
+  "68,104 77,104 81.5,84", "85,104 94,104 104.5,70", "102,104 111,104 128.5,56", "119,104 128,104 151.5,42",
+  "136,104 145,104 174.5,28", "153,104 162,104 198.5,14", "170,104 179,104 221.5,0"];
+document.querySelectorAll("[data-mark]").forEach((el) => {
+  el.innerHTML = `<svg class="mark" viewBox="0 0 222 104" aria-hidden="true">${
+    MARK.map((p, i) => `<polygon style="--i:${i}" points="${p}"/>`).join("")}</svg>`;
+});
+
+/* Intro: the logo rises out of the pool, then waits. Any click, tap, key, scroll or file drag
+   continues (even mid-reveal). Shown once per browser session, or any time with ?intro.
+   intro.done resolves once the page is usable. */
+const intro = (() => {
+  const body = document.body;
+  let shown = false;
+  try { shown = sessionStorage.getItem("mixcheck.introShown") === "1"; } catch {}
+  const replay = new URLSearchParams(location.search).has("intro");
+  let resolve, finished = false;
+  const done = new Promise((r) => { resolve = r; });
+  const continueOn = ["pointerdown", "keydown", "wheel", "dragenter"];
+
+  function finish(e) {
+    if (finished) return;
+    finished = true;
+    // The click that dismisses the intro shouldn't also press whatever is underneath it.
+    if (e?.type === "pointerdown") {
+      window.addEventListener("click", (c) => { c.preventDefault(); c.stopPropagation(); }, { capture: true, once: true });
+    }
+    continueOn.forEach((ev) => window.removeEventListener(ev, finish, true));
+    try { sessionStorage.setItem("mixcheck.introShown", "1"); } catch {}
+    body.classList.add("intro-out");
+    body.classList.remove("intro");
+    setTimeout(() => { $("intro")?.remove(); body.classList.remove("intro-out"); }, 1300);
+    resolve();
+  }
+
+  if (shown && !replay) {
+    $("intro").remove();
+    // One frame later, so the header and drop area still fade up gently.
+    requestAnimationFrame(() => requestAnimationFrame(() => { body.classList.remove("intro"); resolve(); }));
+  } else {
+    if (matchMedia("(hover: none)").matches) $("intro-continue").textContent = "Tap anywhere to continue";
+    continueOn.forEach((ev) => window.addEventListener(ev, finish, true));
+  }
+  return { done };
+})();
 const ACCEPTED = [".wav", ".wave", ".aif", ".aiff", ".flac", ".mp3"];
 const BAND_LABEL = { sub: "Sub", low: "Low", low_mid: "Low mid", high_mid: "High mid", high: "High" };
-const DEFAULT_PLUGINS = ["PAZ Analyzer", "S1 Shuffler", "S1 Stereo Imager", "WLM Plus"];
+const BOUNCE_HINT = {
+  pro_tools: "In Pro Tools, File › Bounce Mix as a WAV",
+  logic: "In Logic, File › Bounce › Project or Section as a WAV",
+  ableton: "In Live, File › Export Audio/Video as a WAV",
+  fl_studio: "In FL Studio, File › Export › WAV",
+  other: "Bounce or export your mix as a WAV",
+};
 
 // Plain-English title and "why it matters" for each finding id from analyze.py.
 const PLAIN = {
@@ -343,20 +606,39 @@ const PLAIN = {
   abrupt_end: ["The ending may be cut off", "The audio is still playing at the very last sample. Check that the bounce covers the full tail."],
   no_air: ["Missing top end", "Almost nothing above 16 kHz. That often means an MP3 or AAC was used somewhere in the session."],
 };
-const GROUPS = [
-  ["critical", "Fix before release"],
-  ["warning", "Worth checking"],
-  ["info", "Good to know"],
-];
+// Where a finding means something different for a mix headed to mastering.
+Object.assign(PLAIN, {
+  louder_than_target: ["Louder than your style", "Louder than is typical for the style you picked. It loses punch, and streaming turns it down anyway."],
+  quieter_than_target: ["Quieter than your style", "Next to other songs in this style it will sound smaller, especially where playback isn't volume-matched."],
+  more_limited_than_target: ["More squashed than your style", "The hits sit closer to the average level than is typical for this style, so it can feel flat."],
+  more_dynamic_than_target: ["More dynamic than your style", "The hits jump out more than is typical for this style; it may feel less dense next to references."],
+  less_contrast_than_target: ["Less build than your style", "Sections sit closer in level than is typical for this style."],
+  more_contrast_than_target: ["Bigger swings than your style", "Quiet parts may get lost in cars and on earbuds compared with typical songs in this style."],
+});
+const PLAIN_MIX = {
+  true_peak_over: ["The mix goes over 0 dB", "It will distort once converted, and mastering needs headroom to work with."],
+  true_peak_hot: ["Peaks are close to 0 dB", "Fine for a mix, but leaving 3–6 dB of headroom gives mastering room to work."],
+  very_loud: ["The mix is already limited loud", "Heavy limiting on a mix leaves mastering nothing to shape, and it's hard to undo."],
+  low_plr: ["The mix is squashed", "Bus limiting or compression is flattening the hits before mastering even starts."],
+};
+const plainFor = (id, stage) => (stage === "mix" && PLAIN_MIX[id]) || PLAIN[id];
+const GROUPS = {
+  master: [["critical", "Fix before release"], ["warning", "Worth checking"], ["info", "Good to know"]],
+  mix: [["critical", "Fix before mastering"], ["warning", "Worth checking"], ["info", "Good to know"]],
+};
 
 let report = null;
-let owned = new Set(loadOwned());
+let setup = loadSetup();   // null until the user has chosen
+let target = "";           // style the user is going for; "" means no preference
+try { target = localStorage.getItem("mixcheck.target") || ""; } catch {}
+let styleOptions = [];
+let setupOptions = null;
 
-function loadOwned() {
-  try { return JSON.parse(localStorage.getItem("mixcheck.plugins") || "[]"); } catch { return []; }
+function loadSetup() {
+  try { return JSON.parse(localStorage.getItem("mixcheck.setup")) || null; } catch { return null; }
 }
-function saveOwned() {
-  try { localStorage.setItem("mixcheck.plugins", JSON.stringify([...owned])); } catch {}
+function saveSetup() {
+  try { localStorage.setItem("mixcheck.setup", JSON.stringify(setup)); } catch {}
 }
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -365,20 +647,96 @@ const num = (v, digits = 1, signed = false) =>
 const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-/* Plugin preferences */
-async function setupPlugins() {
-  let names = DEFAULT_PLUGINS;
+/* Setup: the user's DAW and plugins, so every fix uses tools they own. */
+async function initSetup() {
   try {
     const res = await fetch("/api/info");
-    if (res.ok) names = (await res.json()).optional_plugins;
+    if (res.ok) {
+      const info = await res.json();
+      setupOptions = info.setup_options;
+      styleOptions = info.style_options || [];
+    }
   } catch {}
-  $("plugin-list").innerHTML = names.map((n) => `
-    <label><input type="checkbox" value="${esc(n)}" ${owned.has(n) ? "checked" : ""}> ${esc(n)}</label>`).join("");
-  $("plugin-list").addEventListener("change", (e) => {
-    e.target.checked ? owned.add(e.target.value) : owned.delete(e.target.value);
-    saveOwned();
-    if (report) renderChecklist(report);
-  });
+  $("target-select").innerHTML = `<option value="">No preference</option>` +
+    styleOptions.map((o) => `<option value="${esc(o.id)}">${esc(o.name)}</option>`).join("");
+  $("target-select").value = styleOptions.some((o) => o.id === target) ? target : "";
+  if (!setupOptions) return;
+  const cur = setup || { daw: "", packages: [] };
+  $("daw-choices").innerHTML = setupOptions.daws.map((d) => `
+    <label class="choice"><input type="radio" name="daw" value="${esc(d.id)}" ${cur.daw === d.id ? "checked" : ""} required>
+      <span>${esc(d.name)}</span></label>`).join("");
+  const groups = [...new Set(setupOptions.packages.map((p) => p.group))];
+  $("package-choices").innerHTML = groups.map((g) => `
+    <p class="group-name">${esc(g)}</p>
+    <div class="choices">${setupOptions.packages.filter((p) => p.group === g).map((p) => `
+      <label class="choice"><input type="checkbox" name="pkg" value="${esc(p.id)}" ${cur.packages.includes(p.id) ? "checked" : ""}>
+        <span>${esc(p.name)}</span></label>`).join("")}</div>`).join("");
+  showSetupLabel();
+  if (!setup) intro.done.then(() => setTimeout(() => { if (!setup) $("setup-dialog").showModal(); }, 700));
+}
+
+function setupLabel(s) {
+  if (!s || !setupOptions) return "your setup";
+  const daw = setupOptions.daws.find((d) => d.id === s.daw)?.name || "Other DAW";
+  const n = s.packages.length;
+  return n ? `${daw} + ${plural(n, "plugin set")}` : `${daw} stock tools`;
+}
+function showSetupLabel() {
+  $("setup-label").textContent = setupLabel(setup);
+  $("bounce-hint").textContent = BOUNCE_HINT[setup?.daw] || BOUNCE_HINT.other;
+}
+
+$("setup-chip").addEventListener("click", () => $("setup-dialog").showModal());
+$("setup-form").addEventListener("submit", () => {
+  const form = new FormData($("setup-form"));
+  setup = { daw: form.get("daw") || "other", packages: form.getAll("pkg") };
+  saveSetup();
+  showSetupLabel();
+  if (report) refreshFixes(report.stage.value);
+});
+// Closing without saving still counts as a choice, so the dialog doesn't nag.
+$("setup-dialog").addEventListener("close", () => {
+  if (!setup) { setup = { daw: "other", packages: [] }; saveSetup(); showSetupLabel(); }
+});
+
+/* What the user is going for: remembered, and applied without re-uploading. */
+function setTarget(id) {
+  target = id || "";
+  $("target-select").value = target;
+  try { localStorage.setItem("mixcheck.target", target); } catch {}
+  if (report) refreshFixes(report.stage.value);
+}
+$("target-select").addEventListener("change", (e) => setTarget(e.target.value));
+$("style-match").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-target]");
+  if (b) setTarget(b.dataset.target);
+});
+
+/* Mix / master: rebuild fixes without re-uploading. */
+$("stage").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-stage]");
+  if (b && report && b.dataset.stage !== report.stage.value) refreshFixes(b.dataset.stage);
+});
+
+async function refreshFixes(stage) {
+  try {
+    const res = await fetch("/api/fixes", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ flags: report.flags, setup: setup || {}, stage, target, measures: report.measures }),
+    });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    report.flags = data.flags;
+    report.score = data.score;
+    report.style = data.style;
+    report.target = data.target;
+    report.setup = data.setup;
+    report.stage = { ...report.stage, value: data.stage };
+    render(report);
+  } catch {
+    setStatus({ title: "Drop another bounce to check it", sub: "Or choose a file.",
+                error: "Couldn't update the fixes. Make sure MixCheck is still running." });
+  }
 }
 
 /* Engineering detail remembers whether it was left open. */
@@ -419,10 +777,10 @@ const pool = (() => {
     for (let x = 0; x < W; x += bar) {
       const n = Math.floor((x + scroll) / bar);
       const h = maxH * env(n) * (0.75 + 0.25 * energy);
-      ctx.fillStyle = rgba(0.5);
+      ctx.fillStyle = rgba(0.68);
       ctx.fillRect(x, horizon - h, bar - 1.5, h);
       const wobble = still.matches ? 0 : Math.sin(t * 2.2 + n * 0.35) * 1.6 * energy;
-      ctx.fillStyle = rgba(0.14);
+      ctx.fillStyle = rgba(0.2);
       ctx.fillRect(x + wobble, horizon + 2, bar - 1.5, h * 0.7);
     }
     // Ripple lines, closer together toward the horizon for depth.
@@ -439,7 +797,7 @@ const pool = (() => {
                             + 0.1 * Math.sin(x * k * 5.1 + t * 2.1));
         x ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
       }
-      ctx.strokeStyle = rgba(0.08 + 0.4 * Math.pow(d, 1.2));
+      ctx.strokeStyle = rgba(0.1 + 0.5 * Math.pow(d, 1.2));
       ctx.lineWidth = 0.6 + 0.9 * d;
       ctx.stroke();
     }
@@ -502,6 +860,8 @@ async function analyze(file) {
   setStatus({ title: `Checking ${file.name}`, sub: "Measuring loudness, peaks and stereo. Long songs take a few seconds.", busy: true });
   const body = new FormData();
   body.append("file", file);
+  body.append("setup", JSON.stringify(setup || {}));
+  body.append("target", target);
   try {
     const res = await fetch("/api/analyze", { method: "POST", body });
     const data = await res.json().catch(() => ({}));
@@ -539,11 +899,108 @@ function render(r) {
     <span>${(f.sample_rate_hz / 1000).toFixed(1).replace(".0", "")} kHz</span>
     <span>${f.channels === 2 ? "Stereo" : "Mono"}</span>
     <span>${clock(f.duration_s)}</span>`;
+  renderStage(r);
+  renderScore(r);
+  renderStyle(r);
   renderVerdict(r);
   renderChecklist(r);
   renderReadings(r);
   drawTimeline(r);
   renderDetail(r);
+}
+
+function renderStage(r) {
+  const st = r.stage;
+  document.querySelectorAll("#stage button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.stage === st.value)));
+  $("stage-why").textContent = st.value === st.detected
+    ? `Detected automatically. ${st.reason}`
+    : `You chose this. MixCheck guessed ${st.detected === "mix" ? "a mix" : "a master"}.`;
+}
+
+const SCORE_STOPS = [[1, [240, 4, 24]], [5.5, [245, 197, 24]], [10, [34, 197, 94]]];
+function scoreColor(v) {
+  const i = v <= SCORE_STOPS[1][0] ? 0 : 1;
+  const [[a, ca], [b, cb]] = [SCORE_STOPS[i], SCORE_STOPS[i + 1]];
+  const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
+  return `rgb(${ca.map((c, k) => Math.round(c + (cb[k] - c) * t)).join(",")})`;
+}
+const scorePos = (v) => `${((v - 1) / 9) * 100}%`;
+
+let shownScore = null;
+function renderScore(r) {
+  const sc = r.score, el = $("score");
+  el.style.setProperty("--score-color", scoreColor(sc.value));
+  const areas = sc.areas.length ? sc.areas.map((a) => `
+      <li class="${a.lost ? "" : "clean"}"><span>${esc(a.name)}</span>
+        <span class="bar"><span style="width:${Math.min(100, (a.lost / 3) * 100)}%"></span></span>
+        <span class="pts">${a.lost ? "−" + a.lost.toFixed(1) : "0"}</span></li>`).join("") : "";
+  const gain = sc.if_fixed > sc.value
+    ? `<p class="score-next">Fix the red and amber items to reach <b>${sc.if_fixed.toFixed(1)}</b>.</p>` : "";
+  el.innerHTML = `
+    <div class="score-num"><span class="value" id="score-value">${sc.value.toFixed(1)}</span><span class="of">/10</span></div>
+    <div>
+      <p class="score-label">${esc(sc.label)}</p>
+      <p class="score-kind">Technical score for a ${r.stage.value}: errors that are wrong in any genre (peaks, phase, edges).</p>
+      <div class="score-scale" role="img" aria-label="${sc.value.toFixed(1)} out of 10">
+        ${sc.if_fixed > sc.value ? `<span class="ghost" style="left:${scorePos(sc.if_fixed)}" title="After fixes: ${sc.if_fixed.toFixed(1)}"></span>` : ""}
+        <span class="marker" style="left:${scorePos(shownScore ?? 1)}"></span>
+      </div>
+      ${gain}
+    </div>
+    <ul class="score-areas" aria-label="Where points were lost">${areas}</ul>`;
+  // Count up (and slide the marker) from the last shown score.
+  const from = shownScore ?? 1, to = sc.value, still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  shownScore = to;
+  requestAnimationFrame(() => { el.querySelector(".marker").style.left = scorePos(to); });
+  if (still || from === to) return;
+  const start = performance.now(), dur = 900;
+  const tick = (now) => {
+    const t = Math.min(1, (now - start) / dur), v = from + (to - from) * (1 - Math.pow(1 - t, 3));
+    const out = $("score-value");
+    if (!out) return;
+    out.textContent = v.toFixed(1);
+    el.style.setProperty("--score-color", scoreColor(v));
+    if (t < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function renderStyle(r) {
+  const el = $("style-match"), sm = r.style;
+  if (!sm) {
+    el.style.removeProperty("--match-color");
+    el.className = "style-match style-empty";
+    el.innerHTML = `
+      <h3>What are you going for?</h3>
+      <p>Loudness, punch and contrast depend on the style. Pick one to see how this ${r.stage.value} compares.</p>
+      <div class="choices">${styleOptions.map((o) => `<button type="button" data-target="${esc(o.id)}">${esc(o.name)}</button>`).join("")}</div>`;
+    return;
+  }
+  el.className = "style-match";
+  el.style.setProperty("--match-color", scoreColor(1 + (sm.percent / 100) * 9));
+  const rows = sm.dims.map((d) => {
+    const lo = d.low - d.tolerance, hi = d.high + d.tolerance, span = hi - lo;
+    const pos = (v) => `${Math.min(100, Math.max(0, ((v - lo) / span) * 100))}%`;
+    const where = d.status === "in" ? "In range"
+      : `${d.off_by.toFixed(1)} ${d.status === "low" ? "below" : "above"}`;
+    return `<li>
+      <span>${esc(d.name)}</span>
+      <span class="val">${num(d.value)}<small>${esc(d.unit)}</small></span>
+      <span class="range" title="Typical: ${num(d.low, 1)} to ${num(d.high, 1)} ${esc(d.unit)}">
+        <span class="zone" style="left:${pos(d.low)};width:calc(${pos(d.high)} - ${pos(d.low)})"></span>
+        <span class="dot" style="left:${pos(d.value)};background:${scoreColor(1 + d.match * 9)}"></span>
+      </span>
+      <span class="where">${where}</span>
+    </li>`;
+  }).join("");
+  const skipped = sm.stage === "mix" ? " Loudness isn't compared for a mix; mastering sets it." : "";
+  el.innerHTML = `
+    <div><div class="pct">${sm.percent}%</div><p class="pct-label">style match</p></div>
+    <div>
+      <h3>${esc(sm.name)}</h3>
+      <p class="note">The shaded zone is typical for this style.${skipped}</p>
+      <ul class="dims">${rows}</ul>
+    </div>`;
 }
 
 function renderVerdict(r) {
@@ -552,9 +1009,9 @@ function renderVerdict(r) {
   let state, title, sub;
   if (n.critical) {
     state = "critical";
-    title = `Fix ${plural(n.critical, "thing")} before release`;
-    sub = n.warning ? `Plus ${n.warning} more worth checking. Open each item below for the Pro Tools steps.`
-                    : "Open each item below for the Pro Tools steps.";
+    title = `Fix ${plural(n.critical, "thing")} before ${r.stage.value === "mix" ? "mastering" : "release"}`;
+    sub = n.warning ? `Plus ${n.warning} more worth checking. Open each item below for the steps.`
+                    : "Open each item below for the steps.";
   } else if (n.warning) {
     state = "warning";
     title = `Nearly there: ${plural(n.warning, "thing")} worth checking`;
@@ -572,28 +1029,29 @@ function renderVerdict(r) {
 function whenText(f) {
   if (f.start_s !== undefined) return `${clock(f.start_s)}–${clock(f.end_s)}`;
   if (f.times_s?.length) {
-    const shown = f.times_s.slice(0, 3).map(clock).join(", ");
-    return f.times_s.length > 3 ? `${shown} +${f.times_s.length - 3} more` : shown;
+    const times = [...new Set(f.times_s.map(clock))];  // one per second
+    const shown = times.slice(0, 3).join(", ");
+    return times.length > 3 ? `${shown} +${times.length - 3} more` : shown;
   }
   return "";
 }
 
 function renderChecklist(r) {
-  $("groups").innerHTML = GROUPS.map(([sev, heading]) => {
+  $("groups").innerHTML = GROUPS[r.stage.value].map(([sev, heading]) => {
     const items = r.flags.map((f, i) => [f, i]).filter(([f]) => f.severity === sev);
     if (!items.length) return "";
     return `<section class="group" data-sev="${sev}">
       <h2>${heading}</h2>
-      <ul class="items">${items.map(([f, i]) => checklistItem(f, i)).join("")}</ul>
+      <ul class="items">${items.map(([f, i]) => checklistItem(f, i, r.stage.value)).join("")}</ul>
     </section>`;
   }).join("");
 }
 
-function checklistItem(f, i) {
-  const [title, why] = PLAIN[f.id] || [f.message, ""];
-  const optional = (f.remediation_optional || []).filter((s) => owned.has(s.needs));
-  const steps = [...f.remediation.map((t) => `<li>${esc(t)}</li>`),
-                 ...optional.map((s) => `<li class="optional">${esc(s.text)}</li>`)];
+function checklistItem(f, i, stage) {
+  const [title, why] = plainFor(f.id, stage) || [f.message, ""];
+  const fix = f.fix || { steps: [], more: [] };
+  const steps = fix.steps.map((s) => `<li>${esc(s.text)}</li>`);
+  const more = fix.more.map((s) => `<li>${s.tool ? `<span class="tool">${esc(s.tool)}</span>` : ""}${esc(s.text)}</li>`);
   const when = whenText(f);
   return `<li><details class="item ${f.start_s !== undefined ? "linked" : ""}" data-index="${i}" ${f.severity === "critical" ? "open" : ""}>
     <summary>
@@ -603,7 +1061,8 @@ function checklistItem(f, i) {
       <span class="toggle"><span class="show">How to fix it ›</span><span class="hide">Hide steps</span></span>
     </summary>
     <div class="body">
-      ${steps.length ? `<p class="fix-title">In Pro Tools</p><ol class="fixes">${steps.join("")}</ol>` : ""}
+      ${steps.length ? `<p class="fix-title">What to do</p><ol class="fixes">${steps.join("")}</ol>` : ""}
+      ${more.length ? `<details class="more"><summary>More options (${more.length})</summary><ul>${more.join("")}</ul></details>` : ""}
       <p class="measured">Measured: ${esc(f.message)}</p>
     </div>
   </details></li>`;
@@ -626,7 +1085,7 @@ function renderReadings(r) {
 
   const readings = [
     {
-      name: "Loudness", value: num(lufs), unit: "LUFS", ids: ["very_loud"],
+      name: "Loudness", value: num(lufs), unit: "LUFS", ids: ["very_loud", "louder_than_target", "quieter_than_target"],
       status: lufs == null ? "No level" : spotify < -1 ? `Loud: streaming turns it down ${num(-spotify)} dB`
             : spotify > 1 ? `Quiet: streaming may turn it up ${num(spotify)} dB` : "Right around streaming level",
       explain: "How loud the whole song sounds on average. Spotify, YouTube and others play everything at about −14 LUFS, so going much louder doesn't make your song louder there; it just gets turned down.",
@@ -637,12 +1096,12 @@ function renderReadings(r) {
       explain: "The highest point the waveform reaches, including between samples (\"true peak\"). Keep it at −1 dB or lower so it doesn't distort when streaming services convert your file.",
     },
     {
-      name: "Punch", value: num(plr), unit: "dB", ids: ["low_plr"],
+      name: "Punch", value: num(plr), unit: "dB", ids: ["low_plr", "more_limited_than_target", "more_dynamic_than_target"],
       status: plr == null ? "No level" : plr < 8 ? "Heavily limited" : plr < 12 ? "Healthy for a loud master" : "Plenty of punch",
       explain: "Peak-to-loudness ratio: how far the hits (drums, transients) stick out above the average level. Low numbers mean heavy limiting and less impact.",
     },
     {
-      name: "Contrast", value: num(lra), unit: "LU", ids: ["low_lra"],
+      name: "Contrast", value: num(lra), unit: "LU", ids: ["low_lra", "less_contrast_than_target", "more_contrast_than_target"],
       status: lra == null ? "Too short to measure" : lra < 4 ? "Little difference between sections" : lra > 15 ? "Very wide, like film or classical" : "Normal for a song",
       explain: "Loudness range: how much the level changes between the quiet and loud parts. Most pop and hip-hop sits around 4–8.",
     },
@@ -725,7 +1184,7 @@ function drawTimeline(r) {
 
   r.flags.forEach((f, i) => {
     if (f.start_s === undefined) return;
-    const title = PLAIN[f.id]?.[0] || f.message;
+    const title = plainFor(f.id, r.stage.value)?.[0] || f.message;
     parts.push(`<rect class="phase" data-index="${i}" x="${x(f.start_s)}" y="${pad.t}" width="${Math.max(2, x(f.end_s) - x(f.start_s))}" height="${H - pad.t - pad.b}" fill-opacity="0.3"><title>${esc(title)} (${clock(f.start_s)}–${clock(f.end_s)})</title></rect>`);
   });
 
@@ -754,7 +1213,7 @@ function drawTimeline(r) {
 let resizeTimer;
 window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => report && drawTimeline(report), 120); });
 
-setupPlugins();
+initSetup();
 </script>
 </body>
 </html>

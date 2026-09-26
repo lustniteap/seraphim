@@ -12,12 +12,14 @@ from .audio_io import load_audio
 from .edges import measure_edges
 from .loudness import measure_loudness
 from .peaks import measure_peaks
-from .remediation import DEFAULT_PROFILE, attach_remediation
+from .remediation import STAGES, attach_fixes, describe_setup, detect_stage, normalize_setup
+from .score import score_flags
+from .style import TARGETS, measures, style_flags, style_match
 from .spectrum import measure_spectrum
 from .stereo import measure_stereo
 from .util import fmt_time
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"
 
 # Loudness normalization references (LUFS). Platforms change these, so
 # verify against their current documentation before relying on them.
@@ -32,9 +34,6 @@ STREAMING_TARGETS = {
 # Your ears, your rules: tune these to taste and genre.
 THRESHOLDS = {
     "true_peak_warn_dbtp": -1.0,
-    "very_loud_lufs": -9.0,
-    "low_plr_db": 8.0,
-    "low_lra_lu": 4.0,
     "mono_loss_warn_db": 3.0,
     "low_end_corr_warn": 0.5,
     "dc_offset_warn_dbfs": -50.0,
@@ -42,11 +41,17 @@ THRESHOLDS = {
     "long_head_silence_s": 2.0,
     "long_tail_silence_s": 5.0,
     "abrupt_end_rms_dbfs": -30.0,
-    "lossy_air_pct": 0.005,
 }
+# Loudness, punch, contrast and top end are style, judged in style.py against the user's target.
 
 
-def analyze_file(path, profile=DEFAULT_PROFILE, extras=None):
+def analyze_file(path, setup=None, stage="auto", target=None):
+    """Measure a file and attach fixes for this user's setup.
+
+    setup: {"daw": id, "packages": [ids]} from catalog.py.
+    stage: "mix", "master", or "auto" to guess from loudness.
+    target: a style id from style.TARGETS, or None for no preference.
+    """
     path = Path(path)
     x, fs = load_audio(path)
     if x.shape[1] > 2:
@@ -77,8 +82,18 @@ def analyze_file(path, profile=DEFAULT_PROFILE, extras=None):
         "edges": measure_edges(x, fs),
         "streaming": streaming_adjustments(integrated),
     }
-    report["flags"] = attach_remediation(build_flags(report), profile, extras)
-    report["remediation_profile"] = profile
+    detected, reason = detect_stage(report)
+    stage = stage if stage in STAGES else detected
+    setup = normalize_setup(setup)
+    report["stage"] = {"value": stage, "detected": detected, "reason": reason}
+    report["setup"] = {**setup, "label": describe_setup(setup)}
+    target = target if target in TARGETS else None
+    report["measures"] = measures(report)
+    report["target"] = target
+    flags = build_flags(report) + style_flags(report["measures"], target, stage)
+    report["flags"] = attach_fixes(flags, setup, stage)
+    report["score"] = score_flags(report["flags"], stage)
+    report["style"] = style_match(report["measures"], target, stage)
     return clean(report)
 
 
@@ -110,21 +125,8 @@ def build_flags(r):
     if clips:
         times = sorted({s for c in r["peaks"]["channels"] for s in c["clip_times_s"]})
         flag("clipping", "warning",
-             f"{clips} run(s) of clipped samples, first at {', '.join(fmt_time(s) for s in times[:5])}.",
+             f"{clips} run(s) of clipped samples, first at {', '.join(list(dict.fromkeys(fmt_time(s) for s in times))[:5])}.",
              value=clips, times_s=times)
-
-    lufs = r["loudness"]["integrated_lufs"]
-    if math.isfinite(lufs) and lufs > t["very_loud_lufs"]:
-        flag("very_loud", "info",
-             f"Integrated loudness is {lufs:.1f} LUFS; Spotify would turn it down about {lufs + 14:.1f} dB.", value=lufs)
-
-    plr = r["dynamics"]["plr_db"]
-    if plr is not None and plr < t["low_plr_db"]:
-        flag("low_plr", "info", f"Peak-to-loudness ratio is {plr:.1f} dB; the master is heavily limited.", value=plr)
-
-    lra = r["loudness"]["loudness_range_lu"]
-    if lra is not None and lra < t["low_lra_lu"]:
-        flag("low_lra", "info", f"Loudness range is {lra:.1f} LU; there is little contrast between sections.", value=lra)
 
     st = r["stereo"]
     if st:
@@ -166,12 +168,6 @@ def build_flags(r):
         if e["tail_silence_s"] < 0.05 and e["final_50ms_rms_dbfs"] > t["abrupt_end_rms_dbfs"]:
             flag("abrupt_end", "warning", "The audio is still loud at the last sample; the ending may be cut off.",
                  value=e["final_50ms_rms_dbfs"])
-
-    sp = r["spectrum"]
-    if sp and sp["energy_above_16k_pct"] is not None and sp["energy_above_16k_pct"] < t["lossy_air_pct"]:
-        flag("no_air", "info",
-             "Almost no content above 16 kHz; check whether an MP3/AAC or low-passed file was used as a source.",
-             value=sp["energy_above_16k_pct"])
 
     order = {"critical": 0, "warning": 1, "info": 2}
     return sorted(flags, key=lambda f: order[f["severity"]])

@@ -44,15 +44,17 @@ A browser tab opens at http://127.0.0.1:8000. Drag a bounce onto the page (or ch
 
 - a loudness timeline across the whole track, with phase problems and clipping marked where they happen
 - meter readouts for integrated loudness, true peak, loudness range, PLR, correlation and mono loss
-- findings with Pro Tools/Waves fix steps
+- a verdict and checklist of findings, with fix steps written for your DAW and plugins
 - streaming normalization, stereo details and tonal balance
 
-Use "Plugins I own beyond Waves Essential" in the top corner to unlock tips for extra plugins.
+On first launch it asks which DAW and plugins you use; change it any time from the top of the page.
+It also guesses whether the file is a mix or a master, and you can switch with one click.
 The server only listens on 127.0.0.1, so it isn't reachable from other machines, and uploads are
 deleted as soon as they're analyzed.
 
-API: `POST /api/analyze` with a multipart `file` field returns the JSON report; `GET /api/info`
-returns version, profile and the optional plugin list.
+API: `POST /api/analyze` with a multipart `file` field (plus optional `setup` JSON and `stage`) returns
+the JSON report; `POST /api/fixes` with `{flags, setup, stage}` rebuilds fixes without re-analyzing;
+`GET /api/info` returns the version and setup options.
 
 ## Command line
 
@@ -85,24 +87,51 @@ audio file ──► analysis engine ──► JSON report (schema v1.0) ──�
 The JSON report is the contract between layers. When the engine is ported to C++ for a plugin,
 the report layer stays the same.
 
-## Fix suggestions (Pro Tools + Waves Essential)
+## Technical score and style match
 
-Every finding comes with fix steps written for Pro Tools and the Waves Essential plan, using
-Pro Tools stock tools (Trim, EQ3, Pro Limiter, AudioSuite) and Essential plugins (L2, Renaissance
-series, F6, SSL E-Channel, PuigTec, H-Delay, Kramer Master Tape).
+MixCheck keeps two kinds of "good" apart.
 
-Tips for plugins that may not be in Essential only appear if you say you own them:
+**Technical score (1.0–10.0, red → yellow → green)** counts only errors that are wrong in any genre:
+peaks and clipping, phase and mono problems, and file/edge problems. It starts at 10 and loses points
+per finding, scaled by how bad the measurement is, in capped areas so one kind of problem can't sink
+the whole score. It also shows the score after fixing everything but notes. Rules: `mixcheck/score.py`.
+
+**Style match (%)** compares loudness, punch (PLR) and contrast (LRA) with what the user is going for:
+Trap / hip-hop, EDM, Pop, Rock / metal, R&B / soul, Acoustic / jazz, Lo-fi, or Film / classical.
+A −6 LUFS master is right for trap and wrong for jazz, so these never cost technical points. For a mix,
+loudness isn't compared (mastering sets it) and punch is judged against looser ranges. Lo-fi doesn't
+flag a dull top end. Findings like "Louder than your style" come with fix steps for the user's tools.
+The ranges in `mixcheck/style.py` are starting points from common practice; tune them against real
+releases. Tone (bass/treble balance) isn't judged by genre: that comes with reference tracks.
 
 ```bash
-mixcheck my_mix.wav --plugins "S1 Stereo Imager,PAZ Analyzer,WLM Plus"
+mixcheck my_master.wav --style trap_hiphop
 ```
 
-Or set `EXTRA_PLUGINS` in `mixcheck/remediation.py` once. Use `--no-fixes` to hide the steps.
-Timestamps are measured from the start of the bounced file, so they line up with the
-Pro Tools timeline when the bounce starts at the session start.
+## Fix suggestions for each user's setup
 
-The steps live in `mixcheck/remediation.py`, keyed by finding id, so a Logic Pro profile
-can be added later alongside the Pro Tools one.
+Fixes are built in two layers so they stay specific without being rewritten for every studio:
+
+- `mixcheck/remediation.py` says what fixes each finding, as tool-neutral **actions**
+  (`limit_true_peak`, `mono_low_end`, `clip_gain`...), separately for a **mix** and a **master**.
+  Clipping in a mix headed for mastering is fixed with gain staging, not a limiter.
+- `mixcheck/catalog.py` lists DAWs, plugin packages and tools, and says how each tool performs
+  each action in its own words ("Put Pro-L 2 last on the master, turn on True Peak Limiting...").
+
+For each action the best tool the user owns is chosen; their other tools for the same job go
+under "More options", and anyone without a matching tool gets generic wording. Adding a plugin
+is one entry in `TOOLS`. Covered now: Pro Tools, Logic Pro, Ableton Live and FL Studio stock tools,
+Waves Essential plus S1 Imager/Shuffler, PAZ and WLM Plus, FabFilter, and iZotope Ozone/Insight.
+
+From the command line:
+
+```bash
+mixcheck my_mix.wav --daw logic --plugins fabfilter,izotope_ozone --stage mix
+```
+
+`--stage auto` (the default) guesses from loudness. Use `--no-fixes` to hide the steps.
+Timestamps are measured from the start of the bounced file, so they line up with the
+session timeline when the bounce starts at the session start.
 
 ## Tuning
 
