@@ -12,6 +12,7 @@ from .audio_io import load_audio
 from .edges import measure_edges
 from .loudness import measure_loudness
 from .peaks import measure_peaks
+from .reference import apply_reference, measure_profile
 from .remediation import STAGES, attach_fixes, describe_setup, detect_stage, normalize_setup
 from .score import score_flags
 from .style import TARGETS, measures, style_flags, style_match
@@ -19,7 +20,7 @@ from .spectrum import measure_spectrum
 from .stereo import measure_stereo
 from .util import fmt_time
 
-SCHEMA_VERSION = "1.1"
+SCHEMA_VERSION = "1.2"
 
 # Loudness normalization references (LUFS). Platforms change these, so
 # verify against their current documentation before relying on them.
@@ -45,12 +46,13 @@ THRESHOLDS = {
 # Loudness, punch, contrast and top end are style, judged in style.py against the user's target.
 
 
-def analyze_file(path, setup=None, stage="auto", target=None):
+def analyze_file(path, setup=None, stage="auto", target=None, references=None):
     """Measure a file and attach fixes for this user's setup.
 
     setup: {"daw": id, "packages": [ids]} from catalog.py.
     stage: "mix", "master", or "auto" to guess from loudness.
     target: a style id from style.TARGETS, or None for no preference.
+    references: 1–3 profiles from reference.py to compare with, or None.
     """
     path = Path(path)
     x, fs = load_audio(path)
@@ -81,6 +83,8 @@ def analyze_file(path, setup=None, stage="auto", target=None):
         "spectrum": measure_spectrum(x, fs),
         "edges": measure_edges(x, fs),
         "streaming": streaming_adjustments(integrated),
+        # Kept in the report so references can be added or changed later without re-analyzing.
+        "profile": safe_profile(x, fs, path.name) if math.isfinite(integrated) else None,
     }
     detected, reason = detect_stage(report)
     stage = stage if stage in STAGES else detected
@@ -91,10 +95,19 @@ def analyze_file(path, setup=None, stage="auto", target=None):
     report["measures"] = measures(report)
     report["target"] = target
     flags = build_flags(report) + style_flags(report["measures"], target, stage)
+    flags, report["reference"] = apply_reference(flags, report["profile"], references, stage)
     report["flags"] = attach_fixes(flags, setup, stage)
     report["score"] = score_flags(report["flags"], stage)
     report["style"] = style_match(report["measures"], target, stage)
     return clean(report)
+
+
+def safe_profile(x, fs, name):
+    """The reference-comparison profile, or None when there's too little audio to compare."""
+    try:
+        return measure_profile(x, fs, name)
+    except ValueError:
+        return None
 
 
 def streaming_adjustments(integrated):

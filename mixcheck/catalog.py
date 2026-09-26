@@ -9,7 +9,7 @@ Adding a plugin means adding one entry to TOOLS; every fix that uses its
 actions picks it up automatically. The same actions are what an in-app fixer
 would apply later, so keep them concrete.
 
-Text placeholders: {value} {times} {start} {end}
+Text placeholders: {value} {times} {start} {end}, and for reference tone {band} {amount} {shape}
 """
 
 # What the user picks in setup: one DAW, plus any number of packages.
@@ -58,6 +58,9 @@ ACTIONS = {
     "glue_compression": "Add gentle bus compression (1.5:1 to 2:1, slow attack, auto or medium release) for 1–2 dB of gain reduction.",
     "tame_contrast": "Ride the quietest sections up 1–2 dB with volume automation so the song holds together at one listening level.",
     "loudness_meter": "Before bouncing, play the whole song through a loudness meter and check integrated LUFS and true peak.",
+    "eq_cut_band": "On the master bus, use a broad EQ ({shape}) to lower {band} by about {amount} dB, then compare with the reference at matched volume.",
+    "eq_boost_band": "On the master bus, use a broad EQ ({shape}) to raise {band} by about {amount} dB, then compare with the reference at matched volume.",
+    "widen_image": "Widen the loud sections a little with a stereo imager on the pads, guitars and backing vocals (or gently on the master), keeping everything below about 150 Hz mono.",
 }
 
 # id -> {name, in: packages or DAWs that include it, can: {action: (rank, how)}}
@@ -84,6 +87,10 @@ TOOLS = {
     }},
     "pt_automation": {"name": "Volume automation", "in": ["pro_tools"], "can": {
         "volume_automation": (2, "Write volume automation (or use Clip Gain) so verses sit 2–3 dB below choruses."),
+    }},
+    "pt_eq3": {"name": "EQ3 7-Band", "in": ["pro_tools"], "can": {
+        "eq_cut_band": (2, "Insert EQ3 7-Band on the Master Fader and use a {shape} over {band}, cutting about {amount} dB."),
+        "eq_boost_band": (2, "Insert EQ3 7-Band on the Master Fader and use a {shape} over {band}, boosting about {amount} dB."),
     }},
     "pt_invert": {"name": "Invert AudioSuite", "in": ["pro_tools"], "can": {
         "invert_track": (3, "Select the whole clip and run AudioSuite › Other › Invert."),
@@ -115,10 +122,13 @@ TOOLS = {
     }},
     "logic_channel_eq": {"name": "Channel EQ", "in": ["logic"], "can": {
         "mono_low_end": (2, "Add a Channel EQ, set Processing to Side, and turn on Low Cut at 150 Hz so the lows are mono."),
+        "eq_cut_band": (2, "Add Channel EQ on the Stereo Out and use a {shape} over {band}, cutting about {amount} dB."),
+        "eq_boost_band": (2, "Add Channel EQ on the Stereo Out and use a {shape} over {band}, boosting about {amount} dB."),
         "remove_dc": (1, "Turn on Channel EQ's Low Cut at 20 Hz on the Stereo Out."),
     }},
     "logic_direction_mixer": {"name": "Direction Mixer", "in": ["logic"], "can": {
         "narrow_width": (2, "Insert Imaging › Direction Mixer on the tracks that vanish in mono and lower Spread below 1.0."),
+        "widen_image": (2, "Insert Imaging › Direction Mixer on the pads, guitars and backing vocals and raise Spread above 1.0; leave bass and kick alone."),
     }},
     "logic_meters": {"name": "Loudness Meter / MultiMeter", "in": ["logic"], "can": {
         "loudness_meter": (2, "Insert Metering › Loudness Meter on the Stereo Out and play the whole song; read the Integrated value."),
@@ -153,7 +163,12 @@ TOOLS = {
         "mono_check": (3, "Add Utility to the Main track and switch on Mono."),
         "mono_low_end": (3, "Add Utility to the track (or the Main track) and turn on Bass Mono at about 120 Hz."),
         "narrow_width": (2, "Lower Utility's Width on the tracks that vanish in mono."),
+        "widen_image": (2, "Raise Utility's Width to 110–130% on the pads, guitars and backing vocals; keep Bass Mono on."),
         "remove_dc": (3, "Turn on Utility's DC filter on the affected tracks."),
+    }},
+    "live_eq8": {"name": "EQ Eight", "in": ["ableton"], "can": {
+        "eq_cut_band": (2, "Put EQ Eight on the Main track and use a {shape} over {band}, cutting about {amount} dB."),
+        "eq_boost_band": (2, "Put EQ Eight on the Main track and use a {shape} over {band}, boosting about {amount} dB."),
     }},
     "live_clip": {"name": "Clip View", "in": ["ableton"], "can": {
         "clip_gain": (3, "Open the clip at {times} and lower its Gain in Clip View until it stops clipping."),
@@ -178,12 +193,15 @@ TOOLS = {
         "master_headroom": (2, "Pull down the Master mixer track's fader until peaks sit around −6 to −3 dBFS."),
         "mono_check": (2, "Turn the Master mixer track's stereo separation knob fully to merged to hear the mix in mono."),
         "narrow_width": (2, "Turn the stereo separation knob toward merged on the mixer tracks that vanish in mono."),
+        "widen_image": (2, "Turn the stereo separation knob toward separated on the pads, guitars and backing vocals' mixer tracks."),
     }},
     "fl_stereo_enhancer": {"name": "Fruity Stereo Enhancer", "in": ["fl_studio"], "can": {
         "flip_one_side": (3, "Add Fruity Stereo Enhancer to the track's insert and set Phase Inversion to Left or Right."),
     }},
     "fl_parametric_eq": {"name": "Fruity Parametric EQ 2", "in": ["fl_studio"], "can": {
         "remove_dc": (1, "Add Fruity Parametric EQ 2 on the Master with a high-pass at 20 Hz."),
+        "eq_cut_band": (2, "Add Fruity Parametric EQ 2 on the Master and use a {shape} over {band}, cutting about {amount} dB."),
+        "eq_boost_band": (2, "Add Fruity Parametric EQ 2 on the Master and use a {shape} over {band}, boosting about {amount} dB."),
     }},
     "fl_automation": {"name": "Automation clip", "in": ["fl_studio"], "can": {
         "volume_automation": (2, "Right-click the track's fader › Create automation clip, and draw verses 2–3 dB below choruses."),
@@ -205,6 +223,8 @@ TOOLS = {
     }},
     "waves_renaissance_eq": {"name": "Renaissance EQ", "in": ["waves_essential"], "can": {
         "remove_dc": (1, "Add Renaissance EQ on the master with a high-pass at 20 Hz."),
+        "eq_cut_band": (2, "Add Renaissance EQ on the master and use a {shape} over {band}, cutting about {amount} dB."),
+        "eq_boost_band": (2, "Add Renaissance EQ on the master and use a {shape} over {band}, boosting about {amount} dB."),
     }},
     "waves_rcomp": {"name": "Renaissance Compressor", "in": ["waves_essential"], "can": {
         "restore_transients": (2, "On the drum bus, use Renaissance Compressor with a slower attack (10–30 ms) to let the hits through."),
@@ -215,6 +235,7 @@ TOOLS = {
         "mono_check": (3, "Put S1 Imager on the master and set Width to 0 to hear the mix in mono."),
         "recenter_image": (3, "Use S1 Imager's Rotation and Asymmetry controls to re-center a lopsided stereo source."),
         "narrow_width": (3, "Use S1 Imager on the tracks that vanish in mono and lower Width."),
+        "widen_image": (3, "Use S1 Imager on the pads, guitars and backing vocals and raise Width a little at a time."),
     }},
     "waves_s1_shuffler": {"name": "S1 Shuffler", "in": ["waves_s1_shuffler"], "can": {
         "mono_low_end": (3, "Use S1 Shuffler on the stereo source and lower the width of just the low band."),
@@ -237,6 +258,8 @@ TOOLS = {
     "ff_pro_q": {"name": "FabFilter Pro-Q", "in": ["fabfilter"], "can": {
         "mono_low_end": (3, "In Pro-Q, add a low cut at 150 Hz and set that band's stereo placement to Side."),
         "remove_dc": (2, "Add a Pro-Q low cut at 20 Hz on the master."),
+        "eq_cut_band": (3, "In Pro-Q on the master, add a {shape} over {band} and pull it down about {amount} dB; turn on Auto Gain to compare at matched volume."),
+        "eq_boost_band": (3, "In Pro-Q on the master, add a {shape} over {band} and raise it about {amount} dB; turn on Auto Gain to compare at matched volume."),
     }},
     "ff_pro_c2": {"name": "FabFilter Pro-C 2", "in": ["fabfilter"], "can": {
         "restore_transients": (3, "On the drum bus, use Pro-C 2 in Punch style with a slower attack (10–30 ms)."),
@@ -254,6 +277,11 @@ TOOLS = {
     "ozone_imager": {"name": "Ozone Imager", "in": ["izotope_ozone"], "can": {
         "mono_low_end": (3, "In Ozone Imager, go multiband and set the lowest band (below about 120 Hz) to Width −100."),
         "narrow_width": (2, "In Ozone Imager, lower Width on the bands that vanish in mono."),
+        "widen_image": (3, "In Ozone Imager, go multiband and raise Width on the upper bands only; keep the lowest band at 0 or below."),
+    }},
+    "ozone_eq": {"name": "Ozone EQ", "in": ["izotope_ozone"], "can": {
+        "eq_cut_band": (3, "In Ozone's Equalizer, add a {shape} over {band} and cut about {amount} dB; use Gain Match to compare with the reference."),
+        "eq_boost_band": (3, "In Ozone's Equalizer, add a {shape} over {band} and boost about {amount} dB; use Gain Match to compare with the reference."),
     }},
     "insight": {"name": "Insight 2", "in": ["izotope_insight"], "can": {
         "loudness_meter": (3, "Put Insight 2 on the master and read Integrated loudness and True Peak over the whole song."),

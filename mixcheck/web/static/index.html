@@ -188,6 +188,59 @@
   }
   @media (min-width: 700px) { .stage .why { flex-basis: auto; } }
 
+  /* Reference tracks: up to three songs to sound like, compared at matched volume */
+  .refs {
+    background: var(--card); border: 1px solid var(--card-edge); border-radius: 10px; padding: 20px 26px; margin-bottom: 14px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .refs.dragging { border-color: var(--wave); box-shadow: 0 0 0 1px var(--wave), 0 0 40px rgba(240, 4, 24, 0.25); }
+  .refs h3 { margin: 0 0 2px; font-size: 17px; font-weight: 750; font-variation-settings: "wdth" 115; }
+  .refs .note { margin: 0; font-size: 13px; color: var(--ink-soft); max-width: 80ch; }
+  .refs-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-top: 14px; }
+  .ref-list { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0; padding: 0; list-style: none; min-width: 0; }
+  .ref-chip {
+    display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+    border: 1px solid var(--card-edge); border-radius: 999px; padding: 4px 4px 4px 14px; font-size: 14px; background: #0A0D0F;
+  }
+  .ref-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 30ch; }
+  .ref-chip button {
+    display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 0;
+    background: transparent; color: var(--ink-soft); cursor: pointer; font-size: 16px; line-height: 1;
+  }
+  .ref-chip button:hover { color: var(--ink); background: var(--rule); }
+  .refs .pill {
+    background: #0A0D0F; color: var(--ink-soft); border: 1px dashed var(--ink-soft); border-radius: 999px;
+    padding: 6px 14px; cursor: pointer; font-size: 14px;
+  }
+  .refs .pill:hover { border-color: var(--brand); border-style: solid; color: var(--ink); }
+  .refs .pill.solid { border-style: solid; border-color: var(--card-edge); }
+  .ref-sets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-soft); }
+  .ref-sets select, .ref-sets input {
+    background: #0A0D0F; color: var(--ink); border: 1px solid var(--card-edge); border-radius: 8px;
+    padding: 6px 10px; font: inherit; font-size: 14px;
+  }
+  .ref-sets select { cursor: pointer; max-width: 22ch; }
+  .ref-sets input { width: 18ch; }
+  .ref-sets select:hover, .ref-sets select:focus-visible, .ref-sets input:focus-visible { border-color: var(--brand); }
+  .ref-status { margin: 10px 0 0; font-size: 13px; color: var(--ink-soft); }
+  .ref-status.error { color: var(--critical); font-weight: 600; }
+  .ref-compare {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px 32px; align-items: start;
+    margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--rule);
+  }
+  .ref-compare .pct { font-size: 44px; line-height: 1; font-weight: 800; font-style: italic; font-variant-numeric: tabular-nums; }
+  .ref-compare .pct-label { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); }
+  .ref-compare .note { margin-bottom: 8px; }
+  .range .tick { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); opacity: 0.8; transform: translateX(-50%); }
+  .dims li.band { font-size: 13px; padding: 5px 0; }
+  .dims li.band > span:first-child { padding-left: 14px; color: var(--ink-soft); }
+  .dims li.band .dot { width: 10px; height: 10px; }
+  @media (max-width: 700px) { .dims .tone-note { display: none; } }
+  @media (max-width: 700px) {
+    .refs { padding: 18px; }
+    .ref-compare { grid-template-columns: 1fr; }
+  }
+
   /* The pool: full-bleed black water of waveforms, with the slot floating on it */
   .pool {
     position: relative; overflow: hidden;
@@ -481,6 +534,8 @@
     </div>
     <section class="score" id="score" aria-label="Technical score"></section>
     <section class="style-match" id="style-match" aria-label="Style match"></section>
+    <section class="refs" id="refs" aria-label="Reference tracks"></section>
+    <input type="file" id="ref-input" accept=".wav,.wave,.aif,.aiff,.flac,.mp3" multiple hidden>
     <div class="verdict" id="verdict"></div>
     <div class="groups" id="groups"></div>
 
@@ -615,13 +670,33 @@ Object.assign(PLAIN, {
   less_contrast_than_target: ["Less build than your style", "Sections sit closer in level than is typical for this style."],
   more_contrast_than_target: ["Bigger swings than your style", "Quiet parts may get lost in cars and on earbuds compared with typical songs in this style."],
 });
+// Relative to the user's reference tracks; {ref} becomes "your reference" or "your references".
+Object.assign(PLAIN, {
+  ref_louder: ["Louder than {ref}", "Its loud sections are louder than {ref}, which usually costs punch, and streaming turns it down anyway."],
+  ref_quieter: ["Quieter than {ref}", "Next to {ref} it will sound smaller wherever playback isn't volume-matched."],
+  ref_more_limited: ["Less punch than {ref}", "The hits stand out less above the loud sections than in {ref}."],
+  ref_more_dynamic: ["More punch than {ref}", "The hits jump out more than in {ref}, so it may feel less dense next to it."],
+  ref_less_contrast: ["Less build than {ref}", "Quiet and loud sections are closer in level than in {ref}."],
+  ref_more_contrast: ["Bigger swings than {ref}", "The quiet parts sit further below the loud parts than in {ref}."],
+  ref_narrower: ["Narrower than {ref}", "The loud sections have less stereo spread than {ref}."],
+  ref_wider: ["Wider than {ref}", "The loud sections spread wider than {ref}. Check that it still holds up in mono."],
+});
 const PLAIN_MIX = {
   true_peak_over: ["The mix goes over 0 dB", "It will distort once converted, and mastering needs headroom to work with."],
   true_peak_hot: ["Peaks are close to 0 dB", "Fine for a mix, but leaving 3–6 dB of headroom gives mastering room to work."],
   very_loud: ["The mix is already limited loud", "Heavy limiting on a mix leaves mastering nothing to shape, and it's hard to undo."],
   low_plr: ["The mix is squashed", "Bus limiting or compression is flattening the hits before mastering even starts."],
 };
-const plainFor = (id, stage) => (stage === "mix" && PLAIN_MIX[id]) || PLAIN[id];
+function plainFor(id, stage, f) {
+  const ref = (f?.references || 1) > 1 ? "your references" : "your reference";
+  if (id === "ref_tone_more" || id === "ref_tone_less") {
+    const word = f?.word || (id === "ref_tone_more" ? "more" : "less");
+    return [`${word[0].toUpperCase()}${word.slice(1)} ${f?.phrase || "in one range"} than ${ref}`,
+            "Compared on the loudest sections at matched volume, so this is a tone difference, not a level one."];
+  }
+  const plain = (stage === "mix" && PLAIN_MIX[id]) || PLAIN[id];
+  return plain && plain.map((t) => t.replaceAll("{ref}", ref));
+}
 const GROUPS = {
   master: [["critical", "Fix before release"], ["warning", "Worth checking"], ["info", "Good to know"]],
   mix: [["critical", "Fix before mastering"], ["warning", "Worth checking"], ["info", "Good to know"]],
@@ -712,6 +787,216 @@ $("style-match").addEventListener("click", (e) => {
   if (b) setTarget(b.dataset.target);
 });
 
+/* Reference tracks: 1–3 songs the user wants to sound like. Only their measurements are kept
+   (in this browser, and on this computer for saved sets), never the audio. */
+const MAX_REFS = 3;
+let references = [], refSetName = "", refSets = [];
+let refBusy = "", refError = "", namingSet = false;
+try {
+  references = JSON.parse(localStorage.getItem("mixcheck.references")) || [];
+  refSetName = localStorage.getItem("mixcheck.refSet") || "";
+} catch {}
+if (!Array.isArray(references)) references = [];
+
+function setReferences(list, setName = "") {
+  references = list.slice(0, MAX_REFS);
+  refSetName = setName;
+  try {
+    localStorage.setItem("mixcheck.references", JSON.stringify(references));
+    localStorage.setItem("mixcheck.refSet", refSetName);
+  } catch {}
+  if (report) refreshFixes(report.stage.value);
+}
+
+async function loadRefSets() {
+  try {
+    const res = await fetch("/api/reference-sets");
+    if (res.ok) refSets = (await res.json()).sets || [];
+  } catch {}
+  if (report) renderRefs(report);
+}
+
+async function addReferenceFiles(files) {
+  const room = MAX_REFS - references.length;
+  const all = [...files];
+  const usable = all.filter((f) => ACCEPTED.includes(f.name.slice(f.name.lastIndexOf(".")).toLowerCase()));
+  refError = "";
+  if (usable.length < all.length) refError = "Some files weren't WAV, AIFF, FLAC or MP3, so they were skipped.";
+  if (usable.length > room) refError = room
+    ? `Only ${plural(room, "more song")} fit (up to ${MAX_REFS}), so the rest were skipped.`
+    : `Up to ${MAX_REFS} reference songs. Remove one to add another.`;
+  const added = [];
+  for (const file of usable.slice(0, room)) {
+    refBusy = `Measuring ${file.name}…`;
+    renderRefs(report);
+    const body = new FormData();
+    body.append("file", file);
+    try {
+      const res = await fetch("/api/reference", { method: "POST", body });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || `Couldn't measure ${file.name} (error ${res.status}).`);
+      added.push(data);
+    } catch (err) {
+      refError = err instanceof TypeError
+        ? "MixCheck has stopped running. Double-click MixCheck.command to start it again, then try once more."
+        : err.message;
+    }
+  }
+  refBusy = "";
+  if (added.length) setReferences([...references, ...added]);
+  else renderRefs(report);
+}
+
+async function saveRefSet(name) {
+  try {
+    const res = await fetch("/api/reference-sets", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, references }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || "Couldn't save the set.");
+    namingSet = false;
+    refError = "";
+    setReferences(references, data.name);
+    await loadRefSets();
+  } catch (err) {
+    refError = err.message;
+    renderRefs(report);
+  }
+}
+
+async function deleteRefSet(name) {
+  try {
+    const res = await fetch(`/api/reference-sets/${encodeURIComponent(name)}`, { method: "DELETE" });
+    if (!res.ok && res.status !== 404) throw new Error();
+    refSetName = "";
+    try { localStorage.setItem("mixcheck.refSet", ""); } catch {}
+    await loadRefSets();
+  } catch {
+    refError = "Couldn't delete the set.";
+    renderRefs(report);
+  }
+}
+
+$("ref-input").addEventListener("change", (e) => { if (e.target.files.length) addReferenceFiles(e.target.files); e.target.value = ""; });
+$("refs").addEventListener("dragover", () => $("refs").classList.add("dragging"));
+$("refs").addEventListener("dragleave", (e) => { if (!$("refs").contains(e.relatedTarget)) $("refs").classList.remove("dragging"); });
+$("refs").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  const act = b.dataset.action;
+  if (b.dataset.remove !== undefined) setReferences(references.filter((_, i) => i !== Number(b.dataset.remove)));
+  else if (act === "add") $("ref-input").click();
+  else if (act === "name-set") { namingSet = true; renderRefs(report); $("ref-set-name")?.focus(); }
+  else if (act === "cancel-set") { namingSet = false; renderRefs(report); }
+  else if (act === "delete-set" && refSetName && confirm(`Delete the saved set “${refSetName}”? The songs themselves aren't affected.`)) deleteRefSet(refSetName);
+  else if (act === "clear") setReferences([]);
+});
+$("refs").addEventListener("change", (e) => {
+  if (e.target.id !== "ref-set-select" || !e.target.value) return;
+  const set = refSets.find((s) => s.name === e.target.value);
+  if (set) { refError = ""; setReferences(set.references, set.name); }
+});
+$("refs").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const name = $("ref-set-name").value.trim();
+  if (name) saveRefSet(name);
+});
+
+const REF_WORDS = {
+  loudness: ["louder", "quieter"], punch: ["more punch", "less punch"],
+  contrast: ["wider range", "narrower range"], width: ["wider", "narrower"],
+};
+
+// One row, drawn around the reference: the tick is the reference, the shaded zone is close enough.
+function refRow(name, valHtml, row, words, unit, cls = "") {
+  const c = row.ref, zl = row.zone[0] - c, zh = row.zone[1] - c, d = row.value - c;
+  const span = Math.max(Math.abs(zl), Math.abs(zh), Math.abs(d)) + row.tolerance;
+  const pos = (v) => `${50 + (v / span) * 50}%`;
+  const where = row.status === "in" ? "In line"
+    : `${num(Math.abs(row.diff))} ${unit} ${words[row.status === "high" ? 0 : 1]}`;
+  const spread = row.ref_low === row.ref_high ? `${num(row.ref)}` : `${num(row.ref_low)} to ${num(row.ref_high)}`;
+  return `<li class="${cls}">
+    <span>${esc(name)}</span>
+    <span class="val">${valHtml}</span>
+    <span class="range" title="Reference: ${spread} ${esc(unit)}">
+      <span class="zone" style="left:${pos(zl)};width:calc(${pos(zh)} - ${pos(zl)})"></span>
+      <span class="tick" style="left:50%"></span>
+      <span class="dot" style="left:${pos(d)};background:${scoreColor(1 + row.match * 9)}"></span>
+    </span>
+    <span class="where">${esc(where)}</span>
+  </li>`;
+}
+
+function renderRefs(r) {
+  const el = $("refs");
+  if (!r) return;
+  const n = references.length, cmp = r.reference;
+  const status = refBusy ? `<p class="ref-status">${esc(refBusy)}</p>`
+    : refError ? `<p class="ref-status error" role="alert">${esc(refError)}</p>` : "";
+  const setOptions = refSets.map((s) => `<option value="${esc(s.name)}" ${s.name === refSetName ? "selected" : ""}>${esc(s.name)} (${s.references.length})</option>`).join("");
+  const setsUi = namingSet ? `
+      <form class="ref-sets" id="ref-save-form">
+        <input id="ref-set-name" maxlength="60" placeholder="Name this set" value="${esc(refSetName)}" aria-label="Reference set name" required>
+        <button class="pill solid" type="submit">Save</button>
+        <button class="pill solid" type="button" data-action="cancel-set">Cancel</button>
+      </form>` : `
+      <div class="ref-sets">
+        ${refSets.length ? `<select id="ref-set-select" aria-label="Saved reference sets">
+          <option value="">${refSetName ? "Switch set…" : "Saved sets…"}</option>${setOptions}</select>` : ""}
+        ${n && !refSetName ? `<button class="pill solid" type="button" data-action="name-set">Save as a set</button>` : ""}
+        ${refSetName ? `<button class="pill solid" type="button" data-action="delete-set" title="Delete the saved set “${esc(refSetName)}”">Delete set</button>` : ""}
+      </div>`;
+
+  if (!n) {
+    el.innerHTML = `
+      <h3>Want it to sound like a record you love?</h3>
+      <p class="note">Add 1–3 released songs. MixCheck compares their loudest sections with yours at matched volume,
+        across loudness, punch, contrast, tone and width, and writes the fixes relative to them.
+        Only their measurements are kept, never the audio.</p>
+      <div class="refs-bar">
+        <div class="ref-list"><button class="pill" type="button" data-action="add">+ Add reference songs</button>
+          <span class="note">or drop them here</span></div>
+        ${setsUi}
+      </div>${status}`;
+    return;
+  }
+
+  const chips = references.map((ref, i) => `
+    <li class="ref-chip"><span title="${esc(ref.name)}">${esc(ref.name)}</span>
+      <button type="button" data-remove="${i}" aria-label="Remove ${esc(ref.name)}">×</button></li>`).join("");
+  const add = n < MAX_REFS ? `<li><button class="pill" type="button" data-action="add">+ Add${n ? " another" : ""}</button></li>` : "";
+  let compare = "";
+  if (!r.profile) {
+    compare = `<p class="ref-status">This file is silent, so there's nothing to compare.</p>`;
+  } else if (cmp && cmp.dims.length) {
+    const theRef = cmp.count === 1 ? "your reference" : "the references' average";
+    const rows = cmp.dims.map((d) => {
+      if (d.id !== "tone") {
+        const val = d.id === "width" ? `${num(d.diff, 1, true)}<small>dB</small>` : `${num(d.value)}<small>${esc(d.unit)}</small>`;
+        return refRow(d.name, val, d, REF_WORDS[d.id], d.id === "loudness" ? "LU" : d.unit);
+      }
+      const head = `<li><span>Tone</span><span class="val"></span><span class="note tone-note">Each band at matched volume</span>
+        <span class="where">${d.status === "in" ? "In line" : "See bands"}</span></li>`;
+      return head + cmp.tone.map((b) => refRow(b.name, `${num(b.diff, 1, true)}<small>dB</small>`, b, b.words, "dB", "band")).join("");
+    }).join("");
+    const notes = [
+      `Measured on the loudest sections. The tick is ${theRef}; the shaded zone counts as a match.`,
+      cmp.skipped.includes("loudness") ? "Loudness isn't compared for a mix; mastering sets it." : "",
+      cmp.stage === "mix" ? "A mix is expected to keep 2–6 dB more punch than finished masters." : "",
+    ].filter(Boolean).join(" ");
+    compare = `<div class="ref-compare" style="--match-color:${scoreColor(1 + (cmp.percent / 100) * 9)}">
+      <div><div class="pct" style="color:var(--match-color)">${cmp.percent}%</div><p class="pct-label">reference match</p></div>
+      <div><p class="note">${esc(notes)}</p><ul class="dims">${rows}</ul></div>
+    </div>`;
+  }
+  el.innerHTML = `
+    <h3>Reference tracks${refSetName ? ` <span class="note">· ${esc(refSetName)}</span>` : ""}</h3>
+    <p class="note">Songs you want to sound like. Add up to ${MAX_REFS}, or drop them here.</p>
+    <div class="refs-bar"><ul class="ref-list">${chips}${add}</ul>${setsUi}</div>
+    ${status}${compare}`;
+}
+
 /* Mix / master: rebuild fixes without re-uploading. */
 $("stage").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-stage]");
@@ -722,13 +1007,15 @@ async function refreshFixes(stage) {
   try {
     const res = await fetch("/api/fixes", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ flags: report.flags, setup: setup || {}, stage, target, measures: report.measures }),
+      body: JSON.stringify({ flags: report.flags, setup: setup || {}, stage, target, measures: report.measures,
+                             profile: report.profile, references }),
     });
     if (!res.ok) throw new Error();
     const data = await res.json();
     report.flags = data.flags;
     report.score = data.score;
     report.style = data.style;
+    report.reference = data.reference;
     report.target = data.target;
     report.setup = data.setup;
     report.stage = { ...report.stage, value: data.stage };
@@ -836,7 +1123,11 @@ window.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth =
 window.addEventListener("dragover", (e) => e.preventDefault());
 window.addEventListener("drop", (e) => {
   e.preventDefault(); dragDepth = 0; slot.classList.remove("dragging"); pool.mood("calm");
-  if (e.dataTransfer.files.length) analyze(e.dataTransfer.files[0]);
+  $("refs").classList.remove("dragging");
+  if (!e.dataTransfer.files.length) return;
+  // Dropped on the reference panel: these are songs to compare with, not a bounce to check.
+  if (e.target.closest?.("#refs")) addReferenceFiles(e.dataTransfer.files);
+  else analyze(e.dataTransfer.files[0]);
 });
 $("file-input").addEventListener("change", (e) => { if (e.target.files[0]) analyze(e.target.files[0]); e.target.value = ""; });
 
@@ -862,6 +1153,7 @@ async function analyze(file) {
   body.append("file", file);
   body.append("setup", JSON.stringify(setup || {}));
   body.append("target", target);
+  body.append("references", JSON.stringify(references));
   try {
     const res = await fetch("/api/analyze", { method: "POST", body });
     const data = await res.json().catch(() => ({}));
@@ -902,6 +1194,7 @@ function render(r) {
   renderStage(r);
   renderScore(r);
   renderStyle(r);
+  renderRefs(r);
   renderVerdict(r);
   renderChecklist(r);
   renderReadings(r);
@@ -1048,7 +1341,7 @@ function renderChecklist(r) {
 }
 
 function checklistItem(f, i, stage) {
-  const [title, why] = plainFor(f.id, stage) || [f.message, ""];
+  const [title, why] = plainFor(f.id, stage, f) || [f.message, ""];
   const fix = f.fix || { steps: [], more: [] };
   const steps = fix.steps.map((s) => `<li>${esc(s.text)}</li>`);
   const more = fix.more.map((s) => `<li>${s.tool ? `<span class="tool">${esc(s.tool)}</span>` : ""}${esc(s.text)}</li>`);
@@ -1085,7 +1378,7 @@ function renderReadings(r) {
 
   const readings = [
     {
-      name: "Loudness", value: num(lufs), unit: "LUFS", ids: ["very_loud", "louder_than_target", "quieter_than_target"],
+      name: "Loudness", value: num(lufs), unit: "LUFS", ids: ["very_loud", "louder_than_target", "quieter_than_target", "ref_louder", "ref_quieter"],
       status: lufs == null ? "No level" : spotify < -1 ? `Loud: streaming turns it down ${num(-spotify)} dB`
             : spotify > 1 ? `Quiet: streaming may turn it up ${num(spotify)} dB` : "Right around streaming level",
       explain: "How loud the whole song sounds on average. Spotify, YouTube and others play everything at about −14 LUFS, so going much louder doesn't make your song louder there; it just gets turned down.",
@@ -1096,12 +1389,12 @@ function renderReadings(r) {
       explain: "The highest point the waveform reaches, including between samples (\"true peak\"). Keep it at −1 dB or lower so it doesn't distort when streaming services convert your file.",
     },
     {
-      name: "Punch", value: num(plr), unit: "dB", ids: ["low_plr", "more_limited_than_target", "more_dynamic_than_target"],
+      name: "Punch", value: num(plr), unit: "dB", ids: ["low_plr", "more_limited_than_target", "more_dynamic_than_target", "ref_more_limited", "ref_more_dynamic"],
       status: plr == null ? "No level" : plr < 8 ? "Heavily limited" : plr < 12 ? "Healthy for a loud master" : "Plenty of punch",
       explain: "Peak-to-loudness ratio: how far the hits (drums, transients) stick out above the average level. Low numbers mean heavy limiting and less impact.",
     },
     {
-      name: "Contrast", value: num(lra), unit: "LU", ids: ["low_lra", "less_contrast_than_target", "more_contrast_than_target"],
+      name: "Contrast", value: num(lra), unit: "LU", ids: ["low_lra", "less_contrast_than_target", "more_contrast_than_target", "ref_less_contrast", "ref_more_contrast"],
       status: lra == null ? "Too short to measure" : lra < 4 ? "Little difference between sections" : lra > 15 ? "Very wide, like film or classical" : "Normal for a song",
       explain: "Loudness range: how much the level changes between the quiet and loud parts. Most pop and hip-hop sits around 4–8.",
     },
@@ -1214,6 +1507,7 @@ let resizeTimer;
 window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => report && drawTimeline(report), 120); });
 
 initSetup();
+loadRefSets();
 </script>
 </body>
 </html>

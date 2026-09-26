@@ -80,6 +80,43 @@ FIXES = {
     },
     "less_contrast_than_target": [do("volume_automation"), do("ease_bus_comp", more=True)],
     "more_contrast_than_target": [do("tame_contrast"), do("glue_compression", more=True)],
+    # Relative to the user's reference tracks (reference.py).
+    "ref_louder": [do("ease_limiting")],
+    "ref_quieter": [do("push_limiting"), do("loudness_meter", more=True)],
+    "ref_more_limited": {
+        "master": [do("ease_limiting"), do("restore_transients", more=True)],
+        "mix": [do("remove_mix_limiting"), do("ease_bus_comp"), do("restore_transients", more=True)],
+    },
+    "ref_more_dynamic": {
+        "master": [do("glue_compression"), do("push_limiting", more=True)],
+        "mix": [do("glue_compression")],
+    },
+    "ref_less_contrast": [do("volume_automation"), do("ease_bus_comp", more=True)],
+    "ref_more_contrast": [do("tame_contrast"), do("glue_compression", more=True)],
+    "ref_narrower": [
+        do("widen_image"),
+        say("Keep the kick, bass and lead vocal in the middle; width should come from pads, guitars, "
+            "backing vocals and effects returns.", more=True),
+    ],
+    "ref_wider": [do("narrow_width"), do("mono_check", more=True)],
+    "ref_tone_more": {
+        "master": [do("eq_cut_band"), say("Loop the loudest section and switch between your master and the reference, "
+                                          "at matched volume, while you set the cut.", more=True)],
+        "mix": [
+            say("Solo the parts that fill {band} in the loud sections and turn down or EQ the one doing the most; "
+                "fixing it at the source beats EQ on the whole mix."),
+            do("eq_cut_band", more=True),
+        ],
+    },
+    "ref_tone_less": {
+        "master": [do("eq_boost_band"), say("Loop the loudest section and switch between your master and the reference, "
+                                            "at matched volume, while you set the boost.", more=True)],
+        "mix": [
+            say("Find the parts that should carry {band} in the loud sections and bring them up or EQ them there; "
+                "fixing it at the source beats EQ on the whole mix."),
+            do("eq_boost_band", more=True),
+        ],
+    },
     "negative_correlation": [
         say("The whole mix is out of polarity between left and right. Check the master and bus inserts, "
             "and the output routing, for a flip on one side."),
@@ -155,6 +192,9 @@ def _context(flag):
         "times": shown or "the marked spots",
         "start": fmt_time(flag["start_s"]) if "start_s" in flag else "the marked section",
         "end": fmt_time(flag["end_s"]) if "end_s" in flag else "",
+        "band": flag.get("band_name") or "that range",
+        "amount": flag.get("amount") or "2",
+        "shape": flag.get("shape") or "wide bell",
     }
 
 
