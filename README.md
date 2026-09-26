@@ -4,7 +4,7 @@ Automated technical QC for mixes and masters. Point it at a bounce and it measur
 what a mastering engineer checks before signing off, then flags problems with timestamps.
 
 **Phase 1 (this version):** the analysis engine: measurements plus rule-based findings, output as JSON.
-**Phase 2:** an LLM turns the JSON into plain-English notes, written like a mastering engineer.
+**Phase 2:** an LLM turns the JSON into plain-English notes, written like a mastering engineer (started: `--notes`).
 **Phase 3:** web interface (done), a bounce-folder watcher, and later a JUCE plugin (AU/AAX).
 
 ## What it measures
@@ -171,6 +171,78 @@ by dropping them on the Reference tracks panel; the set you're using is remember
 mixcheck my_mix.wav --ref ref1.wav --ref ref2.flac --save-ref-set "Club refs"
 mixcheck my_mix.wav --ref-set "Club refs"
 ```
+
+## Engineer's notes (optional, AI-written)
+
+With `--notes`, Claude turns the report into short notes like a mastering engineer would write: the headline,
+what to fix first and why, which findings share a cause, and what to listen for afterwards.
+
+```bash
+pip install -e ".[ai]"                 # the only part of MixCheck that needs the anthropic package
+export ANTHROPIC_API_KEY=...           # or: ant auth login
+mixcheck my_mix.wav --notes
+```
+
+In the web page, the same notes come from the **Write engineer's notes** button under the verdict. It shows
+only when the `ai` extra is installed; start MixCheck from a Terminal window where `ANTHROPIC_API_KEY` is set
+(or put the key in `~/.zprofile`). Changing the stage, style, references or setup marks the notes as out of date.
+
+How it's kept honest (`mixcheck/notes.py`, prompt in `mixcheck/prompts/notes.md`):
+
+- The engine stays the source of truth. Claude gets a trimmed copy of the report: numbers, findings and the
+  fix steps already chosen for your tools, each with an id (F1, F1.1...). No audio and no file name are sent.
+- The notes come back in a fixed structure (Pydantic, via structured outputs) and point at findings and steps
+  by id instead of inventing fixes. Ids that don't exist are dropped and recorded as issues, and a critical
+  finding the notes skip is flagged too.
+- The prompt is versioned (`PROMPT_VERSION`) so changes can be measured against evaluations.
+- Model `claude-opus-5` with adaptive thinking at medium effort (`MIXCHECK_AI_MODEL` to change it), with the
+  API's refusal fallback turned on. `MIXCHECK_AI=off` disables notes everywhere. Without the package or a key,
+  MixCheck prints the normal report and a one-line reason.
+
+## Evaluating the notes
+
+`evals/` measures how good the engineer's notes are, so prompt changes are decided by numbers rather than by
+reading a couple of outputs.
+
+**Cases.** Every report in `evals/reports/` (real bounces, numbers only) and `evals/synthetic/` (bounces built
+to trigger known problems, from `evals/make_synthetic.py`), each judged three ways (`evals/scenarios.py`): as
+recorded, as the other stage with a different toolset, and against a style target.
+
+**Checks** (`evals/graders.py`, free and exact):
+
+| check | passes when |
+|---|---|
+| `ids_valid` | the notes only point at findings and fix steps that exist |
+| `covers_critical` / `covers_warnings` | every critical / warning finding is in some priority |
+| `numbers_grounded` | every number-with-unit quoted appears in the report with that unit (honest rounding allowed) |
+| `tools_owned` | every plugin or brand named is one the user owns |
+| `stage_appropriate` | a mix isn't told to push its loudness or limiting |
+| `no_invented_problems` | a clean report gets no priorities |
+
+**Judge** (`evals/judge.py`, optional, `--judge`): a different model grades priority order, whether each
+priority explains its impact, grouping of shared causes, specificity, stage fit, faithfulness and concision,
+with a fixed rubric and structured output. `label` and `agreement` check it against your own grades.
+
+```bash
+python evals/notes_eval.py run --fake oracle   # harness self-test: should pass (no key, no cost)
+python evals/notes_eval.py run --fake null     # harness self-test: coverage should fail
+python evals/notes_eval.py run --limit 6       # pilot with Claude (asks before spending)
+python evals/notes_eval.py run --judge         # the full baseline
+python evals/notes_eval.py summary             # scores with 95% intervals, and every failure with its reason
+```
+
+Results land in `evals/runs/notes/<variant>/` (per-case rows, full traces, errors kept apart from scores);
+each prompt change is a new `--variant` (v1, v2...), and `evals/FAILURE_LOG.md` records what failed, why,
+and what fixed it.
+
+**Adding real bounces.** Save reports, then strip song titles before committing:
+
+```bash
+mixcheck bounce.wav --daw pro_tools --plugins waves_essential --json evals/reports/NAME.json
+python evals/anonymize.py     # NAME.json -> song01.json, titles replaced inside too
+```
+
+Which song is which stays in `~/.mixcheck/eval-song-names.txt` on your computer.
 
 ## Fix suggestions for each user's setup
 

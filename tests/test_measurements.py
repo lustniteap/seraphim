@@ -375,6 +375,187 @@ def test_calibrate_builds_ranges_from_songs():
         calibration_path().unlink()
 
 
+class _FakeClient:
+    """Stands in for anthropic.Anthropic(): records the request and returns canned notes."""
+
+    def __init__(self, notes, stop_reason="end_turn"):
+        from types import SimpleNamespace as NS
+        self.calls = []
+        parsed = NS(model_dump=lambda: notes) if notes is not None else None
+        response = NS(parsed_output=parsed, stop_reason=stop_reason, model="fake-model",
+                      usage=NS(input_tokens=3000, output_tokens=600, cache_read_input_tokens=0))
+
+        def parse(**kwargs):
+            self.calls.append(kwargs)
+            return response
+        self.beta = NS(messages=NS(parse=parse))
+
+
+def _clipped_report():
+    import tempfile
+    from scipy.io import wavfile
+    path = os.path.join(tempfile.mkdtemp(), "secret-song-name.wav")
+    wavfile.write(path, FS, (stereo(np.clip(sine(220, 2.0), -1, 1)) * 32767).astype(np.int16))
+    return analyze_file(path, setup={"daw": "logic", "packages": ["fabfilter"]}, stage="master")
+
+
+def test_notes_input_is_trimmed_and_pointable():
+    import json
+    from mixcheck.notes import notes_input
+    report = _clipped_report()
+    inp = notes_input(report)
+    text = json.dumps(inp)
+    assert "secret-song-name" not in text and "timeline" not in text  # no file name, no bulk
+    assert inp["stage"] == "master" and inp["setup"] == "Logic Pro + FabFilter (Pro-L 2, Pro-Q, Pro-C 2)"
+    ids = [f["id"] for f in inp["findings"]]
+    assert ids == [f"F{i}" for i in range(1, len(report["flags"]) + 1)]
+    clip = next(f for f in inp["findings"] if f["kind"] == "clipping")
+    assert clip["steps"][0]["id"] == f"{clip['id']}.1" and clip["when"]
+    assert len(text) < 12000  # a few thousand tokens at most
+
+
+def test_notes_request_and_checks():
+    from mixcheck.notes import FALLBACK_BETA, NotesUnavailable, format_notes, notes_input, write_notes
+    report = _clipped_report()
+    inp = notes_input(report)
+    crit = [f["id"] for f in inp["findings"] if f["severity"] == "critical"]
+    clip = next(f for f in inp["findings"] if f["kind"] == "clipping")
+    notes = {
+        "headline": "Clipping is the one thing to fix.", "summary": "It clips.",
+        "priorities": [
+            {"finding_ids": [clip["id"], "F99"], "title": "Stop the clipping", "why": "It crackles.",
+             "step_ids": [clip["steps"][0]["id"], "F99.1"]},
+            {"finding_ids": ["F42"], "title": "Invented", "why": "Not real.", "step_ids": []},
+        ],
+        "listen_for": ["The first chorus on earbuds."], "strengths": [],
+    }
+    client = _FakeClient(notes)
+    result = write_notes(report, client=client, model_id="claude-opus-5")
+
+    call = client.calls[0]
+    assert call["model"] == "claude-opus-5" and call["thinking"] == {"type": "adaptive"}
+    assert call["fallbacks"] == "default" and call["betas"] == [FALLBACK_BETA]
+    assert call["system"][0]["cache_control"] == {"type": "ephemeral"}
+    assert "secret-song-name" not in call["messages"][0]["content"]
+
+    # Ids that don't exist are dropped and recorded; a priority with nothing real left goes.
+    kinds = {(i["type"], i.get("id")) for i in result["issues"]}
+    assert {("unknown_finding", "F99"), ("unknown_step", "F99.1"), ("unknown_finding", "F42")} <= kinds
+    assert [p["title"] for p in result["notes"]["priorities"]] == ["Stop the clipping"]
+    assert result["notes"]["priorities"][0]["finding_ids"] == [clip["id"]]
+    assert {("missed_critical", c) for c in crit if c != clip["id"]} <= kinds
+    assert clip["steps"][0]["text"] in format_notes(result)
+
+    try:
+        write_notes(report, client=_FakeClient(None, stop_reason="refusal"))
+        raise AssertionError("a refusal should not produce notes")
+    except NotesUnavailable:
+        pass
+
+
+def test_notes_endpoint():
+    try:
+        from fastapi.testclient import TestClient
+    except ImportError:  # the web extra isn't installed
+        return
+    from mixcheck import notes
+    from mixcheck.web import server
+    report = _clipped_report()
+    client = TestClient(server.app)
+    real = notes.write_notes
+    try:
+        notes.write_notes = lambda r: (_ for _ in ()).throw(notes.NotesUnavailable("No valid Anthropic API key."))
+        res = client.post("/api/notes", json={"report": report})
+        assert res.status_code == 503 and "API key" in res.json()["detail"]
+
+        inp = notes.notes_input(report)
+        canned = {"headline": "h", "summary": "s", "listen_for": [], "strengths": [],
+                  "priorities": [{"finding_ids": ["F1"], "title": "t", "why": "w", "step_ids": ["F1.1"]}]}
+        notes.write_notes = lambda r: real(r, client=_FakeClient(canned))
+        data = client.post("/api/notes", json={"report": report}).json()
+        assert data["steps"]["F1.1"] == inp["findings"][0]["steps"][0]["text"]
+        assert data["findings"]["F1"] == report["flags"][0]["id"] and "input" not in data
+        assert client.post("/api/notes", json={"report": {"flags": []}}).status_code == 422
+    finally:
+        notes.write_notes = real
+
+
+def test_anonymize_removes_titles():
+    import importlib.util
+    import json
+    spec = importlib.util.spec_from_file_location("anonymize", os.path.join(os.path.dirname(__file__), "..", "evals", "anonymize.py"))
+    anon = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(anon)
+    report = _clipped_report()
+    report["reference"] = {"references": [{"name": "Somebody - Hit Song.mp3"}]}
+    titles = anon.scrub(report, "song07")
+    text = json.dumps(report)
+    assert "secret-song-name" not in text and "Hit Song" not in text
+    assert report["file"]["name"] == report["profile"]["name"] == "song07.wav"
+    assert titles == ["secret-song-name.wav", "Somebody - Hit Song.mp3"]
+
+
+def _graded(writer, report, setup=None):
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+    from evals.fakes import FakeClient
+    from evals.graders import grade
+    from mixcheck.notes import write_notes
+    result = write_notes(report, client=FakeClient(writer))
+    return grade(result, result["input"], setup or report["setup"])
+
+
+def test_eval_checks_pass_oracle_and_fail_null_and_sloppy():
+    from evals.scenarios import rejudge
+    master = _clipped_report()
+    mix = rejudge(master, stage="mix")
+
+    for report in (master, mix):
+        scores, details = _graded("oracle", report)
+        assert all(v == 1.0 for v in scores.values() if v is not None), details
+
+    scores, details = _graded("null", master)
+    assert scores["covers_critical"] == 0.0 and scores["ids_valid"] == 1.0
+
+    scores, details = _graded("sloppy", mix)
+    assert scores["ids_valid"] == 0.0 and "F99" in details["ids_valid"]
+    assert scores["numbers_grounded"] == 0.0 and "3.7 LUFS" in details["numbers_grounded"]
+    assert scores["tools_owned"] == 0.0 and "Ozone" in details["tools_owned"]
+    assert scores["stage_appropriate"] == 0.0
+    # An invented priority on a clean report counts, even though check() hides it from the user.
+    from evals.graders import no_invented_problems
+    clean = {"findings": []}
+    dropped = [{"type": "priority_dropped", "title": "Invented"}]
+    assert no_invented_problems({"priorities": []}, clean, dropped)[0] == 0.0
+    assert no_invented_problems({"priorities": []}, clean, [])[0] == 1.0
+    # On a master, pushing loudness isn't a stage error.
+    assert _graded("sloppy", master)[0]["stage_appropriate"] is None
+
+
+def test_eval_scenarios_rejudge_like_the_page():
+    from evals.scenarios import cases_for, rejudge
+    report = _clipped_report()
+    mix = rejudge(report, stage="mix", setup={"daw": "ableton", "packages": []})
+    assert mix["stage"]["value"] == "mix" and mix["setup"]["label"] == "Ableton Live"
+    # Same finding, re-rated and re-fixed for a mix: gain staging, not a limiter.
+    tp = next(f for f in mix["flags"] if f["id"] == "true_peak_over")
+    assert "Utility" in tp["fix"]["steps"][0]["text"]
+    ids = [c[0] for c in cases_for("song01", report)]
+    assert ids == ["song01__as_recorded", "song01__other_stage", "song01__trap_target"]
+
+
+def test_eval_number_check_is_fair_to_rounding_but_not_to_invention():
+    from evals.graders import numbers_grounded
+    inp = {"measurements": {"integrated_loudness_lufs": -14.23, "true_peak_dbtp": -0.3},
+           "findings": [{"id": "F1", "measured": "Peaks at 0:42 and 1:05.", "steps": [], "other_options": []}]}
+    notes = lambda text: {"headline": text, "summary": "", "priorities": [], "listen_for": [], "strengths": []}
+    assert numbers_grounded(notes("It sits at −14.2 LUFS, about −14 LUFS."), inp)[0] == 1.0
+    assert numbers_grounded(notes("True peak is 0.3 dB under full scale."), inp)[0] == 1.0
+    assert numbers_grounded(notes("It sits at −12.5 LUFS."), inp)[0] == 0.0
+    assert numbers_grounded(notes("−14.2 dB"), inp)[0] == 0.0  # right number, wrong quantity
+    assert numbers_grounded(notes("Check 0:42, then 2:10."), inp)[0] == 0.0
+    assert numbers_grounded(notes("No numbers."), inp)[0] is None
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in globals().items() if n.startswith("test_")]
     for name, fn in tests:

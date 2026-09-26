@@ -137,6 +137,8 @@ def main(argv=None):
     parser.add_argument("--ref-set", metavar="NAME", help="Compare with a saved reference set")
     parser.add_argument("--save-ref-set", metavar="NAME", help="Save the --ref songs as a reference set for later")
     parser.add_argument("--no-fixes", action="store_true", help="Hide fix suggestions in the summary")
+    parser.add_argument("--notes", action="store_true",
+                        help="Also write engineer's notes with Claude (optional; sends the measurements, not the audio)")
     args = parser.parse_args(argv)
 
     packages = [p.strip() for p in args.plugins.split(",") if p.strip()]
@@ -151,6 +153,15 @@ def main(argv=None):
         print(f"mixcheck: {exc}", file=sys.stderr)
         sys.exit(1)
 
+    notes = None
+    if args.notes:
+        from .notes import NotesUnavailable, write_notes
+        try:
+            notes = write_notes(report)
+            report["notes"] = {k: v for k, v in notes.items() if k != "input"}
+        except NotesUnavailable as exc:  # the report is still useful without them
+            print(f"mixcheck: no engineer's notes: {exc}", file=sys.stderr)
+
     if args.json:
         with open(args.json, "w") as fh:
             json.dump(report, fh, indent=2)
@@ -158,5 +169,10 @@ def main(argv=None):
         print(json.dumps(report, indent=2))
     else:
         print_summary(report, show_fixes=not args.no_fixes)
+        if notes:
+            from .notes import format_notes
+            print("  Engineer's notes (written by Claude from the measurements above)\n")
+            print("\n".join("  " + line for line in format_notes(notes).splitlines()))
+            print()
         if args.json:
             print(f"  Full report written to {args.json}\n")

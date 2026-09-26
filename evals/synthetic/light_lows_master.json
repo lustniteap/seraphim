@@ -1,0 +1,696 @@
+{
+  "schema_version": "1.2",
+  "analyzer_version": "0.1.0",
+  "file": {
+    "name": "light_lows_master.wav",
+    "sample_rate_hz": 44100,
+    "channels": 2,
+    "duration_s": 40.0
+  },
+  "loudness": {
+    "integrated_lufs": -2.68,
+    "max_momentary_lufs": -1.24,
+    "max_short_term_lufs": -1.31,
+    "loudness_range_lu": 3.49,
+    "timeline": [
+      {
+        "t": 1.5,
+        "lufs": -5.3
+      },
+      {
+        "t": 2.5,
+        "lufs": -5.1
+      },
+      {
+        "t": 3.5,
+        "lufs": -5.1
+      },
+      {
+        "t": 4.5,
+        "lufs": -5.1
+      },
+      {
+        "t": 5.5,
+        "lufs": -4.4
+      },
+      {
+        "t": 6.5,
+        "lufs": -3.0
+      },
+      {
+        "t": 7.5,
+        "lufs": -1.9
+      },
+      {
+        "t": 8.5,
+        "lufs": -1.4
+      },
+      {
+        "t": 9.5,
+        "lufs": -1.3
+      },
+      {
+        "t": 10.5,
+        "lufs": -1.3
+      },
+      {
+        "t": 11.5,
+        "lufs": -1.3
+      },
+      {
+        "t": 12.5,
+        "lufs": -1.8
+      },
+      {
+        "t": 13.5,
+        "lufs": -2.8
+      },
+      {
+        "t": 14.5,
+        "lufs": -4.0
+      },
+      {
+        "t": 15.5,
+        "lufs": -4.5
+      },
+      {
+        "t": 16.5,
+        "lufs": -4.5
+      },
+      {
+        "t": 17.5,
+        "lufs": -4.5
+      },
+      {
+        "t": 18.5,
+        "lufs": -4.3
+      },
+      {
+        "t": 19.5,
+        "lufs": -3.1
+      },
+      {
+        "t": 20.5,
+        "lufs": -2.1
+      },
+      {
+        "t": 21.5,
+        "lufs": -1.4
+      },
+      {
+        "t": 22.5,
+        "lufs": -1.3
+      },
+      {
+        "t": 23.5,
+        "lufs": -1.3
+      },
+      {
+        "t": 24.5,
+        "lufs": -1.3
+      },
+      {
+        "t": 25.5,
+        "lufs": -1.6
+      },
+      {
+        "t": 26.5,
+        "lufs": -2.3
+      },
+      {
+        "t": 27.5,
+        "lufs": -3.2
+      },
+      {
+        "t": 28.5,
+        "lufs": -3.9
+      },
+      {
+        "t": 29.5,
+        "lufs": -4.0
+      },
+      {
+        "t": 30.5,
+        "lufs": -4.0
+      },
+      {
+        "t": 31.5,
+        "lufs": -3.9
+      },
+      {
+        "t": 32.5,
+        "lufs": -3.2
+      },
+      {
+        "t": 33.5,
+        "lufs": -2.3
+      },
+      {
+        "t": 34.5,
+        "lufs": -1.5
+      },
+      {
+        "t": 35.5,
+        "lufs": -1.3
+      },
+      {
+        "t": 36.5,
+        "lufs": -1.3
+      },
+      {
+        "t": 37.5,
+        "lufs": -1.3
+      },
+      {
+        "t": 38.5,
+        "lufs": -2.3
+      }
+    ]
+  },
+  "peaks": {
+    "true_peak_max_dbtp": 2.82,
+    "sample_peak_max_dbfs": -1.5,
+    "clip_events_total": 0,
+    "channels": [
+      {
+        "sample_peak_dbfs": -1.5,
+        "true_peak_dbtp": 2.82,
+        "clip_events": 0,
+        "clip_times_s": [],
+        "dc_offset_dbfs": -86.0
+      },
+      {
+        "sample_peak_dbfs": -1.5,
+        "true_peak_dbtp": 1.73,
+        "clip_events": 0,
+        "clip_times_s": [],
+        "dc_offset_dbfs": -91.5
+      }
+    ]
+  },
+  "dynamics": {
+    "plr_db": 5.5
+  },
+  "stereo": {
+    "correlation": 0.766,
+    "low_end_correlation": 0.785,
+    "low_end_cutoff_hz": 150,
+    "mono_loudness_loss_db": 0.56,
+    "side_to_mid_db": -8.8,
+    "left_right_balance_db": 0.0,
+    "negative_correlation_sections": []
+  },
+  "spectrum": {
+    "band_energy_pct": {
+      "sub": 6.03,
+      "low": 17.87,
+      "low_mid": 35.18,
+      "high_mid": 19.16,
+      "high": 21.76
+    },
+    "energy_above_16k_pct": 4.0817
+  },
+  "edges": {
+    "silent_file": false,
+    "head_silence_s": 0.0,
+    "tail_silence_s": 0.001,
+    "final_50ms_rms_dbfs": -38.0,
+    "quietest_passage_rms_dbfs": -9.7
+  },
+  "streaming": {
+    "Spotify": {
+      "target_lufs": -14.0,
+      "gain_db": -11.3
+    },
+    "Apple Music": {
+      "target_lufs": -16.0,
+      "gain_db": -13.3
+    },
+    "YouTube": {
+      "target_lufs": -14.0,
+      "gain_db": -11.3
+    },
+    "Tidal": {
+      "target_lufs": -14.0,
+      "gain_db": -11.3
+    },
+    "Amazon Music": {
+      "target_lufs": -14.0,
+      "gain_db": -11.3
+    }
+  },
+  "profile": {
+    "version": 1,
+    "name": "light_lows_master.wav",
+    "duration_s": 40.0,
+    "loud_seconds": 29.4,
+    "loudness_lufs": -2.18,
+    "punch_db": 5.0,
+    "contrast_lu": 3.49,
+    "width_db": -8.74,
+    "tone_db": {
+      "lows": -12.68,
+      "low_mids": -9.77,
+      "mids": -7.14,
+      "presence": -9.34,
+      "highs": -8.74
+    }
+  },
+  "stage": {
+    "value": "master",
+    "detected": "master",
+    "reason": "It measures \u22122.7 LUFS, which is master\u2212level loudness."
+  },
+  "setup": {
+    "daw": "pro_tools",
+    "packages": [
+      "waves_essential"
+    ],
+    "label": "Pro Tools + Waves Essential"
+  },
+  "measures": {
+    "lufs": -2.68,
+    "plr": 5.5,
+    "lra": 3.49,
+    "air_pct": 4.0817,
+    "tone": {
+      "lows": -12.68,
+      "low_mids": -9.77,
+      "mids": -7.14,
+      "presence": -9.34,
+      "highs": -8.74
+    }
+  },
+  "target": null,
+  "reference": {
+    "references": [
+      {
+        "name": "Reference 1"
+      }
+    ],
+    "count": 1,
+    "stage": "master",
+    "percent": 97,
+    "dims": [
+      {
+        "id": "loudness",
+        "name": "Loudness",
+        "unit": "LUFS",
+        "value": -2.2,
+        "ref": -2.7,
+        "ref_low": -2.7,
+        "ref_high": -2.7,
+        "zone": [
+          -3.67,
+          -1.67
+        ],
+        "diff": 0.5,
+        "status": "in",
+        "off_by": 0.0,
+        "tolerance": 1.0,
+        "match": 1.0
+      },
+      {
+        "id": "punch",
+        "name": "Punch",
+        "unit": "dB",
+        "value": 5.0,
+        "ref": 4.2,
+        "ref_low": 4.2,
+        "ref_high": 4.2,
+        "zone": [
+          2.71,
+          5.71
+        ],
+        "diff": 0.8,
+        "status": "in",
+        "off_by": 0.0,
+        "tolerance": 1.5,
+        "match": 1.0
+      },
+      {
+        "id": "contrast",
+        "name": "Contrast",
+        "unit": "LU",
+        "value": 3.5,
+        "ref": 3.5,
+        "ref_low": 3.5,
+        "ref_high": 3.5,
+        "zone": [
+          1.54,
+          5.54
+        ],
+        "diff": -0.0,
+        "status": "in",
+        "off_by": 0.0,
+        "tolerance": 2.0,
+        "match": 1.0
+      },
+      {
+        "id": "tone",
+        "name": "Tone",
+        "unit": "dB",
+        "match": 0.87,
+        "status": "off",
+        "off_by": 2.9,
+        "tolerance": 1.5
+      },
+      {
+        "id": "width",
+        "name": "Width",
+        "unit": "dB",
+        "value": -8.7,
+        "ref": -8.7,
+        "ref_low": -8.7,
+        "ref_high": -8.7,
+        "zone": [
+          -10.68,
+          -6.68
+        ],
+        "diff": -0.1,
+        "status": "in",
+        "off_by": 0.0,
+        "tolerance": 2.0,
+        "match": 1.0
+      }
+    ],
+    "tone": [
+      {
+        "id": "lows",
+        "name": "Lows",
+        "band": "the lows (below 100 Hz)",
+        "phrase": "below 100 Hz",
+        "words": [
+          "heavier",
+          "lighter"
+        ],
+        "shape": "low shelf",
+        "value": -12.7,
+        "ref": -8.3,
+        "ref_low": -8.3,
+        "ref_high": -8.3,
+        "zone": [
+          -9.78,
+          -6.78
+        ],
+        "diff": -4.4,
+        "status": "low",
+        "off_by": 2.9,
+        "tolerance": 1.5,
+        "match": 0.36
+      },
+      {
+        "id": "low_mids",
+        "name": "Low mids",
+        "band": "the low mids (100\u2013300 Hz)",
+        "phrase": "at 100\u2013300 Hz",
+        "words": [
+          "heavier",
+          "lighter"
+        ],
+        "shape": "wide bell",
+        "value": -9.8,
+        "ref": -9.9,
+        "ref_low": -9.9,
+        "ref_high": -9.9,
+        "zone": [
+          -11.43,
+          -8.43
+        ],
+        "diff": 0.2,
+        "status": "in",
+        "off_by": 0.0,
+        "tolerance": 1.5,
+        "match": 1.0
+      },
+      {
+        "id": "mids",
+        "name": "Mids",
+        "band": "the mids (300 Hz\u20132 kHz)",
+        "phrase": "at 300 Hz\u20132 kHz",
+        "words": [
+          "fuller",
+          "thinner"
+        ],
+        "shape": "wide bell",
+        "value": -7.1,
+        "ref": -7.3,
+        "ref_low": -7.3,
+        "ref_high": -7.3,
+        "zone": [
+          -8.79,
+          -5.79
+        ],
+        "diff": 0.2,
+        "status": "in",
+        "off_by": 0.0,
+        "tolerance": 1.5,
+        "match": 1.0
+      },
+      {
+        "id": "presence",
+        "name": "Presence",
+        "band": "the presence range (2\u20136 kHz)",
+        "phrase": "at 2\u20136 kHz",
+        "words": [
+          "more forward",
+          "further back"
+        ],
+        "shape": "wide bell",
+        "value": -9.3,
+        "ref": -9.5,
+        "ref_low": -9.5,
+        "ref_high": -9.5,
+        "zone": [
+          -10.97,
+          -7.97
+        ],
+        "diff": 0.1,
+        "status": "in",
+        "off_by": 0.0,
+        "tolerance": 1.5,
+        "match": 1.0
+      },
+      {
+        "id": "highs",
+        "name": "Highs",
+        "band": "the highs (above 6 kHz)",
+        "phrase": "above 6 kHz",
+        "words": [
+          "brighter",
+          "duller"
+        ],
+        "shape": "high shelf",
+        "value": -8.7,
+        "ref": -8.9,
+        "ref_low": -8.9,
+        "ref_high": -8.9,
+        "zone": [
+          -10.43,
+          -7.43
+        ],
+        "diff": 0.2,
+        "status": "in",
+        "off_by": 0.0,
+        "tolerance": 1.5,
+        "match": 1.0
+      }
+    ],
+    "skipped": []
+  },
+  "flags": [
+    {
+      "id": "true_peak_over",
+      "severity": "critical",
+      "message": "True peak is +2.8 dBTP, above full scale; expect distortion on playback and after lossy encoding.",
+      "value": 2.82,
+      "base_severity": "critical",
+      "fix": {
+        "steps": [
+          {
+            "text": "Insert Pro Limiter last on the Master Fader, turn on ISP, and set Ceiling to \u22121.0 dB.",
+            "tool": "Pro Limiter",
+            "action": "limit_true_peak"
+          }
+        ],
+        "more": [
+          {
+            "text": "Set the L2's Out Ceiling to \u22121.5 dB; the L2 limits sample peaks, so leave margin for true peaks.",
+            "tool": "Waves L2",
+            "action": "limit_true_peak"
+          },
+          {
+            "text": "Watch Pro Limiter's loudness meter (Integrated LUFS) while the whole song plays.",
+            "tool": "Pro Limiter",
+            "action": "loudness_meter"
+          }
+        ]
+      },
+      "remediation": [
+        "Insert Pro Limiter last on the Master Fader, turn on ISP, and set Ceiling to \u22121.0 dB."
+      ]
+    },
+    {
+      "id": "ref_tone_less",
+      "severity": "warning",
+      "message": "4.4 dB lighter below 100 Hz than your reference, at matched volume.",
+      "value": -12.7,
+      "reference": -8.3,
+      "diff": -4.4,
+      "off_by": 2.9,
+      "references": 1,
+      "band": "lows",
+      "band_name": "the lows (below 100 Hz)",
+      "phrase": "below 100 Hz",
+      "word": "lighter",
+      "shape": "low shelf",
+      "amount": "4.5",
+      "base_severity": "warning",
+      "fix": {
+        "steps": [
+          {
+            "text": "Insert EQ3 7-Band on the Master Fader and use a low shelf over the lows (below 100 Hz), boosting about 4.5 dB.",
+            "tool": "EQ3 7-Band",
+            "action": "eq_boost_band"
+          }
+        ],
+        "more": [
+          {
+            "text": "Add Renaissance EQ on the master and use a low shelf over the lows (below 100 Hz), boosting about 4.5 dB.",
+            "tool": "Renaissance EQ",
+            "action": "eq_boost_band"
+          },
+          {
+            "text": "Loop the loudest section and switch between your master and the reference, at matched volume, while you set the boost.",
+            "tool": null,
+            "action": null
+          }
+        ]
+      },
+      "remediation": [
+        "Insert EQ3 7-Band on the Master Fader and use a low shelf over the lows (below 100 Hz), boosting about 4.5 dB."
+      ]
+    },
+    {
+      "id": "very_loud",
+      "severity": "info",
+      "message": "Integrated loudness is -2.7 LUFS; Spotify would turn it down about 11.3 dB.",
+      "value": -2.68,
+      "base_severity": "info",
+      "fix": {
+        "steps": [
+          {
+            "text": "Lower Pro Limiter's Input by 2\u20134 dB and compare at matched volume.",
+            "tool": "Pro Limiter",
+            "action": "ease_limiting"
+          }
+        ],
+        "more": [
+          {
+            "text": "Raise the L2's Threshold by 2\u20134 dB (less limiting) and compare at matched volume.",
+            "tool": "Waves L2",
+            "action": "ease_limiting"
+          },
+          {
+            "text": "Streaming services turn this down to about \u221214 LUFS anyway, so the extra limiting only costs punch.",
+            "tool": null,
+            "action": null
+          }
+        ]
+      },
+      "remediation": [
+        "Lower Pro Limiter's Input by 2\u20134 dB and compare at matched volume."
+      ]
+    },
+    {
+      "id": "low_plr",
+      "severity": "info",
+      "message": "Peak-to-loudness ratio is 5.5 dB; the master is heavily limited.",
+      "value": 5.5,
+      "base_severity": "info",
+      "fix": {
+        "steps": [
+          {
+            "text": "Lower Pro Limiter's Input by 2\u20134 dB and compare at matched volume.",
+            "tool": "Pro Limiter",
+            "action": "ease_limiting"
+          }
+        ],
+        "more": [
+          {
+            "text": "Raise the L2's Threshold by 2\u20134 dB (less limiting) and compare at matched volume.",
+            "tool": "Waves L2",
+            "action": "ease_limiting"
+          },
+          {
+            "text": "On the drum bus, use Renaissance Compressor with a slower attack (10\u201330 ms) to let the hits through.",
+            "tool": "Renaissance Compressor",
+            "action": "restore_transients"
+          },
+          {
+            "text": "Ease the mix-bus compressor: raise the threshold or slow the attack so transients get through.",
+            "tool": null,
+            "action": "ease_bus_comp"
+          }
+        ]
+      },
+      "remediation": [
+        "Lower Pro Limiter's Input by 2\u20134 dB and compare at matched volume."
+      ]
+    },
+    {
+      "id": "low_lra",
+      "severity": "info",
+      "message": "Loudness range is 3.5 LU; there is little contrast between sections.",
+      "value": 3.49,
+      "base_severity": "info",
+      "fix": {
+        "steps": [
+          {
+            "text": "Write volume automation (or use Clip Gain) so verses sit 2\u20133 dB below choruses.",
+            "tool": "Volume automation",
+            "action": "volume_automation"
+          }
+        ],
+        "more": [
+          {
+            "text": "Use Clip Gain on the verse clips so they sit 2\u20133 dB below the choruses.",
+            "tool": "Clip Gain",
+            "action": "volume_automation"
+          },
+          {
+            "text": "Ease the mix-bus compressor: raise the threshold or slow the attack so transients get through.",
+            "tool": null,
+            "action": "ease_bus_comp"
+          }
+        ]
+      },
+      "remediation": [
+        "Write volume automation (or use Clip Gain) so verses sit 2\u20133 dB below choruses."
+      ]
+    }
+  ],
+  "score": {
+    "value": 7.8,
+    "label": "Solid",
+    "areas": [
+      {
+        "id": "peaks",
+        "name": "Peaks & clipping",
+        "lost": 2.2
+      },
+      {
+        "id": "stereo",
+        "name": "Stereo & phase",
+        "lost": 0.0
+      },
+      {
+        "id": "file",
+        "name": "File & edges",
+        "lost": 0.0
+      }
+    ],
+    "if_fixed": 10.0
+  },
+  "style": null
+}

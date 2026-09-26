@@ -1,0 +1,321 @@
+{
+  "schema_version": "1.2",
+  "analyzer_version": "0.1.0",
+  "file": {
+    "name": "cutoff_mix.wav",
+    "sample_rate_hz": 44100,
+    "channels": 2,
+    "duration_s": 36.0
+  },
+  "loudness": {
+    "integrated_lufs": -14.38,
+    "max_momentary_lufs": -11.93,
+    "max_short_term_lufs": -12.16,
+    "loudness_range_lu": 6.05,
+    "timeline": [
+      {
+        "t": 1.5,
+        "lufs": -18.6
+      },
+      {
+        "t": 2.5,
+        "lufs": -18.3
+      },
+      {
+        "t": 3.5,
+        "lufs": -18.3
+      },
+      {
+        "t": 4.5,
+        "lufs": -18.3
+      },
+      {
+        "t": 5.5,
+        "lufs": -17.2
+      },
+      {
+        "t": 6.5,
+        "lufs": -14.7
+      },
+      {
+        "t": 7.5,
+        "lufs": -13.1
+      },
+      {
+        "t": 8.5,
+        "lufs": -12.3
+      },
+      {
+        "t": 9.5,
+        "lufs": -12.3
+      },
+      {
+        "t": 10.5,
+        "lufs": -12.3
+      },
+      {
+        "t": 11.5,
+        "lufs": -12.2
+      },
+      {
+        "t": 12.5,
+        "lufs": -13.0
+      },
+      {
+        "t": 13.5,
+        "lufs": -14.4
+      },
+      {
+        "t": 14.5,
+        "lufs": -16.5
+      },
+      {
+        "t": 15.5,
+        "lufs": -17.4
+      },
+      {
+        "t": 16.5,
+        "lufs": -17.5
+      },
+      {
+        "t": 17.5,
+        "lufs": -17.5
+      },
+      {
+        "t": 18.5,
+        "lufs": -17.1
+      },
+      {
+        "t": 19.5,
+        "lufs": -15.0
+      },
+      {
+        "t": 20.5,
+        "lufs": -13.4
+      },
+      {
+        "t": 21.5,
+        "lufs": -12.3
+      },
+      {
+        "t": 22.5,
+        "lufs": -12.2
+      },
+      {
+        "t": 23.5,
+        "lufs": -12.2
+      },
+      {
+        "t": 24.5,
+        "lufs": -12.2
+      },
+      {
+        "t": 25.5,
+        "lufs": -12.6
+      },
+      {
+        "t": 26.5,
+        "lufs": -13.7
+      },
+      {
+        "t": 27.5,
+        "lufs": -15.3
+      },
+      {
+        "t": 28.5,
+        "lufs": -16.6
+      },
+      {
+        "t": 29.5,
+        "lufs": -16.7
+      },
+      {
+        "t": 30.5,
+        "lufs": -16.7
+      },
+      {
+        "t": 31.5,
+        "lufs": -16.7
+      },
+      {
+        "t": 32.5,
+        "lufs": -15.3
+      },
+      {
+        "t": 33.5,
+        "lufs": -13.7
+      },
+      {
+        "t": 34.5,
+        "lufs": -12.6
+      }
+    ]
+  },
+  "peaks": {
+    "true_peak_max_dbtp": -1.27,
+    "sample_peak_max_dbfs": -1.55,
+    "clip_events_total": 0,
+    "channels": [
+      {
+        "sample_peak_dbfs": -1.55,
+        "true_peak_dbtp": -1.27,
+        "clip_events": 0,
+        "clip_times_s": [],
+        "dc_offset_dbfs": -115.2
+      },
+      {
+        "sample_peak_dbfs": -2.14,
+        "true_peak_dbtp": -2.13,
+        "clip_events": 0,
+        "clip_times_s": [],
+        "dc_offset_dbfs": -107.6
+      }
+    ]
+  },
+  "dynamics": {
+    "plr_db": 13.1
+  },
+  "stereo": {
+    "correlation": 0.785,
+    "low_end_correlation": 0.793,
+    "low_end_cutoff_hz": 150,
+    "mono_loudness_loss_db": 0.5,
+    "side_to_mid_db": -9.2,
+    "left_right_balance_db": 0.02,
+    "negative_correlation_sections": []
+  },
+  "spectrum": {
+    "band_energy_pct": {
+      "sub": 16.42,
+      "low": 20.91,
+      "low_mid": 29.74,
+      "high_mid": 15.77,
+      "high": 17.17
+    },
+    "energy_above_16k_pct": 3.1633
+  },
+  "edges": {
+    "silent_file": false,
+    "head_silence_s": 0.0,
+    "tail_silence_s": 0.0,
+    "final_50ms_rms_dbfs": -16.6,
+    "quietest_passage_rms_dbfs": -22.4
+  },
+  "streaming": {
+    "Spotify": {
+      "target_lufs": -14.0,
+      "gain_db": 0.4
+    },
+    "Apple Music": {
+      "target_lufs": -16.0,
+      "gain_db": -1.6
+    },
+    "YouTube": {
+      "target_lufs": -14.0,
+      "gain_db": 0.4
+    },
+    "Tidal": {
+      "target_lufs": -14.0,
+      "gain_db": 0.4
+    },
+    "Amazon Music": {
+      "target_lufs": -14.0,
+      "gain_db": 0.4
+    }
+  },
+  "profile": {
+    "version": 1,
+    "name": "cutoff_mix.wav",
+    "duration_s": 36.0,
+    "loud_seconds": 17.7,
+    "loudness_lufs": -12.82,
+    "punch_db": 11.55,
+    "contrast_lu": 6.05,
+    "width_db": -9.2,
+    "tone_db": {
+      "lows": -7.73,
+      "low_mids": -9.56,
+      "mids": -7.16,
+      "presence": -9.54,
+      "highs": -9.19
+    }
+  },
+  "stage": {
+    "value": "mix",
+    "detected": "mix",
+    "reason": "It isn't limited to master loudness, so it looks like a mix."
+  },
+  "setup": {
+    "daw": "pro_tools",
+    "packages": [
+      "waves_essential"
+    ],
+    "label": "Pro Tools + Waves Essential"
+  },
+  "measures": {
+    "lufs": -14.38,
+    "plr": 13.1,
+    "lra": 6.05,
+    "air_pct": 3.1633,
+    "tone": {
+      "lows": -7.73,
+      "low_mids": -9.56,
+      "mids": -7.16,
+      "presence": -9.54,
+      "highs": -9.19
+    }
+  },
+  "target": null,
+  "reference": null,
+  "flags": [
+    {
+      "id": "abrupt_end",
+      "severity": "warning",
+      "message": "The audio is still loud at the last sample; the ending may be cut off.",
+      "value": -16.6,
+      "base_severity": "warning",
+      "fix": {
+        "steps": [
+          {
+            "text": "Extend the timeline selection past the last reverb and delay tails, then File \u203a Bounce Mix again.",
+            "tool": "Bounce Mix",
+            "action": "include_tail"
+          }
+        ],
+        "more": [
+          {
+            "text": "Select the end of the last clip, press Command-F to add a fade-out, and bounce again.",
+            "tool": "Bounce Mix",
+            "action": "fade_out"
+          }
+        ]
+      },
+      "remediation": [
+        "Extend the timeline selection past the last reverb and delay tails, then File \u203a Bounce Mix again."
+      ]
+    }
+  ],
+  "score": {
+    "value": 9.4,
+    "label": "Ready for mastering",
+    "areas": [
+      {
+        "id": "peaks",
+        "name": "Peaks & clipping",
+        "lost": 0.0
+      },
+      {
+        "id": "stereo",
+        "name": "Stereo & phase",
+        "lost": 0.0
+      },
+      {
+        "id": "file",
+        "name": "File & edges",
+        "lost": 0.6
+      }
+    ],
+    "if_fixed": 10.0
+  },
+  "style": null
+}

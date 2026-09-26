@@ -340,6 +340,26 @@
     .score-num .value { font-size: 56px; }
   }
 
+  /* Engineer's notes: optional, written by Claude from the measurements */
+  .ai-notes { background: var(--card); border: 1px solid var(--card-edge); border-radius: 10px; padding: 20px 26px; margin-top: 14px; }
+  .ai-notes[hidden] { display: none; }
+  .ai-head { display: flex; justify-content: space-between; align-items: center; gap: 12px 20px; flex-wrap: wrap; }
+  .ai-notes h3 { margin: 0; font-size: 17px; font-weight: 750; font-variation-settings: "wdth" 115; }
+  .ai-notes .note { margin: 2px 0 0; font-size: 13px; color: var(--ink-soft); max-width: 70ch; }
+  .ai-notes .ai-headline { margin: 16px 0 6px; font-size: 20px; font-weight: 700; line-height: 1.3; }
+  .ai-notes .ai-summary { margin: 0; color: var(--ink); max-width: 75ch; }
+  .ai-notes h4 { margin: 18px 0 8px; font-size: 13px; color: var(--ink-soft); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ai-priorities { margin: 0; padding-left: 22px; max-width: 75ch; }
+  .ai-priorities > li { margin-bottom: 12px; }
+  .ai-priorities > li::marker { color: var(--brand); font-weight: 700; }
+  .ai-priorities b { display: block; }
+  .ai-priorities p { margin: 2px 0 4px; color: var(--ink-soft); }
+  .ai-priorities ul, .ai-list { margin: 0; padding-left: 18px; max-width: 75ch; }
+  .ai-priorities ul li { margin-bottom: 3px; }
+  .ai-meta { margin: 16px 0 0; font-size: 12px; color: var(--ink-soft); }
+  .ai-stale { margin: 12px 0 0; font-size: 13px; color: var(--warning); font-weight: 600; }
+  .ai-notes .progress { width: min(320px, 100%); }
+
   /* Verdict */
   .verdict { border-left: 6px solid var(--ok); background: var(--ok-bg); padding: 20px 24px; border-radius: 0 6px 6px 0; }
   .verdict[data-state="critical"] { border-color: var(--critical); background: var(--critical-bg); }
@@ -537,6 +557,7 @@
     <section class="refs" id="refs" aria-label="Reference tracks"></section>
     <input type="file" id="ref-input" accept=".wav,.wave,.aif,.aiff,.flac,.mp3" multiple hidden>
     <div class="verdict" id="verdict"></div>
+    <section class="ai-notes" id="ai-notes" aria-label="Engineer's notes" aria-live="polite" hidden></section>
     <div class="groups" id="groups"></div>
 
     <div class="section-head">
@@ -712,6 +733,8 @@ let setup = loadSetup();   // null until the user has chosen
 let target = "";           // style the user is going for; "" means no preference
 try { target = localStorage.getItem("mixcheck.target") || ""; } catch {}
 let styleOptions = [];
+let aiInfo = { available: false, reason: "This copy of MixCheck is older than the notes feature. Restart it after updating." };
+let aiNotes = null, aiStale = false, aiBusy = false, aiError = "";
 let setupOptions = null;
 
 function loadSetup() {
@@ -734,6 +757,7 @@ async function initSetup() {
     if (res.ok) {
       const info = await res.json();
       setupOptions = info.setup_options;
+      aiInfo = info.ai_notes || aiInfo;
       styleOptions = info.style_options || [];
     }
   } catch {}
@@ -1002,6 +1026,72 @@ function renderRefs(r) {
     ${status}${compare}`;
 }
 
+/* Engineer's notes: optional. Claude writes them from the measurements (never the audio);
+   ids in the notes point back at MixCheck's own findings and fix steps. */
+async function writeNotes() {
+  if (!report || aiBusy) return;
+  aiBusy = true; aiError = "";
+  renderNotes(report);
+  try {
+    const res = await fetch("/api/notes", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ report }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || `The notes couldn't be written (error ${res.status}).`);
+    aiNotes = data; aiStale = false;
+  } catch (err) {
+    aiError = err instanceof TypeError
+      ? "MixCheck has stopped running. Start it again, then try once more."
+      : err.message;
+  }
+  aiBusy = false;
+  renderNotes(report);
+}
+
+function renderNotes(r) {
+  const el = $("ai-notes");
+  el.hidden = false;
+  const button = aiBusy || !aiInfo.available ? ""
+    : `<button class="button" type="button" id="ai-write">${aiNotes ? "Rewrite notes" : "Write engineer's notes"}</button>`;
+  // Say why notes aren't available rather than hiding the panel, so the feature can be found.
+  let body = aiInfo.available ? "" : `<p class="note" style="margin-top:12px">Not available: ${esc(aiInfo.reason || "MixCheck couldn't load the AI part.")}</p>`;
+  if (aiBusy) body = `<p class="note" style="margin-top:14px">Claude is reading the measurements. This takes 10–40 seconds.</p><div class="progress"><span></span></div>`;
+  else if (aiError) body = `<p class="error">${esc(aiError)}</p>`;
+  if (aiNotes && !aiBusy) {
+    const n = aiNotes.notes;
+    const flagFor = (fid) => r.flags[Number(fid.slice(1)) - 1];
+    const priorities = n.priorities.map((p) => {
+      const labels = aiStale ? [] : p.finding_ids.map((fid) => plainFor(aiNotes.findings[fid], r.stage.value, flagFor(fid))?.[0]).filter(Boolean);
+      return `<li><b>${esc(p.title)}</b>
+        <p>${esc(p.why)}${labels.length ? ` <span class="note">(${esc(labels.join("; "))})</span>` : ""}</p>
+        ${p.step_ids.length ? `<ul>${p.step_ids.map((sid) => `<li>${esc(aiNotes.steps[sid] || sid)}</li>`).join("")}</ul>` : ""}
+      </li>`;
+    }).join("");
+    const list = (title, items) => items.length ? `<h4>${title}</h4><ul class="ai-list">${items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
+    const u = aiNotes.usage || {};
+    body += `
+      ${aiStale ? `<p class="ai-stale">You changed the stage, style, references or setup since these were written. Rewrite them to match.</p>` : ""}
+      <p class="ai-headline">${esc(n.headline)}</p>
+      <p class="ai-summary">${esc(n.summary)}</p>
+      ${priorities ? `<h4>What to do first</h4><ol class="ai-priorities">${priorities}</ol>` : ""}
+      ${list("Listen for", n.listen_for)}
+      ${list("Already working", n.strengths)}
+      <p class="ai-meta">Written by ${esc(aiNotes.model)} from the measurements above (prompt ${esc(aiNotes.prompt_version)},
+        ${(u.input_tokens || 0) + (u.output_tokens || 0)} tokens)${aiNotes.issues.length ? `; ${aiNotes.issues.length} unsupported reference(s) removed` : ""}.</p>`;
+  }
+  el.innerHTML = `
+    <div class="ai-head">
+      <div>
+        <h3>Engineer's notes <span class="note">· AI</span></h3>
+        <p class="note">Claude turns this report into notes like a mastering engineer's: what to fix first and why.
+          It sends the measurements, not the audio. Each set of notes costs a few cents on your Anthropic account.</p>
+      </div>
+      ${button}
+    </div>${body}`;
+}
+$("ai-notes").addEventListener("click", (e) => { if (e.target.closest("#ai-write")) writeNotes(); });
+
 /* Mix / master: rebuild fixes without re-uploading. */
 $("stage").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-stage]");
@@ -1021,6 +1111,7 @@ async function refreshFixes(stage) {
     report.score = data.score;
     report.style = data.style;
     report.reference = data.reference;
+    if (aiNotes) aiStale = true;  // the notes were written for the old findings
     report.target = data.target;
     report.setup = data.setup;
     report.stage = { ...report.stage, value: data.stage };
@@ -1164,6 +1255,7 @@ async function analyze(file) {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.detail || `Something went wrong while checking the file (error ${res.status}).`);
     report = data;
+    aiNotes = null; aiStale = false; aiError = "";
     render(report);
     pool.compact();
     setStatus({ title: "Drop another bounce to check it", sub: "Or choose a file." });
@@ -1201,6 +1293,7 @@ function render(r) {
   renderStyle(r);
   renderRefs(r);
   renderVerdict(r);
+  renderNotes(r);
   renderChecklist(r);
   renderReadings(r);
   drawTimeline(r);
