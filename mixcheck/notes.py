@@ -202,15 +202,24 @@ def _plain_error(exc):
     except ImportError:
         return exc
     # With no credentials at all, the SDK raises TypeError before sending anything.
-    if isinstance(exc, anthropic.AuthenticationError) or (
-            isinstance(exc, TypeError) and "authentication" in str(exc)):
-        return NotesUnavailable("No valid Anthropic API key. Set ANTHROPIC_API_KEY or run `ant auth login`.")
+    if isinstance(exc, TypeError) and "authentication" in str(exc):
+        return NotesUnavailable(
+            "No Anthropic API key found. Set ANTHROPIC_API_KEY in the Terminal window you start MixCheck from "
+            "(or run `ant auth login`), then start it again.")
+    if isinstance(exc, anthropic.AuthenticationError):
+        return NotesUnavailable(
+            "Anthropic rejected the API key. It may have been copied incompletely or deleted; "
+            "create a new one in the Anthropic console and set ANTHROPIC_API_KEY again.")
+    if isinstance(exc, anthropic.PermissionDeniedError):
+        return NotesUnavailable(f"This API key isn't allowed to use {model()}. Check the key's workspace in the Anthropic console.")
     if isinstance(exc, anthropic.RateLimitError):
         return NotesUnavailable("The AI service is busy right now. Try again in a minute.")
     if isinstance(exc, anthropic.APIConnectionError):
         return NotesUnavailable("Couldn't reach the AI service. Check your internet connection.")
+    if isinstance(exc, anthropic.BadRequestError) and "credit balance" in str(exc).lower():
+        return NotesUnavailable("Your Anthropic account is out of credit. Add some under Billing in the Anthropic console.")
     if isinstance(exc, anthropic.APIStatusError):
-        return NotesUnavailable(f"The AI service returned an error ({exc.status_code}).")
+        return NotesUnavailable(f"The AI service returned an error ({exc.status_code}): {getattr(exc, 'message', exc)}")
     return exc
 
 
