@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MixCheck</title>
+<title>Seraphim</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..800;1,62..125,400..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..800;1,62..125,400..800&family=Cinzel:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
   :root {
@@ -31,6 +31,9 @@
     --wave: #F00418;
     --wave-fill: rgba(240, 4, 24, 0.22);
     --font: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    /* Classical inscription capitals for the name only; everything that guides the user stays in Archivo. */
+    --display: "Cinzel", "Trajan Pro", Georgia, serif;
+    --glow: rgba(240, 4, 24, 0.35);
   }
   * { box-sizing: border-box; }
   body {
@@ -58,40 +61,51 @@
   header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   header p { margin: 4px 0 0; color: var(--ink-soft); font-size: 14px; }
 
-  /* Brand: the MixCheck mark (aura streaks rising into a check) + wordmark, by AuraPharm */
+  /* Brand: the Seraphim mark (six wings around a halo, after Isaiah 6:2) + wordmark, by AuraPharm */
   .mark { display: block; height: 100%; width: auto; fill: var(--brand); overflow: visible; }
-  .brand { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .brand [data-mark] { height: 24px; }
+  .mark .halo { fill: none; stroke: var(--brand); }
+  .brand { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .brand [data-mark] { height: 32px; filter: drop-shadow(0 0 6px var(--glow)); }
   .wordmark {
-    margin: 0; font-style: italic; font-weight: 800; letter-spacing: -0.01em; line-height: 1;
-    font-variation-settings: "wdth" 100; font-size: 26px; color: var(--ink);
+    margin: 0; font-family: var(--display); font-weight: 600; letter-spacing: 0.16em; line-height: 1;
+    text-transform: uppercase; font-size: 24px; color: var(--ink);
   }
+  .tagline { margin: 0; font-family: var(--display); font-size: 12px; letter-spacing: 0.14em; color: var(--ink-soft); }
   .by { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; color: var(--ink-soft); }
   .by img { height: 15px; width: auto; display: block; }
 
-  /* Intro: the mark rises out of the pool, then settles into the header */
+  /* Intro: the wings unfold around the halo, then the lockup settles into the header */
   #intro {
     position: fixed; inset: 0; z-index: 20; cursor: pointer;
     display: grid; place-items: center;
-    /* a pocket of still, dark water so the mark reads over the waves */
-    background: radial-gradient(ellipse 60% 42% at 50% 50%, rgba(5, 6, 7, 0.92) 0, rgba(5, 6, 7, 0.7) 45%, transparent 100%);
+    /* light from behind the seraph, fading into the dark */
+    background:
+      radial-gradient(circle at 50% 44%, rgba(240, 4, 24, 0.20) 0, rgba(240, 4, 24, 0.06) 22%, transparent 42%),
+      radial-gradient(ellipse 60% 48% at 50% 50%, rgba(5, 6, 7, 0.9) 0, rgba(5, 6, 7, 0.7) 50%, transparent 100%);
     transition: opacity 1s ease, transform 1.2s cubic-bezier(.6, 0, .2, 1);
   }
-  .intro-lockup { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 0 16px; }
-  .intro-lockup [data-mark] { height: clamp(90px, 16vw, 150px); }
-  .intro-lockup .wordmark { font-size: clamp(44px, 8vw, 84px); }
+  .intro-lockup { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 0 16px; text-align: center; }
+  .intro-lockup [data-mark] { height: clamp(110px, 20vw, 190px); filter: drop-shadow(0 0 24px var(--glow)); }
+  .intro-lockup .wordmark { font-size: clamp(40px, 7.5vw, 80px); letter-spacing: 0.2em; margin-right: -0.2em; }
+  .intro-lockup .tagline { font-size: clamp(13px, 1.6vw, 17px); letter-spacing: 0.22em; }
   .intro-lockup .by { font-size: 15px; gap: 10px; }
   .intro-lockup .by img { height: clamp(20px, 3vw, 28px); }
-  .mark polygon { transform-box: fill-box; transform-origin: 50% 100%; }
-  /* Streaks rise 0.4–2.4s, name 2.1–3.2s, AuraPharm 2.8–3.8s, then the prompt waits for the user. */
-  body.intro #intro .mark polygon { animation: rise 0.9s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 110ms + 400ms); }
+  /* Each wing folds in toward the halo; the right wing turns one way, the left the mirror of it. */
+  .mark polygon { transform-box: view-box; transform-origin: var(--ox) var(--oy); }
+  /* Wings 0.3–2.3s (middle pair, then upper, then lower), halo from 0.2s, name 2.1s, tagline 2.6s, AuraPharm 3.1s. */
+  body.intro #intro .mark polygon { animation: unfold-r 1s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 70ms + 300ms); }
+  body.intro #intro .mark polygon.l { animation-name: unfold-l; }
+  body.intro #intro .mark .halo { animation: draw-halo 1.4s ease 0.2s both; }
   body.intro #intro .wordmark { animation: fade-up 1.1s ease 2.1s both; }
-  body.intro #intro .by { animation: fade-up 1s ease 2.8s both; }
+  body.intro #intro .tagline { animation: fade-up 1s ease 2.6s both; }
+  body.intro #intro .by { animation: fade-up 1s ease 3.1s both; }
   .continue { margin: 28px 0 0; font-size: 14px; letter-spacing: 0.06em; color: var(--ink-soft); }
-  body.intro #intro .continue { animation: fade-up 0.8s ease 3.9s both, breathe 2.4s ease-in-out 4.7s infinite; }
+  body.intro #intro .continue { animation: fade-up 0.8s ease 4s both, breathe 2.4s ease-in-out 4.8s infinite; }
   @keyframes breathe { 50% { opacity: 0.35; } }
   body.intro-out #intro { pointer-events: none; }
-  @keyframes rise { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+  @keyframes unfold-r { from { transform: rotate(-70deg) scale(0.3); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes unfold-l { from { transform: rotate(70deg) scale(0.3); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes draw-halo { from { stroke-dashoffset: 80; opacity: 0; } 30% { opacity: 1; } to { stroke-dashoffset: 0; opacity: 1; } }
   @keyframes fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
   body.intro-out #intro { opacity: 0; transform: translateY(-34vh) scale(0.35); }
 
@@ -241,7 +255,7 @@
     .ref-compare { grid-template-columns: 1fr; }
   }
 
-  /* The pool: full-bleed black water of waveforms, with the slot floating on it */
+  /* The altar: full-bleed dark, light and embers rising from below, with the slot floating over it */
   .pool {
     position: relative; overflow: hidden;
     width: 100vw; margin: 20px 0 0 calc(50% - 50vw); padding: 0 24px;
@@ -251,7 +265,7 @@
   }
   .pool.compact { min-height: 150px; }
   .pool canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  .pool::after { /* fade the water into the page at the edges */
+  .pool::after { /* fade the light into the page at the edges */
     content: ""; position: absolute; inset: 0; pointer-events: none;
     background:
       linear-gradient(to bottom, var(--panel) 0, transparent 10%, transparent 85%, var(--panel) 100%),
@@ -483,7 +497,8 @@
 <div id="intro" aria-hidden="true">
   <div class="intro-lockup">
     <span data-mark></span>
-    <p class="wordmark">MixCheck</p>
+    <p class="wordmark">Seraphim</p>
+    <p class="tagline" data-tagline></p>
     <p class="by">by <img src="aurapharm-logo.png" alt=""></p>
     <p class="continue" id="intro-continue">Click anywhere or press any key to continue</p>
   </div>
@@ -493,9 +508,10 @@
     <div>
       <div class="brand">
         <span data-mark></span>
-        <h1 class="wordmark">MixCheck</h1>
+        <h1 class="wordmark">Seraphim</h1>
         <span class="by">by <img src="aurapharm-logo.png" alt="AuraPharm"></span>
       </div>
+      <p class="tagline" data-tagline></p>
       <p>Checks a mix or master for problems and tells you how to fix them with your own tools.</p>
     </div>
     <button class="setup-chip" id="setup-chip" type="button">Fixes for <b id="setup-label">your setup</b> <span>Change</span></button>
@@ -504,7 +520,7 @@
   <dialog class="setup" id="setup-dialog" aria-labelledby="setup-title">
     <form method="dialog" id="setup-form">
       <h2 id="setup-title">What do you work with?</h2>
-      <p class="lede">MixCheck writes every fix for your DAW and the plugins you own, so the steps use controls you actually have.</p>
+      <p class="lede">Seraphim writes every fix for your DAW and the plugins you own, so the steps use controls you actually have.</p>
       <fieldset>
         <legend>Your DAW</legend>
         <div class="choices" id="daw-choices"></div>
@@ -606,16 +622,50 @@
 <script>
 const $ = (id) => document.getElementById(id);
 
-/* The MixCheck mark: aura streaks rising into a check (same shape as mixcheck-mark.svg). */
-const MARK = ["0,104 9,104 18.5,74", "17,104 26,104 31.5,82", "34,104 43,104 44.5,90", "51,104 60,104 59.5,96",
-  "68,104 77,104 81.5,84", "85,104 94,104 104.5,70", "102,104 111,104 128.5,56", "119,104 128,104 151.5,42",
-  "136,104 145,104 174.5,28", "153,104 162,104 198.5,14", "170,104 179,104 221.5,0"];
+/* The Seraphim mark: six wings in three pairs around a halo (same shape as seraphim-mark.svg).
+   Each blade is [side, order, points]; order sets when it unfolds in the intro. */
+const TAGLINE = "Refined by fire, for His glory.";
+const SERAPH = { viewBox: "17 27 207 132", cx: 120, cy: 100, r: 11.5, stroke: 4.5, blades: [
+  ["r", 6, "131.0,88.0 137.5,84.2 136.3,71.3"],
+  ["l", 6, "109.0,88.0 102.5,84.2 103.7,71.3"],
+  ["r", 7, "139.6,83.0 146.1,79.3 147.9,60.8"],
+  ["l", 7, "100.4,83.0 93.9,79.3 92.1,60.8"],
+  ["r", 8, "148.1,78.1 154.6,74.3 161.0,49.9"],
+  ["l", 8, "91.9,78.1 85.4,74.3 79.0,49.9"],
+  ["r", 9, "156.7,73.1 163.2,69.4 175.3,39.8"],
+  ["l", 9, "83.3,73.1 76.8,69.4 64.7,39.8"],
+  ["r", 10, "165.3,68.2 171.8,64.4 191.3,29.9"],
+  ["l", 10, "74.7,68.2 68.2,64.4 48.7,29.9"],
+  ["r", 0, "137.0,97.0 144.3,95.4 147.4,112.9"],
+  ["l", 0, "103.0,97.0 95.7,95.4 92.6,112.9"],
+  ["r", 1, "146.7,94.9 154.0,93.4 160.5,115.9"],
+  ["l", 1, "93.3,94.9 86.0,93.4 79.5,115.9"],
+  ["r", 2, "156.4,92.9 163.7,91.3 174.1,118.6"],
+  ["l", 2, "83.6,92.9 76.3,91.3 65.9,118.6"],
+  ["r", 3, "166.1,90.8 173.4,89.3 188.8,121.8"],
+  ["l", 3, "73.9,90.8 66.6,89.3 51.2,121.8"],
+  ["r", 4, "175.7,88.8 183.1,87.2 204.0,124.5"],
+  ["l", 4, "64.3,88.8 56.9,87.2 36.0,124.5"],
+  ["r", 5, "185.4,86.7 192.8,85.1 220.4,127.5"],
+  ["l", 5, "54.6,86.7 47.2,85.1 19.6,127.5"],
+  ["r", 12, "131.0,112.0 137.5,115.8 136.1,126.7"],
+  ["l", 12, "109.0,112.0 102.5,115.8 103.9,126.7"],
+  ["r", 13, "139.6,117.0 146.1,120.7 147.2,136.3"],
+  ["l", 13, "100.4,117.0 93.9,120.7 92.8,136.3"],
+  ["r", 14, "148.1,121.9 154.6,125.6 159.6,146.3"],
+  ["l", 14, "91.9,121.9 85.4,125.6 80.4,146.3"],
+  ["r", 15, "156.7,126.8 163.2,130.6 173.1,155.7"],
+  ["l", 15, "83.3,126.8 76.8,130.6 66.9,155.7"],
+] };
 document.querySelectorAll("[data-mark]").forEach((el) => {
-  el.innerHTML = `<svg class="mark" viewBox="0 0 222 104" aria-hidden="true">${
-    MARK.map((p, i) => `<polygon style="--i:${i}" points="${p}"/>`).join("")}</svg>`;
+  const origin = `--ox:${SERAPH.cx}px;--oy:${SERAPH.cy}px`;
+  el.innerHTML = `<svg class="mark" viewBox="${SERAPH.viewBox}" aria-hidden="true">${
+    SERAPH.blades.map(([side, i, pts]) => `<polygon class="${side}" style="--i:${i};${origin}" points="${pts}"/>`).join("")
+  }<circle class="halo" cx="${SERAPH.cx}" cy="${SERAPH.cy}" r="${SERAPH.r}" stroke-width="${SERAPH.stroke}" stroke-dasharray="80"/></svg>`;
 });
+document.querySelectorAll("[data-tagline]").forEach((el) => { el.textContent = TAGLINE; });
 
-/* Intro: the logo rises out of the pool, then waits. Any click, tap, key, scroll or file drag
+/* Intro: the seraph's wings unfold over the light, then it waits. Any click, tap, key, scroll or file drag
    continues (even mid-reveal). Shown once per browser session, or any time with ?intro.
    intro.done resolves once the page is usable. */
 const intro = (() => {
@@ -733,7 +783,7 @@ let setup = loadSetup();   // null until the user has chosen
 let target = "";           // style the user is going for; "" means no preference
 try { target = localStorage.getItem("mixcheck.target") || ""; } catch {}
 let styleOptions = [];
-let aiInfo = { available: false, reason: "This copy of MixCheck is older than the notes feature. Restart it after updating." };
+let aiInfo = { available: false, reason: "This copy of Seraphim is older than the notes feature. Restart it after updating." };
 let aiNotes = null, aiStale = false, aiBusy = false, aiError = "";
 let setupOptions = null;
 
@@ -867,7 +917,7 @@ async function addReferenceFiles(files) {
       added.push(data);
     } catch (err) {
       refError = err instanceof TypeError
-        ? "MixCheck has stopped running. Double-click MixCheck.command to start it again, then try once more."
+        ? "Seraphim has stopped running. Double-click Seraphim.command to start it again, then try once more."
         : err.message;
     }
   }
@@ -980,7 +1030,7 @@ function renderRefs(r) {
   if (!n) {
     el.innerHTML = `
       <h3>Want it to sound like a record you love?</h3>
-      <p class="note">Add 1–3 released songs. MixCheck compares their loudest sections with yours at matched volume,
+      <p class="note">Add 1–3 released songs. Seraphim compares their loudest sections with yours at matched volume,
         across loudness, punch, contrast, tone and width, and writes the fixes relative to them.
         Only their measurements are kept, never the audio.</p>
       <div class="refs-bar">
@@ -1027,7 +1077,7 @@ function renderRefs(r) {
 }
 
 /* Engineer's notes: optional. Claude writes them from the measurements (never the audio);
-   ids in the notes point back at MixCheck's own findings and fix steps. */
+   ids in the notes point back at Seraphim's own findings and fix steps. */
 async function writeNotes() {
   if (!report || aiBusy) return;
   aiBusy = true; aiError = "";
@@ -1042,7 +1092,7 @@ async function writeNotes() {
     aiNotes = data; aiStale = false;
   } catch (err) {
     aiError = err instanceof TypeError
-      ? "MixCheck has stopped running. Start it again, then try once more."
+      ? "Seraphim has stopped running. Start it again, then try once more."
       : err.message;
   }
   aiBusy = false;
@@ -1055,7 +1105,7 @@ function renderNotes(r) {
   const button = aiBusy || !aiInfo.available ? ""
     : `<button class="button" type="button" id="ai-write">${aiNotes ? "Rewrite notes" : "Write engineer's notes"}</button>`;
   // Say why notes aren't available rather than hiding the panel, so the feature can be found.
-  let body = aiInfo.available ? "" : `<p class="note" style="margin-top:12px">Not available: ${esc(aiInfo.reason || "MixCheck couldn't load the AI part.")}</p>`;
+  let body = aiInfo.available ? "" : `<p class="note" style="margin-top:12px">Not available: ${esc(aiInfo.reason || "Seraphim couldn't load the AI part.")}</p>`;
   if (aiBusy) body = `<p class="note" style="margin-top:14px">Claude is reading the measurements. This takes 10–40 seconds.</p><div class="progress"><span></span></div>`;
   else if (aiError) body = `<p class="error">${esc(aiError)}</p>`;
   if (aiNotes && !aiBusy) {
@@ -1118,7 +1168,7 @@ async function refreshFixes(stage) {
     render(report);
   } catch {
     setStatus({ title: "Drop another bounce to check it", sub: "Or choose a file.",
-                error: "Couldn't update the fixes. Make sure MixCheck is still running." });
+                error: "Couldn't update the fixes. Make sure Seraphim is still running." });
   }
 }
 
@@ -1128,8 +1178,8 @@ $("detail").addEventListener("toggle", () => {
   try { localStorage.setItem("mixcheck.detail", $("detail").open ? "open" : "closed"); } catch {}
 });
 
-/* The pool: a scrolling waveform standing on black water, with its reflection and ripples.
-   mood() raises the swell while a file is dragged in or being checked. */
+/* The altar: a scrolling waveform rising as light from a low line, tallest toward the centre,
+   with embers drifting up. mood() raises the fire while a file is dragged in or being checked. */
 const pool = (() => {
   const canvas = $("waves"), ctx = canvas.getContext("2d");
   const still = matchMedia("(prefers-reduced-motion: reduce)");
@@ -1143,6 +1193,7 @@ const pool = (() => {
     return Math.max(0.12, Math.min(1, e)) * (n % 16 < 2 ? 1.2 : 1) * (0.35 + 0.65 * rnd(n));
   };
   let W = 0, H = 0, t = 0, scroll = 0, energy = 1, target = 1, busy = false, last = 0;
+  const embers = [];
 
   function resize() {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -1153,40 +1204,52 @@ const pool = (() => {
     if (still.matches) draw();
   }
 
-  function draw() {
+  function draw(dt = 0) {
     ctx.clearRect(0, 0, W, H);
-    const horizon = H * 0.5, bar = 4, maxH = H * 0.38;
-    // Waveform bars above the surface, fainter reflection below.
+    const altar = H * 0.8, bar = 4, maxH = H * 0.62;
+    // Light gathering above the altar, strongest in the middle.
+    const glow = ctx.createRadialGradient(W / 2, altar, 0, W / 2, altar, Math.max(W, H) * 0.55);
+    glow.addColorStop(0, rgba(0.16 + 0.06 * energy));
+    glow.addColorStop(1, rgba(0));
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+    // Waveform bars rising as flame: red at the base, fading to dark as they climb.
     for (let x = 0; x < W; x += bar) {
       const n = Math.floor((x + scroll) / bar);
-      const h = maxH * env(n) * (0.75 + 0.25 * energy);
-      ctx.fillStyle = rgba(0.68);
-      ctx.fillRect(x, horizon - h, bar - 1.5, h);
-      const wobble = still.matches ? 0 : Math.sin(t * 2.2 + n * 0.35) * 1.6 * energy;
-      ctx.fillStyle = rgba(0.2);
-      ctx.fillRect(x + wobble, horizon + 2, bar - 1.5, h * 0.7);
+      const centre = 1 - Math.pow(Math.abs(x / W - 0.5) * 2, 1.6) * 0.75;  // a column of light
+      const h = maxH * env(n) * centre * (0.7 + 0.3 * energy);
+      const g = ctx.createLinearGradient(0, altar, 0, altar - h);
+      g.addColorStop(0, rgba(0.75));
+      g.addColorStop(0.55, rgba(0.28));
+      g.addColorStop(1, rgba(0));
+      ctx.fillStyle = g;
+      ctx.fillRect(x, altar - h, bar - 1.5, h);
     }
-    // Ripple lines, closer together toward the horizon for depth.
-    const lines = 18;
-    for (let i = 0; i < lines; i++) {
-      const d = (i + 1) / lines;
-      const y0 = horizon + (H - horizon) * Math.pow(d, 1.7);
-      const amp = (1 + 9 * d) * energy;
-      const k = 0.003 + 0.012 * (1 - d);
-      ctx.beginPath();
-      for (let x = 0; x <= W + 6; x += 6) {
-        const y = y0 + amp * (0.6 * Math.sin(x * k + t * 0.9 + i * 0.7)
-                            + 0.3 * Math.sin(x * k * 2.3 - t * 1.4 + i * 1.3)
-                            + 0.1 * Math.sin(x * k * 5.1 + t * 2.1));
-        x ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    // The altar line, with a white-hot core at the centre.
+    const line = ctx.createLinearGradient(0, 0, W, 0);
+    line.addColorStop(0, rgba(0)); line.addColorStop(0.5, "rgba(255,240,240,0.9)"); line.addColorStop(1, rgba(0));
+    ctx.fillStyle = rgba(0.55);
+    ctx.fillRect(0, altar, W, 1.5);
+    ctx.fillStyle = line;
+    ctx.fillRect(W * 0.2, altar, W * 0.6, 1);
+    // Embers: born at the altar, drifting up and fading. More of them when the fire is up.
+    if (!still.matches) {
+      const rate = dt * 14 * energy * (W / 1200);  // embers this frame, on average
+      const count = Math.floor(rate) + (Math.random() < rate % 1 ? 1 : 0);
+      for (let k = 0; k < count && embers.length < 400; k++) {
+        const x = W / 2 + (Math.random() - 0.5) * W * 0.8 * Math.random();
+        embers.push({ x, y: altar - 2, vy: 18 + Math.random() * 40, vx: (Math.random() - 0.5) * 10,
+                      life: 0, span: 2.5 + Math.random() * 3.5, size: 0.8 + Math.random() * 1.6 });
       }
-      ctx.strokeStyle = rgba(0.1 + 0.5 * Math.pow(d, 1.2));
-      ctx.lineWidth = 0.6 + 0.9 * d;
-      ctx.stroke();
     }
-    // The surface itself.
-    ctx.fillStyle = rgba(0.5);
-    ctx.fillRect(0, horizon, W, 1);
+    for (let i = embers.length - 1; i >= 0; i--) {
+      const e = embers[i];
+      e.life += dt; e.y -= e.vy * dt * (0.6 + 0.4 * energy); e.x += (e.vx + Math.sin(t * 1.3 + e.span * 5) * 6) * dt;
+      const a = Math.max(0, 1 - e.life / e.span);
+      if (a <= 0 || e.y < 0) { embers.splice(i, 1); continue; }
+      ctx.fillStyle = e.size > 1.8 ? `rgba(255,236,236,${0.55 * a})` : rgba(0.8 * a);
+      ctx.fillRect(e.x, e.y, e.size, e.size);
+    }
   }
 
   function frame(now) {
@@ -1196,7 +1259,7 @@ const pool = (() => {
     energy += (goal - energy) * Math.min(1, dt * 3);
     t += dt;
     scroll += dt * 26 * energy;
-    draw();
+    draw(dt);
     if (!still.matches) requestAnimationFrame(frame);
   }
 
@@ -1262,7 +1325,7 @@ async function analyze(file) {
     $("choose").textContent = "Choose another file";
   } catch (err) {
     const msg = err instanceof TypeError
-      ? "MixCheck has stopped running. Double-click MixCheck.command to start it again, then try once more."
+      ? "Seraphim has stopped running. Double-click Seraphim.command to start it again, then try once more."
       : err.message;
     setStatus({ title: report ? "Drop another bounce to check it" : "Drop a bounce here to check it",
                 sub: "WAV, AIFF, FLAC or MP3.", error: msg });
@@ -1305,7 +1368,7 @@ function renderStage(r) {
   document.querySelectorAll("#stage button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.stage === st.value)));
   $("stage-why").textContent = st.value === st.detected
     ? `Detected automatically. ${st.reason}`
-    : `You chose this. MixCheck guessed ${st.detected === "mix" ? "a mix" : "a master"}.`;
+    : `You chose this. Seraphim guessed ${st.detected === "mix" ? "a mix" : "a master"}.`;
 }
 
 const SCORE_STOPS = [[1, [240, 4, 24]], [5.5, [245, 197, 24]], [10, [34, 197, 94]]];
@@ -1395,7 +1458,7 @@ function renderStyle(r) {
     sm.songs ? `Ranges measured from ${sm.songs} ${sm.name} songs you calibrated with.`
              : "The shaded zone is typical for this style.",
     sm.stage === "mix" ? "Loudness isn't compared for a mix; mastering sets it." : "",
-    !sm.songs ? "Tone is compared once you calibrate this style with real releases (mixcheck-calibrate)." : "",
+    !sm.songs ? "Tone is compared once you calibrate this style with real releases (seraphim-calibrate)." : "",
   ].filter(Boolean).join(" ");
   el.innerHTML = `
     <div><div class="pct">${sm.percent}%</div><p class="pct-label">style match</p></div>

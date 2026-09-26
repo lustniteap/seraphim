@@ -35,7 +35,7 @@ ALLOWED_SUFFIXES = {".wav", ".wave", ".aif", ".aiff", ".flac", ".mp3"}
 MAX_UPLOAD_BYTES = 1024 * 1024 * 1024  # 1 GB: a long 96 kHz/32-bit stereo bounce fits
 CHUNK = 1024 * 1024
 
-app = FastAPI(title="MixCheck", version=__version__)
+app = FastAPI(title="Seraphim", version=__version__)
 
 
 @app.middleware("http")
@@ -217,7 +217,7 @@ def main():
 
     import uvicorn
 
-    parser = argparse.ArgumentParser(prog="mixcheck-web", description="Run the MixCheck web interface.")
+    parser = argparse.ArgumentParser(prog="seraphim-web", description="Run the Seraphim web interface.")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--no-browser", action="store_true", help="Don't open a browser tab")
     args = parser.parse_args()
@@ -225,14 +225,14 @@ def main():
     url = f"http://127.0.0.1:{args.port}"
     if already_running(url):
         # Launching twice shouldn't fail: just show the copy that's already up.
-        print(f"MixCheck is already running at {url}")
+        print(f"Seraphim is already running at {url}")
         if not args.no_browser:
             webbrowser.open(url)
         return
     if port_in_use(args.port):
-        sys.exit(f"Port {args.port} is being used by another program. Try: mixcheck-web --port {args.port + 1}")
+        sys.exit(f"Port {args.port} is being used by another program. Try: seraphim-web --port {args.port + 1}")
 
-    print(f"MixCheck is running at {url}")
+    print(f"Seraphim is running at {url}")
     print("Keep this window open while you use it. Close it (or press Ctrl+C) to quit.")
     if not args.no_browser:
         # Open the tab once the server is listening, not before.
