@@ -69,6 +69,10 @@ def _input_numbers(inp):
             for m in RANGE_WITH_UNIT.finditer(o):  # "−6 to −3 dBFS": the first number has the unit too
                 add(m.group(3), _num(m.group(1)))
     walk(inp)
+    # Durations and times are written m:ss ("duration": "0:40"), and notes rightly say "the whole 40 seconds".
+    for t in TIME.findall(json.dumps(inp, ensure_ascii=False)):
+        m, sec = t.split(":")
+        add("s", 60 * int(m) + int(sec))
     return found
 
 

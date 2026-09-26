@@ -584,6 +584,9 @@ def test_eval_number_check_is_fair_to_rounding_but_not_to_invention():
     # Found in the first real pilot: "808s" (the drum machine) was read as 808 seconds.
     assert numbers_grounded(notes("Let the 808s carry the low end."), inp)[0] is None
     assert numbers_grounded(notes("Trim the last 30 s."), inp)[0] == 0.0
+    # Found in the baseline: a 0:40 song is "the whole 40 seconds"; times in m:ss count as seconds too.
+    assert numbers_grounded(notes("Check the 42 seconds mark."), inp)[0] == 1.0
+    assert numbers_grounded(notes("Check the 50 seconds mark."), inp)[0] == 0.0
 
 
 if __name__ == "__main__":

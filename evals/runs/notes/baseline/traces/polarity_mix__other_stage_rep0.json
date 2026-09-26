@@ -169,7 +169,7 @@
   "ids_valid": "all ids exist",
   "covers_critical": "all covered",
   "covers_warnings": "all covered",
-  "numbers_grounded": "not in the report: 40 seconds",
+  "numbers_grounded": "16 quoted, all found",
   "tools_owned": "only owned tools",
   "stage_appropriate": "not a mix",
   "no_invented_problems": "the report has findings"
