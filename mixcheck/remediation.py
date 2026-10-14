@@ -15,7 +15,7 @@ Stage matters: clipping in a mix headed for mastering is fixed with gain
 staging, not a limiter. STAGE_SEVERITY re-rates findings that mean something
 different for a mix.
 """
-from .catalog import ACTIONS, DAWS, PACKAGES, owned_tools
+from .catalog import ACTIONS, DAWS, PACKAGES, expand_packages, owned_tools
 from .util import fmt_time
 
 STAGES = ("mix", "master")
@@ -191,12 +191,14 @@ def detect_stage(report):
 def normalize_setup(setup):
     setup = setup or {}
     daw = setup.get("daw") if setup.get("daw") in DAWS else DEFAULT_SETUP["daw"]
-    packages = [p for p in setup.get("packages", []) if p in PACKAGES]
-    return {"daw": daw, "packages": packages}
+    return {"daw": daw, "packages": expand_packages(setup.get("packages"))}
 
 
 def describe_setup(setup):
-    parts = [DAWS[setup["daw"]]] + [PACKAGES[p]["name"] for p in setup["packages"]]
+    # Waves plugins are listed together, like "Waves (L2, F6)", rather than as many separate items.
+    waves = [PACKAGES[p]["name"] for p in setup["packages"] if PACKAGES[p]["group"] == "Waves"]
+    others = [PACKAGES[p]["name"] for p in setup["packages"] if PACKAGES[p]["group"] != "Waves"]
+    parts = [DAWS[setup["daw"]]] + ([f"Waves ({', '.join(waves)})"] if waves else []) + others
     return " + ".join(parts)
 
 

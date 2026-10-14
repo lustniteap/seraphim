@@ -22,7 +22,10 @@ DAWS = {
 }
 
 PACKAGES = {
-    "waves_essential": {"name": "Waves Essential", "group": "Waves"},
+    "waves_l2": {"name": "L2", "group": "Waves"},
+    "waves_f6": {"name": "F6", "group": "Waves"},
+    "waves_ren_eq": {"name": "Renaissance EQ", "group": "Waves"},
+    "waves_ren_comp": {"name": "Renaissance Compressor", "group": "Waves"},
     "waves_s1_imager": {"name": "S1 Stereo Imager", "group": "Waves"},
     "waves_s1_shuffler": {"name": "S1 Shuffler", "group": "Waves"},
     "waves_paz": {"name": "PAZ Analyzer", "group": "Waves"},
@@ -30,6 +33,22 @@ PACKAGES = {
     "fabfilter": {"name": "FabFilter (Pro-L 2, Pro-Q, Pro-C 2)", "group": "FabFilter"},
     "izotope_ozone": {"name": "iZotope Ozone", "group": "iZotope"},
     "izotope_insight": {"name": "iZotope Insight 2", "group": "iZotope"},
+}
+
+# Ids that older saved setups, scripts and eval cases use, each standing for several current ones.
+# "waves_essential" used to be one item covering these four Waves plugins.
+LEGACY_PACKAGES = {
+    "waves_essential": ["waves_l2", "waves_f6", "waves_ren_eq", "waves_ren_comp"],
+}
+
+# Waves sells its plugins as subscription tiers. These are the plugins in each tier that Seraphim has
+# fix steps for, from Waves' own plugin list (waves.com, checked 2026-10-14: the list flags each plugin
+# for the low tier, Waves Essential, and the high tier, Waves Ultimate). Ultimate also has L3 and many
+# more, which Seraphim can't write steps for yet. S1 Shuffler isn't in either tier, so it's chosen alone.
+_ESSENTIAL = ["waves_l2", "waves_f6", "waves_ren_eq", "waves_ren_comp", "waves_s1_imager", "waves_paz", "waves_wlm"]
+WAVES_TIERS = {
+    "essential": {"name": "Waves Essential", "plugins": _ESSENTIAL},
+    "ultimate": {"name": "Waves Ultimate", "plugins": _ESSENTIAL},
 }
 
 # Every action a fix can ask for, with wording that works in any DAW.
@@ -212,21 +231,21 @@ TOOLS = {
     }},
 
     # Waves Essential
-    "waves_l2": {"name": "Waves L2", "in": ["waves_essential"], "can": {
+    "waves_l2": {"name": "Waves L2", "in": ["waves_l2"], "can": {
         "limit_true_peak": (1, "Set the L2's Out Ceiling to −1.5 dB; the L2 limits sample peaks, so leave margin for true peaks."),
         "ease_limiting": (2, "Raise the L2's Threshold by 2–4 dB (less limiting) and compare at matched volume."),
         "push_limiting": (2, "Lower the L2's Threshold in 1 dB steps until you reach the target; keep Out Ceiling at −1.5 dB."),
         "remove_mix_limiting": (2, "Bypass the L2 on the master bus before bouncing for mastering."),
     }},
-    "waves_f6": {"name": "Waves F6", "in": ["waves_essential"], "can": {
+    "waves_f6": {"name": "Waves F6", "in": ["waves_f6"], "can": {
         "mono_low_end": (2, "Insert F6 in M/S mode and cut the Side below 150 Hz with a high-pass band."),
     }},
-    "waves_renaissance_eq": {"name": "Renaissance EQ", "in": ["waves_essential"], "can": {
+    "waves_renaissance_eq": {"name": "Renaissance EQ", "in": ["waves_ren_eq"], "can": {
         "remove_dc": (1, "Add Renaissance EQ on the master with a high-pass at 20 Hz."),
         "eq_cut_band": (2, "Add Renaissance EQ on the master and use a {shape} over {band}, cutting about {amount} dB."),
         "eq_boost_band": (2, "Add Renaissance EQ on the master and use a {shape} over {band}, boosting about {amount} dB."),
     }},
-    "waves_rcomp": {"name": "Renaissance Compressor", "in": ["waves_essential"], "can": {
+    "waves_rcomp": {"name": "Renaissance Compressor", "in": ["waves_ren_comp"], "can": {
         "restore_transients": (2, "On the drum bus, use Renaissance Compressor with a slower attack (10–30 ms) to let the hits through."),
     }},
 
@@ -292,8 +311,18 @@ TOOLS = {
 
 def owned_tools(setup):
     """Tools available to a user: their DAW's stock tools plus their packages."""
-    have = {setup.get("daw", "other"), *setup.get("packages", [])}
+    have = {setup.get("daw", "other"), *expand_packages(setup.get("packages"))}
     return {tid: t for tid, t in TOOLS.items() if have & set(t["in"])}
+
+
+def expand_packages(ids):
+    """Package ids as saved or typed, with legacy ones replaced by what they stood for; unknown ones dropped."""
+    out = []
+    for p in ids or []:
+        for q in LEGACY_PACKAGES.get(p, [p]):
+            if q in PACKAGES and q not in out:
+                out.append(q)
+    return out
 
 
 def options():
@@ -301,4 +330,6 @@ def options():
     return {
         "daws": [{"id": k, "name": v} for k, v in DAWS.items()],
         "packages": [{"id": k, **v} for k, v in PACKAGES.items()],
+        "waves_tiers": [{"id": k, **v} for k, v in WAVES_TIERS.items()],
+        "legacy_packages": LEGACY_PACKAGES,
     }

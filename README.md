@@ -278,7 +278,18 @@ Fixes are built in two layers so they stay specific without being rewritten for 
 For each action the best tool the user owns is chosen; their other tools for the same job go
 under "More options", and anyone without a matching tool gets generic wording. Adding a plugin
 is one entry in `TOOLS`. Covered now: Pro Tools, Logic Pro, Ableton Live and FL Studio stock tools,
-Waves Essential plus S1 Imager/Shuffler, PAZ and WLM Plus, FabFilter, and iZotope Ozone/Insight.
+these Waves plugins (L2, F6, Renaissance EQ and Compressor, S1 Stereo Imager and Shuffler, PAZ Analyzer,
+WLM Plus), FabFilter, and iZotope Ozone/Insight.
+
+**Setup screen.** The user picks a DAW and the plugins they own. **Scan this Mac** (`mixcheck/scan.py`)
+reads which DAWs and plugins are installed and pre-ticks them, tagged "found on this Mac", and the user
+confirms; installed isn't licensed, since trials and expired licences show up too. Only bundle metadata is
+read (names and vendor IDs), nothing is loaded or sent anywhere, and it works on a Mac only so far. Waves
+loads every plugin through a shared shell, so the scan can only say Waves is installed; the user picks a
+Waves bundle, **Waves Essential** or **Waves Ultimate**, which ticks the plugins it includes (from Waves' own
+plugin list, `WAVES_TIERS` in `catalog.py`), then unticks what they don't have. S1 Shuffler isn't in either
+bundle, so it's chosen alone. The old `waves_essential` id still works and stands for L2, F6 and the two
+Renaissance plugins, so saved setups and scripts keep working.
 
 From the command line:
 
