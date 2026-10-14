@@ -589,6 +589,146 @@ def test_eval_number_check_is_fair_to_rounding_but_not_to_invention():
     assert numbers_grounded(notes("Check the 50 seconds mark."), inp)[0] == 0.0
 
 
+class _TempHome:
+    """A fresh MIXCHECK_HOME for one test, so ratings from another test can't leak in."""
+
+    def __enter__(self):
+        import tempfile
+        self.old = os.environ.get("MIXCHECK_HOME")
+        os.environ["MIXCHECK_HOME"] = tempfile.mkdtemp()
+        return self
+
+    def __exit__(self, *exc):
+        if self.old is None:
+            os.environ.pop("MIXCHECK_HOME", None)
+        else:
+            os.environ["MIXCHECK_HOME"] = self.old
+
+
+def _written_notes(report=None):
+    """(result of write_notes, report) with canned notes; the result is what the server remembers."""
+    from mixcheck.notes import write_notes
+    report = report or _clipped_report()
+    canned = {"headline": "h", "summary": "s", "listen_for": [], "strengths": [],
+              "priorities": [{"finding_ids": ["F1"], "title": "t", "why": "w", "step_ids": ["F1.1"]}]}
+    return write_notes(report, client=_FakeClient(canned)), report
+
+
+def test_feedback_ratings_are_saved_changed_and_cleared():
+    from mixcheck import feedback
+    with _TempHome():
+        result, _ = _written_notes()
+        nid = feedback.remember(result)
+        assert feedback.stats() == {"count": 0, "up": 0, "down": 0}
+        assert feedback.rate(nid, "up", ["too_long"])["reasons"] == []  # reasons only go with a thumbs down
+        assert feedback.stats() == {"count": 1, "up": 1, "down": 0}
+        out = feedback.rate(nid, "down", ["made_something_up", "too_long", "too_long"])
+        assert out["rating"] == "down" and out["reasons"] == ["made_something_up", "too_long"]
+        assert feedback.stats() == {"count": 1, "up": 0, "down": 1}  # a changed rating replaces the old one
+        assert feedback.rate(nid, None)["count"] == 0  # clearing takes it back
+        for bad in (lambda: feedback.rate(nid, "sideways"), lambda: feedback.rate(nid, "down", ["rude"])):
+            try:
+                bad()
+                raise AssertionError("a bad rating was saved")
+            except ValueError:
+                pass
+        try:
+            feedback.rate("not-a-real-id", "up")
+            raise AssertionError("notes that were never written were rated")
+        except feedback.Gone:
+            pass
+        # After a restart the page can still change a rating it already made.
+        feedback.rate(nid, "up")
+        feedback._recent.clear()
+        assert feedback.rate(nid, "down", ["generic"])["reasons"] == ["generic"]
+        assert feedback.stats()["down"] == 1
+
+
+def test_feedback_export_has_no_audio_or_file_name():
+    import json
+    from mixcheck import feedback
+    with _TempHome():
+        result, report = _written_notes()
+        assert report["file"]["name"] == "secret-song-name.wav"
+        nid = feedback.remember(result)
+        feedback.rate(nid, "down", ["made_something_up", "wrong_stage"])
+        name, text, count = feedback.export("Sam K!")
+        assert name == "feedback-samk.jsonl" and count == 1
+        assert "secret-song-name" not in text and nid not in text and '"at"' not in text
+        row = json.loads(text)
+        assert row["rating"] == "down" and row["prompt_version"] and row["input"]["findings"]
+        assert row["labels"] == {"faithful": 0.0, "stage_appropriate": 0.0}  # only what the person said
+        assert len(row["day"]) == 10
+        # A thumbs up labels no criterion; nothing rated means nothing to export.
+        feedback.rate(nid, "up")
+        assert json.loads(feedback.export()[1])["labels"] == {}
+        feedback.rate(nid, None)
+        assert feedback.export()[2] == 0
+
+
+def test_feedback_reasons_match_the_judges_criteria():
+    from evals.judge import CRITERIA
+    from mixcheck import feedback
+    # Every criterion can be labelled from the page, and no reason points at one that doesn't exist.
+    assert sorted(c for _, c in feedback.REASONS.values()) == sorted(CRITERIA)
+
+
+def test_feedback_endpoints():
+    try:
+        from fastapi.testclient import TestClient
+    except ImportError:  # the web extra isn't installed
+        return
+    from mixcheck import notes
+    from mixcheck.web import server
+    client = TestClient(server.app)
+    real = notes.write_notes
+    with _TempHome():
+        try:
+            import copy
+            canned, report = _written_notes()  # built before patching, so it can't call the stand-in
+            notes.write_notes = lambda r: copy.deepcopy(canned)  # the server removes "input" from what it gets
+            reasons = client.get("/api/info").json()["notes_feedback"]["reasons"]
+            assert {r["id"] for r in reasons} >= {"made_something_up", "too_long"}
+            assert client.get("/api/notes/feedback/export").status_code == 404  # nothing yet
+            data = client.post("/api/notes", json={"report": report}).json()
+            nid = data["notes_id"]
+            assert nid and "input" not in data
+            ok = client.post("/api/notes/feedback", json={"notes_id": nid, "rating": "down", "reasons": ["too_long"]})
+            assert ok.status_code == 200 and ok.json()["down"] == 1
+            assert client.get("/api/info").json()["notes_feedback"]["count"] == 1
+            assert client.post("/api/notes/feedback", json={"notes_id": nid, "rating": "meh"}).status_code == 422
+            assert client.post("/api/notes/feedback", json={"notes_id": nid, "rating": "up", "reasons": ["rude"]}).status_code == 422
+            assert client.post("/api/notes/feedback", json={"notes_id": "nope", "rating": "up"}).status_code == 404
+            export = client.get("/api/notes/feedback/export", params={"name": "sam"})
+            assert export.status_code == 200
+            assert 'filename="feedback-sam.jsonl"' in export.headers["content-disposition"]
+            assert "secret-song-name" not in export.text
+        finally:
+            notes.write_notes = real
+
+
+def test_feedback_summary_reads_exports():
+    import contextlib
+    import io
+    from pathlib import Path
+    from types import SimpleNamespace as NS
+    from evals import notes_eval
+    from mixcheck import feedback
+    with _TempHome():
+        result, _ = _written_notes()
+        for rating, why in (("up", []), ("down", ["too_long"]), ("down", ["too_long", "generic"])):
+            feedback.rate(feedback.remember(result), rating, why)
+        _, text, _ = feedback.export("sam")
+        path = Path(os.environ["MIXCHECK_HOME"]) / "feedback-sam.jsonl"
+        path.write_text(text)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            notes_eval.cmd_feedback(NS(files=[str(path)], local=False))
+        summary = out.getvalue()
+        assert "3 rating(s)" in summary and "notes-v2" in summary and "33%" in summary
+        assert "too_long 2" in summary and "generic 1" in summary
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in globals().items() if n.startswith("test_")]
     for name, fn in tests:

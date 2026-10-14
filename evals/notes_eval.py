@@ -9,6 +9,7 @@
     python evals/notes_eval.py regrade                  # re-score saved notes after a check changes (free)
     python evals/notes_eval.py label --by sam           # grade some notes yourself...
     python evals/notes_eval.py agreement                # ...and see how often the judge agrees with everyone
+    python evals/notes_eval.py feedback                 # thumbs people gave notes in the web page (evals/feedback/)
 
 Cases: every report in evals/reports (real bounces) and evals/synthetic (known problems), each
 judged three ways (scenarios.py). Results go to evals/runs/notes/<variant>/: results.jsonl (one row
@@ -32,6 +33,7 @@ sys.path.insert(0, str(ROOT))
 from evals import graders  # noqa: E402
 from evals.judge import CRITERIA, DEFAULT_JUDGE, judge  # noqa: E402
 from evals.scenarios import cases_for  # noqa: E402
+from mixcheck import feedback as page_feedback  # noqa: E402
 from mixcheck import notes  # noqa: E402
 
 EVALS = Path(__file__).parent
@@ -323,6 +325,34 @@ def cmd_agreement(args):
         print(f"{c:20} {100 * agree / len(pairs):6.0f}%  {len(pairs):3}  {lenient} too lenient, {strict} too strict")
 
 
+def cmd_feedback(args):
+    """What people said about real notes in the web page: how often they were useful, and what went wrong."""
+    paths = [Path(f) for f in args.files] if args.files else sorted((EVALS / "feedback").glob("feedback-*.jsonl"))
+    if args.local:
+        paths.append(page_feedback.feedback_file())
+    rows = page_feedback.load_exports([p for p in paths if p.exists()])
+    if not rows:
+        sys.exit("No ratings yet. In the web page, rate some engineer's notes, use Export my ratings, "
+                 "and put the file in evals/feedback/ (or pass it here).")
+    people = len([p for p in paths if p.exists()])
+    print(f"{len(rows)} rating(s) from {people} file(s).\n")
+    print(f"{'prompt version':16} {'n':>4}  {'useful':>7}  95% interval   what people said was wrong")
+    for version in sorted({r["prompt_version"] for r in rows}):
+        mine = [r for r in rows if r["prompt_version"] == version]
+        up = sum(r["rating"] == "up" for r in mine)
+        lo, hi = wilson(up, len(mine))
+        reasons = {}
+        for r in mine:
+            for reason in r["reasons"]:
+                reasons[reason] = reasons.get(reason, 0) + 1
+        said = ", ".join(f"{k} {v}" for k, v in sorted(reasons.items(), key=lambda kv: -kv[1])) or "-"
+        print(f"{version:16} {len(mine):4}  {100 * up / len(mine):6.0f}%  {100 * lo:4.0f}-{100 * hi:.0f}%       {said}")
+    labelled = sum(bool(r.get("labels")) for r in rows)
+    print(f"\n{labelled} of {len(rows)} ratings name a reason, so they also work as hand labels for the criteria in judge.py "
+          f"(reason -> criterion: {', '.join(f'{k} -> {v[1]}' for k, v in page_feedback.REASONS.items())}).")
+    print("Opinions on real bounces, not ground truth: use label/agreement to check the judge.")
+
+
 def main():
     p = argparse.ArgumentParser(prog="notes_eval", description=__doc__.split("\n\n")[0])
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -348,9 +378,12 @@ def main():
     a = sub.add_parser("agreement", help="how often the judge agrees with people's labels")
     a.add_argument("--variant", default="baseline")
     a.add_argument("--by", help="only this person's labels (default: everyone's)")
+    fb = sub.add_parser("feedback", help="ratings people gave notes in the web page")
+    fb.add_argument("files", nargs="*", help="exported feedback files (default: evals/feedback/feedback-*.jsonl)")
+    fb.add_argument("--local", action="store_true", help="also read this computer's own ratings in ~/.mixcheck")
     args = p.parse_args()
     {"run": cmd_run, "summary": cmd_summary, "regrade": cmd_regrade, "label": cmd_label,
-     "agreement": cmd_agreement}[args.cmd](args)
+     "agreement": cmd_agreement, "feedback": cmd_feedback}[args.cmd](args)
 
 
 if __name__ == "__main__":
