@@ -68,7 +68,7 @@ def calibration():
         return {}
     if _cache["key"] != key:
         try:
-            with open(path) as fh:
+            with open(path, encoding="utf-8") as fh:
                 styles = json.load(fh).get("styles", {})
         except (OSError, ValueError, AttributeError):
             styles = {}

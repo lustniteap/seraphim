@@ -154,6 +154,7 @@
   .tier-row { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin: 0 0 8px; }
   .tier-row .note { margin: 0; font-size: 13px; color: var(--ink-soft); }
   .tier-note { margin: 8px 0 0; font-size: 13px; color: var(--ink-soft); }
+  .scan-row[hidden] { display: none; }
   .scan-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 16px; }
   .scan-row .link-button { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: var(--brand); font-weight: 600; border-bottom: 1px solid currentColor; }
   .scan-row .link-button:disabled { opacity: 0.5; cursor: default; }
@@ -610,7 +611,7 @@
       <h2 id="setup-title">What do you work with?</h2>
       <p class="lede">Seraphim writes every fix for your DAW and the plugins you own, so the steps use controls you actually have.</p>
       <div class="scan-row">
-        <button class="link-button" type="button" id="scan-btn">Scan this Mac</button>
+        <button class="link-button" type="button" id="scan-btn">Scan this computer</button>
         <p class="scan-note" id="scan-note" aria-live="polite">Finds your DAW and plugins and pre-ticks them. You confirm before saving.</p>
       </div>
       <fieldset>
@@ -878,6 +879,8 @@ let setup = loadSetup();   // null until the user has chosen
 let target = "";           // style the user is going for; "" means no preference
 try { target = localStorage.getItem("mixcheck.target") || ""; } catch {}
 let styleOptions = [];
+// Which computer Seraphim runs on, so the page says Mac or PC and names the right start file.
+let platformInfo = { id: "other", noun: "computer", launcher: "the start script" };
 let aiInfo = { available: false, reason: "This copy of Seraphim is older than the notes feature. Restart it after updating." };
 let aiNotes = null, aiStale = false, aiBusy = false, aiError = "";
 let setupOptions = null;
@@ -898,6 +901,7 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 /* Setup: the user's DAW and plugins, so every fix uses tools they own. */
 /* Scan this computer: pre-tick what's installed. Installed isn't licensed, so the user still confirms. */
 let scanFound = null;
+const scanLabel = (again) => `${again ? "Scan again" : `Scan this ${platformInfo.noun}`}`;
 async function scanMac() {
   const btn = $("scan-btn"), note = $("scan-note");
   btn.disabled = true; btn.textContent = "Scanning...";
@@ -907,10 +911,10 @@ async function scanMac() {
     scanFound = await res.json();
   } catch {
     note.textContent = "Couldn't scan this computer. Choose your DAW and plugins below.";
-    btn.disabled = false; btn.textContent = "Scan this Mac";
+    btn.disabled = false; btn.textContent = scanLabel(false);
     return;
   }
-  btn.disabled = false; btn.textContent = "Scan again";
+  btn.disabled = false; btn.textContent = scanLabel(true);
 
   const dawNames = scanFound.daws.map((d) => setupOptions.daws.find((o) => o.id === d.id)?.name).filter(Boolean);
   const pickedDaw = scanFound.daws[0]?.id;
@@ -927,11 +931,11 @@ async function scanMac() {
   document.querySelectorAll(".found").forEach((el) => el.remove());
   for (const d of scanFound.daws) {
     const radio = document.querySelector(`input[name="daw"][value="${d.id}"]`);
-    radio?.closest("label")?.querySelector("span").insertAdjacentHTML("afterend", `<span class="found">found on this Mac</span>`);
+    radio?.closest("label")?.querySelector("span").insertAdjacentHTML("afterend", `<span class="found">found on this ${platformInfo.noun}</span>`);
   }
   for (const id of pkgFound) {
     const box = document.querySelector(`input[name="pkg"][value="${id}"]`);
-    box?.closest("label")?.querySelector("span").insertAdjacentHTML("afterend", `<span class="found">found on this Mac</span>`);
+    box?.closest("label")?.querySelector("span").insertAdjacentHTML("afterend", `<span class="found">found on this ${platformInfo.noun}</span>`);
   }
 
   const parts = [];
@@ -968,6 +972,7 @@ async function initSetup() {
       const info = await res.json();
       setupOptions = info.setup_options;
       aiInfo = info.ai_notes || aiInfo;
+      platformInfo = info.platform || platformInfo;
       styleOptions = info.style_options || [];
     }
   } catch {}
@@ -975,6 +980,8 @@ async function initSetup() {
     styleOptions.map((o) => `<option value="${esc(o.id)}">${esc(o.name)}</option>`).join("");
   $("target-select").value = styleOptions.some((o) => o.id === target) ? target : "";
   if (!setupOptions) return;
+  $("scan-btn").textContent = scanLabel(false);
+  $("scan-btn").closest(".scan-row").hidden = !["mac", "windows"].includes(platformInfo.id);  // nothing to scan elsewhere
   if (setup) {  // older saved setups name packages that have since been split up
     const legacy = setupOptions.legacy_packages || {};
     const packages = [...new Set(setup.packages.flatMap((id) => legacy[id] || [id]))];
@@ -983,7 +990,8 @@ async function initSetup() {
     }
   }
   const cur = setup || { daw: "", packages: [] };
-  $("daw-choices").innerHTML = setupOptions.daws.map((d) => `
+  // Logic Pro only runs on a Mac.
+  $("daw-choices").innerHTML = setupOptions.daws.filter((d) => !(platformInfo.id === "windows" && d.id === "logic")).map((d) => `
     <label class="choice"><input type="radio" name="daw" value="${esc(d.id)}" ${cur.daw === d.id ? "checked" : ""} required>
       <span>${esc(d.name)}</span></label>`).join("");
   const groups = [...new Set(setupOptions.packages.map((p) => p.group))];
@@ -1093,7 +1101,7 @@ async function addReferenceFiles(files) {
       added.push(data);
     } catch (err) {
       refError = err instanceof TypeError
-        ? "Seraphim has stopped running. Double-click Seraphim.command to start it again, then try once more."
+        ? `Seraphim has stopped running. Double-click ${platformInfo.launcher} to start it again, then try once more.`
         : err.message;
     }
   }
@@ -1580,7 +1588,7 @@ async function analyze(file) {
     $("choose").textContent = "Choose another file";
   } catch (err) {
     const msg = err instanceof TypeError
-      ? "Seraphim has stopped running. Double-click Seraphim.command to start it again, then try once more."
+      ? `Seraphim has stopped running. Double-click ${platformInfo.launcher} to start it again, then try once more.`
       : err.message;
     setStatus({ title: report ? "Drop another bounce to check it" : "Drop a bounce here to check it",
                 sub: "WAV, AIFF, FLAC or MP3.", error: msg });

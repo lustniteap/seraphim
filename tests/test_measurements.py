@@ -309,7 +309,7 @@ def _calibrate_to(styles):
     import json
     from mixcheck.style import calibration_path
     calibration_path().parent.mkdir(parents=True, exist_ok=True)
-    with open(calibration_path(), "w") as fh:
+    with open(calibration_path(), "w", encoding="utf-8") as fh:
         json.dump({"version": 1, "styles": styles}, fh)
     os.utime(calibration_path(), ns=(0, len(json.dumps(styles))))  # so the cache sees each rewrite
 
@@ -456,7 +456,7 @@ def test_notes_request_and_checks():
 def test_notes_endpoint():
     try:
         from fastapi.testclient import TestClient
-    except ImportError:  # the web extra isn't installed
+    except (ImportError, RuntimeError):  # the web extra or httpx isn't installed
         return
     from mixcheck import notes
     from mixcheck.web import server
@@ -483,7 +483,7 @@ def test_notes_endpoint():
 def test_analyze_streams_progress():
     try:
         from fastapi.testclient import TestClient
-    except ImportError:  # the web extra isn't installed
+    except (ImportError, RuntimeError):  # the web extra or httpx isn't installed
         return
     import io
     import json
@@ -501,8 +501,10 @@ def test_analyze_streams_progress():
     # A file that isn't audio ends the stream with an error the page can show.
     bad = client.post("/api/analyze", data={"progress": "1"}, files={"file": ("x.wav", b"not audio", "audio/wav")})
     error = json.loads(bad.text.splitlines()[-1])["error"]
-    assert "couldn't be read as audio" in error and "/tmp" not in error
-    assert "/tmp" not in client.post("/api/analyze", files={"file": ("x.wav", b"not audio", "audio/wav")}).json()["detail"]
+    import tempfile
+    temp = tempfile.gettempdir()  # the real temp folder on this system, not a guess like /tmp
+    assert "couldn't be read as audio" in error and temp not in error
+    assert temp not in client.post("/api/analyze", files={"file": ("x.wav", b"not audio", "audio/wav")}).json()["detail"]
     # Without progress=1, the plain JSON report as before.
     assert "flags" in client.post("/api/analyze", files={"file": ("a.wav", buf.getvalue(), "audio/wav")}).json()
 
@@ -606,12 +608,12 @@ def test_scan_maps_installed_plugins_and_daws():
     _fake_bundle(apps, "Pro Tools", ".app", "com.avid.ProTools")
     _fake_bundle(apps, "FL Studio 2026", ".app", "com.image-line.flstudio")
     _fake_bundle(apps, "Notes", ".app", "com.apple.Notes")
-    old = (scan.PLUGIN_FOLDERS, scan.APP_FOLDERS)
-    scan.PLUGIN_FOLDERS, scan.APP_FOLDERS = [plugins], [apps]
+    old = (scan.PLUGIN_FOLDERS, scan.APP_FOLDERS, scan.PLATFORM)
+    scan.PLUGIN_FOLDERS, scan.APP_FOLDERS, scan.PLATFORM = [plugins], [apps], "mac"
     try:
         r = scan.scan_this_computer()
     finally:
-        scan.PLUGIN_FOLDERS, scan.APP_FOLDERS = old
+        scan.PLUGIN_FOLDERS, scan.APP_FOLDERS, scan.PLATFORM = old
     assert set(r["packages"]) == {"izotope_ozone", "izotope_insight"}
     assert r["packages"]["izotope_ozone"]["count"] == 1 and r["packages"]["izotope_insight"]["count"] == 1
     assert r["waves_installed"] is True
@@ -648,6 +650,111 @@ def test_waves_tiers_and_the_old_waves_essential_id():
     assert "Waves L2" in names
     # Owning only L2 gives the L2 and none of the other Waves plugins.
     assert {t["name"] for t in owned_tools({"daw": "other", "packages": ["waves_l2"]}).values()} == {"Waves L2"}
+
+
+def _touch(path, text="x"):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def test_scan_finds_windows_daws_and_plugins():
+    import tempfile
+    from pathlib import Path
+    from mixcheck import scan
+    root = Path(tempfile.mkdtemp())
+    pf, common, data, local = root / "Program Files", root / "Common Files", root / "ProgramData", root / "Local"
+    _touch(pf / "Avid" / "Pro Tools" / "ProTools.exe")
+    _touch(pf / "Image-Line" / "FL Studio 2026" / "FL64.exe")
+    _touch(data / "Ableton" / "Live 12 Suite" / "Program" / "Ableton Live 12 Suite.exe")
+    _touch(pf / "Avid" / "Other App" / "other.exe")  # not a DAW
+    _touch(common / "VST3" / "iZotope" / "Ozone 9.vst3")                       # vendor sub-folder, single file
+    _touch(common / "VST3" / "iZotope" / "Insight 2.vst3")
+    _touch(common / "VST3" / "Waves 16.0" / "WaveShell1-VST3 16.0_x64.vst3")   # a folder name with a dot
+    _touch(common / "VST3" / "Solo Synth.vst3")                                 # no vendor folder: no vendor to report
+    _touch(common / "VST3" / "FabFilter" / "FabFilter Pro-L 2.vst3" / "Contents" / "x86_64-win" / "FabFilter Pro-L 2.vst3")
+    _touch(common / "Avid" / "Audio" / "Plug-Ins" / "WaveShell1-AAX 16.0.aaxplugin" / "Contents" / "x64" / "WaveShell1-AAX 16.0.aaxplugin")
+    _touch(pf / "VSTPlugins" / "Old Delay.dll")
+    _touch(pf / "VSTPlugins" / "Insight Other Company.dll")                     # "insight" without iZotope is not Insight
+    names = ["ProgramFiles", "ProgramW6432", "ProgramFiles(x86)", "CommonProgramFiles", "CommonProgramFiles(x86)",
+             "CommonProgramW6432", "ProgramData", "LOCALAPPDATA"]
+    saved = {n: os.environ.get(n) for n in names}
+    old_platform = scan.PLATFORM
+    try:
+        for n in names:
+            os.environ.pop(n, None)
+        os.environ.update({"ProgramFiles": str(pf), "CommonProgramFiles": str(common),
+                           "ProgramData": str(data), "LOCALAPPDATA": str(local)})
+        scan.PLATFORM = "windows"
+        r = scan.scan_this_computer()
+    finally:
+        scan.PLATFORM = old_platform
+        for n, v in saved.items():
+            os.environ.pop(n, None) if v is None else os.environ.__setitem__(n, v)
+    assert r["platform"] == "windows" and r["supported"] is True
+    assert [d["id"] for d in r["daws"]] == ["pro_tools", "ableton", "fl_studio"]  # Pro Tools pre-selected first
+    assert {d["id"]: d["app"] for d in r["daws"]}["ableton"] == "Ableton Live 12 Suite"
+    assert set(r["packages"]) == {"izotope_ozone", "izotope_insight"}
+    assert r["waves_installed"] is True
+    assert "fabfilter" in r["other_vendors"] and "vst3" not in r["other_vendors"]  # a vendor folder, not the plugin folder
+
+
+def test_scan_on_other_systems_says_it_is_unsupported():
+    from mixcheck import scan
+    old = scan.PLATFORM
+    scan.PLATFORM = "other"
+    try:
+        r = scan.scan_this_computer()
+    finally:
+        scan.PLATFORM = old
+    assert r["supported"] is False and r["daws"] == [] and r["packages"] == {} and r["waves_installed"] is False
+
+
+def test_console_output_survives_a_legacy_code_page():
+    import subprocess
+    code = "from mixcheck.util import utf8_console; utf8_console(); print('Out Ceiling to \u22121.0 dB \u203a Bounce')"
+    env = {**os.environ, "PYTHONIOENCODING": "cp1252", "PYTHONUTF8": "0"}  # what a Windows redirect can default to
+    root = os.path.join(os.path.dirname(__file__), "..")
+    env["PYTHONPATH"] = root
+    out = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, check=True).stdout
+    assert out.decode("utf-8").strip() == "Out Ceiling to \u22121.0 dB \u203a Bounce"
+    # Without the helper the same print fails on that code page, which is what the helper is for.
+    bare = subprocess.run([sys.executable, "-c", "print('\u22121.0')"], env=env, capture_output=True)
+    assert bare.returncode != 0 and b"UnicodeEncodeError" in bare.stderr
+
+
+def test_every_text_file_is_opened_with_an_explicit_encoding():
+    # Windows reads and writes text in a legacy code page unless told otherwise, and this app's text
+    # has characters like the minus sign and angle quotes. Fails the moment new code forgets.
+    import ast
+    import pathlib
+    root = pathlib.Path(__file__).resolve().parent.parent
+    problems = []
+    for path in sorted(list((root / "mixcheck").rglob("*.py")) + list((root / "evals").rglob("*.py"))):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if not isinstance(node, ast.Call):
+                continue
+            f = node.func
+            name = f.id if isinstance(f, ast.Name) else f.attr if isinstance(f, ast.Attribute) else ""
+            owner = f.value.id if isinstance(f, ast.Attribute) and isinstance(f.value, ast.Name) else ""
+            is_open = (name == "open" and not owner) or (name == "fdopen" and owner == "os")
+            if not (is_open or name in ("read_text", "write_text")):
+                continue
+            if any(k.arg == "encoding" for k in node.keywords):
+                continue
+            if is_open and any(isinstance(a, ast.Constant) and isinstance(a.value, str) and "b" in a.value for a in node.args[1:2]):
+                continue  # binary
+            problems.append(f"{path.relative_to(root)}:{node.lineno} {name}(...)")
+    assert not problems, "text opened without encoding=: " + ", ".join(problems)
+
+
+def test_info_says_which_system_this_is():
+    try:
+        from fastapi.testclient import TestClient
+    except (ImportError, RuntimeError):  # the web extra or httpx isn't installed
+        return
+    from mixcheck.web import server
+    info = TestClient(server.app).get("/api/info").json()["platform"]
+    assert info["id"] in ("mac", "windows", "other") and info["noun"] and info["launcher"]
 
 
 if __name__ == "__main__":

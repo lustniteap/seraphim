@@ -48,7 +48,7 @@ def load_cases(only=None):
     out = []
     for source, folder in SOURCES.items():
         for path in sorted(folder.glob("*.json")):
-            report = json.loads(path.read_text())
+            report = json.loads(path.read_text(encoding="utf-8"))
             for case_id, scenario, r in cases_for(path.stem, report):
                 if only and only not in case_id:
                     continue
@@ -106,7 +106,7 @@ def cmd_run(args):
     results = out / "results.jsonl"
     done = set()
     if results.exists():
-        done = {(r["prompt_id"], r["rep"]) for r in map(json.loads, results.read_text().splitlines())}
+        done = {(r["prompt_id"], r["rep"]) for r in map(json.loads, results.read_text(encoding="utf-8").splitlines())}
     todo = [(c, rep) for c in cases for rep in range(args.reps) if (c["id"], rep) not in done]
     print(f"{len(cases)} cases x {args.reps} rep(s): {len(todo)} to run, {len(done)} already done -> {out}")
     if not todo:
@@ -130,7 +130,7 @@ def cmd_run(args):
             sys.exit("Nothing run.")
     (out / "run.json").write_text(json.dumps({
         "model": model, "prompt_version": notes.PROMPT_VERSION, "judge_model": args.judge_model if judge_client else None,
-        "reps": args.reps, "started": time.strftime("%Y-%m-%d %H:%M")}, indent=2))
+        "reps": args.reps, "started": time.strftime("%Y-%m-%d %H:%M")}, indent=2), encoding="utf-8")
 
     lock = threading.Lock()
     with ThreadPoolExecutor(args.jobs) as pool:
@@ -140,14 +140,14 @@ def cmd_run(args):
             try:
                 row, trace = fut.result()
             except Exception as exc:  # a failed call is plumbing, not a model score
-                with lock, open(out / "errors.jsonl", "a") as fh:
+                with lock, open(out / "errors.jsonl", "a", encoding="utf-8") as fh:
                     fh.write(json.dumps({"prompt_id": c["id"], "rep": rep, "error": type(exc).__name__,
                                          "message": str(exc)[:500], "at": time.strftime("%H:%M:%S")}) + "\n")
                 print(f"  [{i}/{len(todo)}] {c['id']} rep {rep}: ERROR {type(exc).__name__}: {str(exc)[:120]}")
                 continue
             with lock:
-                (out / "traces" / f"{c['id']}_rep{rep}.json").write_text(json.dumps(trace, indent=1, ensure_ascii=False))
-                with open(results, "a") as fh:
+                (out / "traces" / f"{c['id']}_rep{rep}.json").write_text(json.dumps(trace, indent=1, ensure_ascii=False), encoding="utf-8")
+                with open(results, "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(row, ensure_ascii=False) + "\n")
             failed = [k for k, v in row["grade"].items() if v < 1]
             print(f"  [{i}/{len(todo)}] {c['id']} rep {rep}: " + (f"fails {', '.join(failed)}" if failed else "all pass"))
@@ -168,7 +168,7 @@ def wilson(passes, n, z=1.96):
 
 def load_rows(variant_dir):
     path = variant_dir / "results.jsonl"
-    return [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()] if path.exists() else []
 
 
 def summarize(flow):
@@ -179,15 +179,15 @@ def summarize(flow):
     metrics = [m for m in metrics if any(m in r["grade"] for rows in data.values() for r in rows)]
     lines = [f"# Engineer's notes eval: {flow.name}", ""]
     for name, rows in data.items():
-        run = json.loads((flow / name / "run.json").read_text()) if (flow / name / "run.json").exists() else {}
-        errors = len((flow / name / "errors.jsonl").read_text().splitlines()) if (flow / name / "errors.jsonl").exists() else 0
+        run = json.loads((flow / name / "run.json").read_text(encoding="utf-8")) if (flow / name / "run.json").exists() else {}
+        errors = len((flow / name / "errors.jsonl").read_text(encoding="utf-8").splitlines()) if (flow / name / "errors.jsonl").exists() else 0
         ok = [r for r in rows if r["status"] == "ok"]
         spend = sum(r.get("cost_usd", 0) + r.get("judge_cost_usd", 0) for r in rows)
         change = (flow / name / "change.md")
         lines.append(f"**{name}**: {run.get('model', '?')}, prompt {run.get('prompt_version', '?')}, "
                      f"{len(ok)} ok / {len(rows) - len(ok)} truncated / {errors} errors, ${spend:.2f}"
                      + (f"; median {median(r['latency_s'] for r in ok):.1f} s, {median(r['words'] for r in ok):.0f} words" if ok else "")
-                     + (f". {change.read_text().strip().splitlines()[0]}" if change.exists() else ""))
+                     + (f". {change.read_text(encoding='utf-8').strip().splitlines()[0]}" if change.exists() else ""))
     lines += ["", "| metric | " + " | ".join(data) + " |", "|---|" + "---|" * len(data)]
     for m in metrics:
         cells = []
@@ -208,10 +208,10 @@ def summarize(flow):
             detail = r["details"].get(m)
             if detail is None and m.startswith("judge_"):
                 trace = flow / last / "traces" / f"{r['prompt_id']}_rep{r['rep']}.json"
-                detail = json.loads(trace.read_text()).get("judge", {}).get(m[6:], "") if trace.exists() else ""
+                detail = json.loads(trace.read_text(encoding="utf-8")).get("judge", {}).get(m[6:], "") if trace.exists() else ""
             lines.append(f"- **{m}** · {r['prompt_id']}: {detail}")
     text = "\n".join(lines) + "\n"
-    (flow / "summary.md").write_text(text)
+    (flow / "summary.md").write_text(text, encoding="utf-8")
     print("\n" + text)
 
 
@@ -226,14 +226,14 @@ def cmd_label(args):
     out = RUNS / "notes" / args.variant
     rows = load_rows(out)
     labels_path = out / "labels.jsonl"
-    labelled = {json.loads(line)["prompt_id"] for line in labels_path.read_text().splitlines()} if labels_path.exists() else set()
+    labelled = {json.loads(line)["prompt_id"] for line in labels_path.read_text(encoding="utf-8").splitlines()} if labels_path.exists() else set()
     todo = [r for r in rows if r["prompt_id"] not in labelled and r["rep"] == 0]
     random.Random(7).shuffle(todo)
     print(f"{len(labelled)} labelled so far. For each criterion type p (pass), f (fail), n (n/a); Enter skips; q quits.\n")
     rubric = {line.split(":")[0].strip("- "): line.split(":", 1)[1].strip()
-              for line in (EVALS / "prompts" / "judge_notes.md").read_text().splitlines() if line.startswith("- ")}
+              for line in (EVALS / "prompts" / "judge_notes.md").read_text(encoding="utf-8").splitlines() if line.startswith("- ")}
     for r in todo[:args.n]:
-        trace = json.loads((out / "traces" / f"{r['prompt_id']}_rep0.json").read_text())
+        trace = json.loads((out / "traces" / f"{r['prompt_id']}_rep0.json").read_text(encoding="utf-8"))
         inp, n = trace["input"], trace["notes"]
         print("=" * 78, f"\n{r['prompt_id']}  ({inp['stage']}, {inp['setup']})\nFindings:")
         for f in inp["findings"]:
@@ -246,14 +246,14 @@ def cmd_label(args):
                 return
             if ans in ("p", "f", "n"):
                 labels[c] = {"p": 1.0, "f": 0.0, "n": None}[ans]
-        with open(labels_path, "a") as fh:
+        with open(labels_path, "a", encoding="utf-8") as fh:
             fh.write(json.dumps({"prompt_id": r["prompt_id"], "labels": labels}) + "\n")
 
 
 def cmd_agreement(args):
     out = RUNS / "notes" / args.variant
     labels = {json.loads(line)["prompt_id"]: json.loads(line)["labels"]
-              for line in (out / "labels.jsonl").read_text().splitlines()}
+              for line in (out / "labels.jsonl").read_text(encoding="utf-8").splitlines()}
     rows = {r["prompt_id"]: r for r in load_rows(out) if r["rep"] == 0}
     print(f"{len(labels)} cases labelled by you\n")
     print(f"{'criterion':20} {'agree':>7}  {'n':>3}  judge said pass/you said fail, and the reverse")

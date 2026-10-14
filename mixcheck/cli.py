@@ -8,6 +8,7 @@ from .analyze import analyze_file
 from .catalog import DAWS, PACKAGES
 from .reference import MAX_REFERENCES, profile_file
 from .style import TARGETS
+from .util import utf8_console
 
 ICONS = {"critical": "[!!]", "warning": "[! ]", "info": "[i ]"}
 
@@ -120,6 +121,7 @@ def load_references(args, parser):
 
 
 def main(argv=None):
+    utf8_console()
     parser = argparse.ArgumentParser(prog="seraphim", description="Seraphim: technical QC for mixes and masters.")
     parser.add_argument("file", help="Audio file (WAV; AIFF/FLAC/MP3 with soundfile installed)")
     parser.add_argument("--json", metavar="PATH", help="Write the full report to a JSON file")
@@ -163,7 +165,7 @@ def main(argv=None):
             print(f"mixcheck: no engineer's notes: {exc}", file=sys.stderr)
 
     if args.json:
-        with open(args.json, "w") as fh:
+        with open(args.json, "w", encoding="utf-8") as fh:
             json.dump(report, fh, indent=2)
     if args.print_json:
         print(json.dumps(report, indent=2))

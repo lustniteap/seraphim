@@ -1,9 +1,24 @@
 import os
+import sys
 from pathlib import Path
 
 import numpy as np
 
 TINY = 1e-20
+
+
+def utf8_console():
+    """Print UTF-8 whatever the console or redirect defaults to.
+
+    Fix steps and messages use characters like the minus sign and angle quotes. Windows consoles and
+    redirected output can default to a legacy code page that can't print them and raises an error;
+    anything it still can't show becomes a replacement mark rather than a crash.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):  # not a real text stream, e.g. captured by a test runner
+            pass
 
 
 def db(amplitude):
