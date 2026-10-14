@@ -65,7 +65,7 @@ def _read(path):
     if not path.exists():
         return []
     rows = []
-    for line in path.read_text().splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         try:
             rows.append(json.loads(line))
         except ValueError:
@@ -122,7 +122,7 @@ def rate(notes_id, rating, reasons=()):
             "notes": base["notes"],
         }
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "a") as fh:
+        with open(path, "a", encoding="utf-8") as fh:
             fh.write(json.dumps(row, ensure_ascii=False) + "\n")
     return {"rating": rating, "reasons": reasons, **stats(path)}
 
