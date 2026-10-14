@@ -583,6 +583,50 @@ def test_eval_number_check_is_fair_to_rounding_but_not_to_invention():
     assert numbers_grounded(notes("No numbers."), inp)[0] is None
 
 
+def _fake_bundle(folder, name, suffix, bundle_id, app=False):
+    import plistlib
+    path = folder / (name + suffix)
+    (path / "Contents").mkdir(parents=True)
+    with open(path / "Contents" / "Info.plist", "wb") as fh:
+        plistlib.dump({"CFBundleIdentifier": bundle_id, "CFBundleShortVersionString": "1.0"}, fh)
+
+
+def test_scan_maps_installed_plugins_and_daws():
+    import tempfile
+    from pathlib import Path
+    from mixcheck import scan
+    tmp_path = Path(tempfile.mkdtemp())
+    plugins, apps = tmp_path / "plugins", tmp_path / "apps"
+    plugins.mkdir(); apps.mkdir()
+    _fake_bundle(plugins, "iZOzone8 Maximizer", ".vst3", "com.izotope.audioplugins")
+    _fake_bundle(plugins, "iZOzone8 Insight", ".aaxplugin", "com.izotope.audioplugins")
+    _fake_bundle(plugins, "Neutron 2 Compressor", ".vst3", "com.izotope.audioplugins")
+    _fake_bundle(plugins, "WaveShell1-AU 16.2", ".component", "com.WavesAudio.WaveShell1-AU")
+    _fake_bundle(plugins, "UAD API 2500", ".component", "com.uaudio.api2500")
+    _fake_bundle(apps, "Pro Tools", ".app", "com.avid.ProTools")
+    _fake_bundle(apps, "FL Studio 2026", ".app", "com.image-line.flstudio")
+    _fake_bundle(apps, "Notes", ".app", "com.apple.Notes")
+    old = (scan.PLUGIN_FOLDERS, scan.APP_FOLDERS)
+    scan.PLUGIN_FOLDERS, scan.APP_FOLDERS = [plugins], [apps]
+    try:
+        r = scan.scan_this_computer()
+    finally:
+        scan.PLUGIN_FOLDERS, scan.APP_FOLDERS = old
+    assert set(r["packages"]) == {"izotope_ozone", "izotope_insight"}
+    assert r["packages"]["izotope_ozone"]["count"] == 1 and r["packages"]["izotope_insight"]["count"] == 1
+    assert r["waves_installed"] is True
+    assert [d["id"] for d in r["daws"]] == ["pro_tools", "fl_studio"]  # Pro Tools pre-selected
+    assert "com.uaudio" in r["other_vendors"] and "com.izotope" in r["other_vendors"]
+
+
+def test_scan_never_reports_plugins_it_cannot_identify():
+    from mixcheck.scan import _package_for, _vendor
+    assert _package_for("Waves L2", "com.WavesAudio.WaveShell1-AAX") == "waves"  # shell only, never a fake Waves plugin
+    assert _package_for("Serum", "com.xfer.serum") is None
+    assert _vendor("jp.co.roland.TR-808") == "jp.co.roland"
+    assert _vendor("com.arturia.component.Pigments") == "com.arturia"
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in globals().items() if n.startswith("test_")]
     for name, fn in tests:

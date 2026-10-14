@@ -26,6 +26,7 @@ from .. import notes as ai_notes
 from .. import refsets
 from ..analyze import THRESHOLDS, analyze_file
 from ..catalog import options as setup_options
+from ..scan import scan_this_computer
 from ..reference import MAX_REFERENCES, apply_reference, profile_file, sanitize_profile
 from ..remediation import STAGES, attach_fixes, describe_setup, normalize_setup
 from ..score import score_flags
@@ -116,6 +117,12 @@ def with_real_name(report, name):
     if report.get("profile"):
         report["profile"]["name"] = name
     return report
+
+
+@app.get("/api/scan")
+def scan():
+    """What's installed on this computer, to pre-fill the setup screen. Reads bundle metadata only."""
+    return scan_this_computer()
 
 
 @app.post("/api/analyze")
