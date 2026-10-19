@@ -24,6 +24,7 @@ from fastapi.staticfiles import StaticFiles
 from .. import __version__
 from .. import notes as ai_notes
 from .. import refsets
+from .. import separate
 from ..analyze import THRESHOLDS, analyze_file
 from ..catalog import options as setup_options
 from ..reference import MAX_REFERENCES, apply_reference, profile_file, sanitize_profile
@@ -59,6 +60,7 @@ def info():
         "thresholds": THRESHOLDS,
         "max_references": MAX_REFERENCES,
         "ai_notes": dict(zip(("available", "reason"), ai_notes.available())),
+        "separation": dict(zip(("available", "reason"), separate.available())),
     }
 
 
@@ -120,13 +122,16 @@ def with_real_name(report, name):
 
 @app.post("/api/analyze")
 async def analyze(file: UploadFile = File(...), setup: str = Form("{}"), stage: str = Form("auto"),
-                  target: str = Form(""), references: str = Form("[]"), progress: str = Form("")):
+                  target: str = Form(""), references: str = Form("[]"), progress: str = Form(""),
+                  split_vocal: str = Form("")):
     """The report as JSON. With progress=1, newline-delimited JSON instead: {"stage": ...} as each
-    part of the analysis finishes (see analyze.PROGRESS_STAGES), then {"report": ...} or {"error": ...}."""
+    part of the analysis finishes (see analyze.PROGRESS_STAGES), then {"report": ...} or {"error": ...}.
+    With split_vocal=1 the mix is split into vocal and instrumental and the vocal is checked (slow)."""
     name = file.filename or "upload"
     user_setup = parse_setup(setup)
     refs = parse_references(parse_json(references, "references", []))
-    run = lambda path, done=None: analyze_file(path, user_setup, stage, target or None, refs, progress=done)
+    run = lambda path, done=None: analyze_file(path, user_setup, stage, target or None, refs, progress=done,
+                                               split_vocal=split_vocal == "1")
     if progress != "1":
         return with_real_name(await with_upload(file, run), name)
 
@@ -205,9 +210,9 @@ def delete_reference_set(name: str):
 @app.post("/api/fixes")
 def fixes(flags: list = Body(...), setup: dict = Body({}), stage: str = Body("mix"),
           target: str = Body(""), measures: dict = Body({}), profile: Optional[dict] = Body(None),
-          references: list = Body([])):
+          references: list = Body([]), vocal: bool = Body(False)):
     """Rebuild findings, fixes and scores for a new setup, stage, target or set of
-    references, without re-analyzing."""
+    references, without re-analyzing. vocal: the report includes the vocal checks."""
     if stage not in STAGES:
         raise HTTPException(422, f"stage must be one of {', '.join(STAGES)}")
     for f in flags:
@@ -220,7 +225,7 @@ def fixes(flags: list = Body(...), setup: dict = Body({}), stage: str = Body("mi
     flags = attach_fixes(flags, user_setup, stage)
     return {
         "flags": flags,
-        "score": score_flags(flags, stage),
+        "score": score_flags(flags, stage, vocal=vocal),
         "style": style_match(measures, target, stage),
         "reference": comparison,
         "target": target or None,

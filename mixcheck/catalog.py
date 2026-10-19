@@ -61,6 +61,14 @@ ACTIONS = {
     "eq_cut_band": "On the master bus, use a broad EQ ({shape}) to lower {band} by about {amount} dB, then A/B it at matched volume.",
     "eq_boost_band": "On the master bus, use a broad EQ ({shape}) to raise {band} by about {amount} dB, then A/B it at matched volume.",
     "widen_image": "Widen the loud sections a little with a stereo imager on the pads, guitars and backing vocals (or gently on the master), keeping everything below about 150 Hz mono.",
+    # The vocal on its own (vocal.py)
+    "compress_vocal": "Put a compressor on the vocal: ratio about 3:1, attack 10–20 ms, fast release, for 3–6 dB of gain reduction on the loudest words.",
+    "highpass_vocal": "Put an EQ on the vocal and high-pass it around 80–100 Hz to clear rumble and plosives.",
+    "cut_vocal_mud": "On the vocal's EQ, cut 2–4 dB with a medium-width bell somewhere between 200 and 400 Hz; sweep to find where it clears.",
+    "add_vocal_warmth": "On the vocal's EQ, add a gentle 1–3 dB low shelf or wide bell around 150–250 Hz, then check it doesn't turn muddy.",
+    "deess_vocal": "Put a de-esser on the vocal, centered around 5–8 kHz, taking 3–5 dB off the loudest 's' sounds.",
+    "raise_vocal": "Raise the vocal fader about 2 dB and compare against the beat at matched volume.",
+    "lower_vocal": "Lower the vocal fader about 2 dB and compare against the beat at matched volume.",
 }
 
 # id -> {name, in: packages or DAWs that include it, can: {action: (rank, how)}}
@@ -75,9 +83,12 @@ TOOLS = {
         "loudness_meter": (2, "Watch Pro Limiter's loudness meter (Integrated LUFS) while the whole song plays."),
     }},
     "pt_dyn3": {"name": "Compressor/Limiter Dyn 3", "in": ["pro_tools"], "can": {
+        "compress_vocal": (2, "Insert Compressor/Limiter Dyn 3 on the vocal: Ratio 3:1, Attack 10–20 ms, Release 100 ms, for 3–6 dB of gain reduction on the loudest words."),
         "glue_compression": (2, "Insert Compressor/Limiter Dyn 3 on the Master Fader: Ratio 2:1, Attack 30 ms, for 1–2 dB of gain reduction."),
     }},
     "pt_trim": {"name": "Trim", "in": ["pro_tools"], "can": {
+        "raise_vocal": (1, "Raise the vocal track's fader (or Trim) about 2 dB and compare against the beat at matched volume."),
+        "lower_vocal": (1, "Lower the vocal track's fader (or Trim) about 2 dB and compare against the beat at matched volume."),
         "master_headroom": (2, "Insert Trim first on the Master Fader and lower Gain until peaks sit around −6 to −3 dBFS."),
         "flip_one_side": (2, "Insert Trim as multi-mono on the stereo track and click Ø on one side only."),
     }},
@@ -89,6 +100,9 @@ TOOLS = {
         "volume_automation": (2, "Write volume automation (or use Clip Gain) so verses sit 2–3 dB below choruses."),
     }},
     "pt_eq3": {"name": "EQ3 7-Band", "in": ["pro_tools"], "can": {
+        "highpass_vocal": (2, "Insert EQ3 7-Band on the vocal and turn on the high-pass filter at about 90 Hz."),
+        "cut_vocal_mud": (2, "On EQ3 7-Band on the vocal, use a mid band with a medium Q between 200 and 400 Hz and cut 2–4 dB; sweep to find where it clears."),
+        "add_vocal_warmth": (2, "On EQ3 7-Band on the vocal, use the low-mid band around 150–250 Hz and add 1–3 dB, then check it doesn't turn muddy."),
         "eq_cut_band": (2, "Insert EQ3 7-Band on the Master Fader and use a {shape} over {band}, cutting about {amount} dB."),
         "eq_boost_band": (2, "Insert EQ3 7-Band on the Master Fader and use a {shape} over {band}, boosting about {amount} dB."),
     }},
@@ -112,6 +126,7 @@ TOOLS = {
         "remove_mix_limiting": (2, "Bypass Adaptive Limiter (and any other limiter) on the Stereo Out before bouncing for mastering."),
     }},
     "logic_compressor": {"name": "Compressor", "in": ["logic"], "can": {
+        "compress_vocal": (2, "Insert Compressor on the vocal (Studio VCA or Platinum Digital): Ratio 3:1, Attack 10–20 ms, for 3–6 dB of gain reduction on the loudest words."),
         "glue_compression": (2, "Insert Compressor on the Stereo Out, choose Vintage VCA, Ratio 2:1, slow attack, for 1–2 dB of gain reduction."),
     }},
     "logic_gain": {"name": "Gain", "in": ["logic"], "can": {
@@ -121,6 +136,9 @@ TOOLS = {
         "mono_check": (2, "Insert Utility › Gain on the Stereo Out and set Mono to hear the mix summed."),
     }},
     "logic_channel_eq": {"name": "Channel EQ", "in": ["logic"], "can": {
+        "highpass_vocal": (2, "Add Channel EQ on the vocal and turn on Low Cut at about 90 Hz."),
+        "cut_vocal_mud": (2, "On Channel EQ on the vocal, use a band with a medium Q between 200 and 400 Hz and cut 2–4 dB; sweep to find where it clears."),
+        "add_vocal_warmth": (2, "On Channel EQ on the vocal, use the Low Shelf or a wide band around 150–250 Hz and add 1–3 dB, then check it doesn't turn muddy."),
         "mono_low_end": (2, "Add a Channel EQ, set Processing to Side, and turn on Low Cut at 150 Hz so the lows are mono."),
         "eq_cut_band": (2, "Add Channel EQ on the Stereo Out and use a {shape} over {band}, cutting about {amount} dB."),
         "eq_boost_band": (2, "Add Channel EQ on the Stereo Out and use a {shape} over {band}, boosting about {amount} dB."),
@@ -146,6 +164,16 @@ TOOLS = {
         "include_tail": (3, "In the Bounce window, turn on Include Audio Tail (or extend the cycle range past the last tail)."),
     }},
 
+    "pt_deesser": {"name": "Dyn 3 De-Esser", "in": ["pro_tools"], "can": {
+        "deess_vocal": (2, "Insert Dyn 3 De-Esser on the vocal, set the frequency around 6–8 kHz, and lower the Threshold until the loudest 's' sounds drop 3–5 dB."),
+    }},
+    "logic_deesser": {"name": "DeEsser 2", "in": ["logic"], "can": {
+        "deess_vocal": (2, "Insert DeEsser 2 on the vocal, set Frequency around 6–8 kHz, and raise Suppression until the loudest 's' sounds drop 3–5 dB."),
+    }},
+    "ff_pro_ds": {"name": "FabFilter Pro-DS", "in": ["fabfilter"], "can": {
+        "deess_vocal": (3, "Put Pro-DS on the vocal in Allround mode and lower the Threshold until the loudest 's' sounds drop 3–5 dB."),
+    }},
+
     # Ableton Live stock
     "live_limiter": {"name": "Limiter", "in": ["ableton"], "can": {
         "limit_true_peak": (2, "Put Limiter last on the Main track with Ceiling at −1.0 dB and True Peak on (Live 12; on older versions use −1.5 dB)."),
@@ -154,6 +182,7 @@ TOOLS = {
         "remove_mix_limiting": (2, "Turn off Limiter (and any other limiter) on the Main track before exporting for mastering."),
     }},
     "live_glue": {"name": "Glue Compressor", "in": ["ableton"], "can": {
+        "compress_vocal": (2, "Put Glue Compressor (or the stock Compressor) on the vocal: Ratio 4, Attack 10 ms, Release 0.2, for 3–6 dB of reduction on the loudest words."),
         "glue_compression": (3, "Put Glue Compressor on the Main track: Ratio 2, Attack 10–30 ms, Release Auto, for 1–2 dB of reduction."),
     }},
     "live_utility": {"name": "Utility", "in": ["ableton"], "can": {
@@ -167,6 +196,9 @@ TOOLS = {
         "remove_dc": (3, "Turn on Utility's DC filter on the affected tracks."),
     }},
     "live_eq8": {"name": "EQ Eight", "in": ["ableton"], "can": {
+        "highpass_vocal": (3, "Put EQ Eight on the vocal and use band 1 as a high-pass at about 90 Hz."),
+        "cut_vocal_mud": (3, "On EQ Eight on the vocal, use a bell between 200 and 400 Hz and cut 2–4 dB; sweep to find where it clears."),
+        "add_vocal_warmth": (3, "On EQ Eight on the vocal, use a low shelf or wide bell around 150–250 Hz and add 1–3 dB, then check it doesn't turn muddy."),
         "eq_cut_band": (2, "Put EQ Eight on the Main track and use a {shape} over {band}, cutting about {amount} dB."),
         "eq_boost_band": (2, "Put EQ Eight on the Main track and use a {shape} over {band}, boosting about {amount} dB."),
     }},
@@ -199,6 +231,9 @@ TOOLS = {
         "flip_one_side": (3, "Add Fruity Stereo Enhancer to the track's insert and set Phase Inversion to Left or Right."),
     }},
     "fl_parametric_eq": {"name": "Fruity Parametric EQ 2", "in": ["fl_studio"], "can": {
+        "highpass_vocal": (2, "Add Fruity Parametric EQ 2 on the vocal's mixer track with a high-pass at about 90 Hz."),
+        "cut_vocal_mud": (2, "On Fruity Parametric EQ 2 on the vocal, use a bell between 200 and 400 Hz and cut 2–4 dB; sweep to find where it clears."),
+        "add_vocal_warmth": (2, "On Fruity Parametric EQ 2 on the vocal, use a low shelf or wide bell around 150–250 Hz and add 1–3 dB, then check it doesn't turn muddy."),
         "remove_dc": (1, "Add Fruity Parametric EQ 2 on the Master with a high-pass at 20 Hz."),
         "eq_cut_band": (2, "Add Fruity Parametric EQ 2 on the Master and use a {shape} over {band}, cutting about {amount} dB."),
         "eq_boost_band": (2, "Add Fruity Parametric EQ 2 on the Master and use a {shape} over {band}, boosting about {amount} dB."),
@@ -222,11 +257,15 @@ TOOLS = {
         "mono_low_end": (2, "Insert F6 in M/S mode and cut the Side below 150 Hz with a high-pass band."),
     }},
     "waves_renaissance_eq": {"name": "Renaissance EQ", "in": ["waves_essential"], "can": {
+        "highpass_vocal": (2, "Add Renaissance EQ on the vocal with a high-pass at about 90 Hz."),
+        "cut_vocal_mud": (2, "On Renaissance EQ on the vocal, use a bell between 200 and 400 Hz and cut 2–4 dB; sweep to find where it clears."),
+        "add_vocal_warmth": (2, "On Renaissance EQ on the vocal, use a low shelf or wide bell around 150–250 Hz and add 1–3 dB, then check it doesn't turn muddy."),
         "remove_dc": (1, "Add Renaissance EQ on the master with a high-pass at 20 Hz."),
         "eq_cut_band": (2, "Add Renaissance EQ on the master and use a {shape} over {band}, cutting about {amount} dB."),
         "eq_boost_band": (2, "Add Renaissance EQ on the master and use a {shape} over {band}, boosting about {amount} dB."),
     }},
     "waves_rcomp": {"name": "Renaissance Compressor", "in": ["waves_essential"], "can": {
+        "compress_vocal": (2, "Insert Renaissance Compressor on the vocal: Ratio about 3, Attack 10–20 ms, for 3–6 dB of gain reduction on the loudest words."),
         "restore_transients": (2, "On the drum bus, use Renaissance Compressor with a slower attack (10–30 ms) to let the hits through."),
     }},
 
@@ -256,12 +295,16 @@ TOOLS = {
         "loudness_meter": (3, "Open Pro-L 2's loudness meters and read Integrated and True Peak over the whole song."),
     }},
     "ff_pro_q": {"name": "FabFilter Pro-Q", "in": ["fabfilter"], "can": {
+        "highpass_vocal": (3, "In Pro-Q on the vocal, add a low cut at about 90 Hz."),
+        "cut_vocal_mud": (3, "In Pro-Q on the vocal, add a bell between 200 and 400 Hz and cut 2–4 dB; sweep to find where it clears."),
+        "add_vocal_warmth": (3, "In Pro-Q on the vocal, add a low shelf or wide bell around 150–250 Hz and raise it 1–3 dB, then check it doesn't turn muddy."),
         "mono_low_end": (3, "In Pro-Q, add a low cut at 150 Hz and set that band's stereo placement to Side."),
         "remove_dc": (2, "Add a Pro-Q low cut at 20 Hz on the master."),
         "eq_cut_band": (3, "In Pro-Q on the master, add a {shape} over {band} and pull it down about {amount} dB; turn on Auto Gain to compare at matched volume."),
         "eq_boost_band": (3, "In Pro-Q on the master, add a {shape} over {band} and raise it about {amount} dB; turn on Auto Gain to compare at matched volume."),
     }},
     "ff_pro_c2": {"name": "FabFilter Pro-C 2", "in": ["fabfilter"], "can": {
+        "compress_vocal": (3, "Put Pro-C 2 on the vocal in Vocal style: Ratio about 3:1, Attack 10–20 ms, for 3–6 dB of gain reduction on the loudest words."),
         "restore_transients": (3, "On the drum bus, use Pro-C 2 in Punch style with a slower attack (10–30 ms)."),
         "ease_bus_comp": (3, "In Pro-C 2 on the mix bus, raise Threshold or lengthen Attack until transients come through."),
         "glue_compression": (3, "Put Pro-C 2 on the mix bus in Bus style: Ratio 2:1, slow attack, for 1–2 dB of gain reduction."),

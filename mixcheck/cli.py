@@ -62,6 +62,9 @@ def print_summary(r, show_fixes=True):
           f"{' (detected: ' + st['reason'] + ')' if st['value'] == st['detected'] else ' (you chose this)'}")
     print(f"  Fixes written for: {r['setup']['label']}")
 
+    if r.get("vocal"):
+        print_vocal(r["vocal"])
+
     print("\n  Findings:")
     if not r["flags"]:
         print("    No technical issues found.")
@@ -74,6 +77,21 @@ def print_summary(r, show_fixes=True):
                 print(f"            ({len(fl['fix']['more'])} more option(s) in the JSON report or web page)")
     print()
     print("  Timestamps are measured from the start of the bounced file.\n")
+
+
+def print_vocal(v):
+    print("\n  Vocal (split from the mix; estimates)")
+    if not v.get("found"):
+        print(f"    {v['reason']}")
+        return
+    rows = [("Loud words vs typical", v.get("range_db"), "dB"), ("Peaks over average", v.get("crest_db"), "dB"),
+            ("Mud, 200-500 Hz", v.get("mud_db"), "dB vs mids"), ("Body, 100-250 Hz", v.get("body_db"), "dB vs mids"),
+            ("Rumble, below 80 Hz", v.get("rumble_db"), "dB vs mids"), ("Sibilance, 5-9 kHz", v.get("sibilance_db"), "dB vs mids"),
+            ("Vocal vs beat", v.get("vocal_to_beat_db"), "dB")]
+    for name, value, unit in rows:
+        if value is not None:
+            print(f"    {name:<22}{value:>7.1f} {unit}")
+    print(f"    {v['disclaimer']}")
 
 
 def print_reference(ref):
@@ -136,6 +154,9 @@ def main(argv=None):
                         help=f"A song you want to sound like (repeat for up to {MAX_REFERENCES})")
     parser.add_argument("--ref-set", metavar="NAME", help="Compare with a saved reference set")
     parser.add_argument("--save-ref-set", metavar="NAME", help="Save the --ref songs as a reference set for later")
+    parser.add_argument("--split-vocal", action="store_true",
+                        help="Split the vocal out of the mix and check it (slow; needs the optional 'separate' install). "
+                             "The result is an estimate.")
     parser.add_argument("--no-fixes", action="store_true", help="Hide fix suggestions in the summary")
     parser.add_argument("--notes", action="store_true",
                         help="Also write engineer's notes with Claude (optional; sends the measurements, not the audio)")
@@ -148,7 +169,8 @@ def main(argv=None):
     references = load_references(args, parser)
     try:
         report = analyze_file(args.file, setup={"daw": args.daw, "packages": packages},
-                              stage=args.stage, target=args.style, references=references)
+                              stage=args.stage, target=args.style, references=references,
+                              split_vocal=args.split_vocal)
     except Exception as exc:  # show a clean message rather than a traceback
         print(f"mixcheck: {exc}", file=sys.stderr)
         sys.exit(1)

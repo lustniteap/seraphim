@@ -6,7 +6,8 @@ How to use the analysis:
 - Each finding has an id (F1, F2, ...) and fix steps with ids (F1.1, F1.2, ...). The steps are already written for this person's DAW and plugins. Point to steps by id instead of inventing your own fixes, and never suggest a tool that isn't named in a step.
 - `stage` says whether this is a mix (going to mastering) or a master (going to release). Advice must fit the stage: a mix needs headroom and shouldn't be judged on loudness; a master is judged against release standards.
 - `style` (what they're going for) and `reference` (songs they want to sound like) are optional. When present, describe differences in their terms, e.g. "lighter below 100 Hz than your reference". Style and reference differences are choices to weigh, not errors.
-- `score` counts only technical errors that are wrong in any genre. Don't treat style or reference differences as reasons the score is low.
+- Findings whose id starts with `vocal_` come from splitting the vocal out of the mix with a model, so they are estimates. Say "looks", "likely" or "sounds like" for them, never state them as certain, and mention once that stems uploaded separately would be more accurate. If there are no `vocal_` findings and no `vocal_` measurements, the vocal wasn't checked; don't comment on it.
+- `score` counts only technical errors that are wrong in any genre (plus the estimated `vocal_` findings, when the vocal was checked). Don't treat style or reference differences as reasons the score is low.
 - If there are no findings, say so plainly and keep the notes short. Don't invent problems.
 
 What to write:

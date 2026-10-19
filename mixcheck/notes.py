@@ -18,7 +18,7 @@ from typing import List
 from .util import fmt_time
 
 PROMPT_FILE = Path(__file__).parent / "prompts" / "notes.md"
-PROMPT_VERSION = "notes-v1"  # bump whenever prompts/notes.md or notes_input() changes
+PROMPT_VERSION = "notes-v2"  # bump whenever prompts/notes.md or notes_input() changes
 DEFAULT_MODEL = "claude-opus-5"
 MAX_TOKENS = 16000
 # If the model declines, the API retries the same request on a fallback model it picks.
@@ -44,11 +44,23 @@ def available():
 
 # ---------------------------------------------------------------- input
 
+# The vocal measurements the notes can quote (vocal.py); the rest of that block is bookkeeping.
+VOCAL_NOTE_KEYS = ("range_db", "crest_db", "mud_db", "body_db", "rumble_db", "sibilance_db")
+
 def _when(flag):
     if "start_s" in flag:
         return f"{fmt_time(flag['start_s'])}–{fmt_time(flag['end_s'])}"
     times = list(dict.fromkeys(fmt_time(t) for t in flag.get("times_s") or []))
     return ", ".join(times[:5]) or None
+
+
+def _vocal_measurements(vocal):
+    if not vocal or not vocal.get("found"):
+        return {}
+    out = {f"vocal_{k}": vocal[k] for k in VOCAL_NOTE_KEYS if vocal.get(k) is not None}
+    if vocal.get("vocal_to_beat_db") is not None:
+        out["vocal_to_beat_db"] = vocal["vocal_to_beat_db"]
+    return out
 
 
 def notes_input(report):
@@ -86,6 +98,7 @@ def notes_input(report):
                 "mono_loss_db": st.get("mono_loudness_loss_db"),
                 "left_right_balance_db": st.get("left_right_balance_db"),
             } if st else {}),
+            **_vocal_measurements(report.get("vocal")),
         },
         "style": {
             "going_for": style["name"], "match_percent": style["percent"],

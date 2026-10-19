@@ -204,6 +204,21 @@
   }
   @media (min-width: 700px) { .stage .why { flex-basis: auto; } }
 
+  /* Vocal check: the vocal on its own, split from the mix (an estimate) */
+  .vocal { background: var(--card); border: 1px solid var(--card-edge); border-radius: 10px; padding: 20px 26px; margin-bottom: 14px; }
+  .vocal h3 { margin: 0 0 2px; font-size: 17px; font-weight: 750; font-variation-settings: "wdth" 115; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .vocal .note { margin: 0; font-size: 13px; color: var(--ink-soft); max-width: 80ch; }
+  .vocal-rows { list-style: none; margin: 12px 0 0; padding: 0; }
+  .vocal-rows li { display: grid; grid-template-columns: minmax(0, 1fr) 130px 70px; gap: 12px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--rule); font-size: 14px; }
+  .vocal-rows li:last-child { border-bottom: 0; }
+  .vocal-rows .val { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+  .vocal-rows .val small { color: var(--ink-soft); font-weight: 400; margin-left: 3px; }
+  .vocal-rows .st { font-size: 13px; color: var(--ink-soft); text-align: right; }
+  .vocal-rows .st.warning, .vocal-rows .st.critical { color: var(--warning); font-weight: 650; }
+  .vocal-rows .st.info { color: var(--ink); }
+  .est { display: inline-block; font-size: 11px; font-weight: 650; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); border: 1px solid var(--card-edge); border-radius: 999px; padding: 1px 8px; }
+  .item .title .est { margin-left: 8px; vertical-align: middle; }
+
   /* Reference tracks: up to three songs to sound like, compared at matched volume */
   .refs {
     background: var(--card); border: 1px solid var(--card-edge); border-radius: 10px; padding: 20px 26px; margin-bottom: 14px;
@@ -298,6 +313,12 @@
   .steps { margin: 20px 0 0; padding: 0; list-style: none; display: flex; gap: 10px 28px; flex-wrap: wrap; color: var(--ink-soft); font-size: 14px; }
   .steps b { color: var(--wave); margin-right: 6px; }
   .pool.compact .steps { display: none; }
+  .opt { display: flex; align-items: flex-start; gap: 10px; margin: 16px 0 0; max-width: 58ch; cursor: pointer; font-size: 14px; color: var(--ink-soft); }
+  .opt input { margin-top: 3px; accent-color: var(--brand); cursor: inherit; }
+  .opt b { color: var(--ink); font-weight: 650; }
+  .opt small { display: block; font-size: 13px; }
+  .opt.off { cursor: default; }
+  .pool.compact .opt { margin-top: 8px; }
   .button {
     display: inline-block; cursor: pointer; border: 0; border-radius: 6px;
     background: var(--ink); color: var(--panel); padding: 12px 22px; font-weight: 650;
@@ -627,6 +648,11 @@
         <li><b>2</b>Drag the file onto this page</li>
         <li><b>3</b>Get a checklist of anything to fix</li>
       </ol>
+      <label class="opt" id="split-opt">
+        <input type="checkbox" id="split-vocal">
+        <span><b>Check the vocal too</b>
+          <small id="split-note">Splits the vocal from the beat to judge its compression, tone and level. Slower, and an estimate.</small></span>
+      </label>
       <div class="throne" id="progress" hidden>
         <div class="wheels" aria-hidden="true"><div class="wheel w1"></div><div class="wheel w2"></div><div class="wheel w3"></div><i class="core"></i></div>
         <ol class="lamps" id="lamps" aria-label="Analysis progress"></ol>
@@ -652,6 +678,7 @@
       <span class="why" id="stage-why"></span>
     </div>
     <section class="score" id="score" aria-label="Technical score"></section>
+    <section class="vocal" id="vocal" aria-label="Vocal check" hidden></section>
     <section class="style-match" id="style-match" aria-label="Style match"></section>
     <section class="refs" id="refs" aria-label="Reference tracks"></section>
     <input type="file" id="ref-input" accept=".wav,.wave,.aif,.aiff,.flac,.mp3" multiple hidden>
@@ -835,6 +862,16 @@ Object.assign(PLAIN, {
   ref_narrower: ["Narrower than {ref}", "The loud sections have less stereo spread than {ref}."],
   ref_wider: ["Wider than {ref}", "The loud sections spread wider than {ref}. Check that it still holds up in mono."],
 });
+// The vocal on its own (vocal.py). Estimated when the vocal was split from the mix.
+Object.assign(PLAIN, {
+  vocal_uncompressed: ["The vocal sounds uncompressed", "Loud and quiet words are far apart, so some get lost under the beat while others jump out. A compressor evens that out."],
+  vocal_muddy: ["The vocal is muddy", "Too much energy around 200–500 Hz makes it sound boxy and covers up the words."],
+  vocal_thin: ["The vocal sounds thin", "There isn't much body in the low mids, so it can feel cold or small next to the beat."],
+  vocal_rumble: ["Low rumble under the vocal", "Energy below 80 Hz from the mic or plosives. It uses up headroom and muddies the bass."],
+  vocal_sibilant: ["Harsh 's' sounds", "The 's' and 't' sounds poke out and can sound sharp, especially on earbuds."],
+  vocal_buried: ["The vocal sits behind the beat", "The vocal is quieter than the beat while it is singing, so words can get lost."],
+  vocal_dominant: ["The vocal sits on top of the beat", "The vocal is much louder than the beat, so the beat can feel pushed back."],
+});
 const PLAIN_MIX = {
   true_peak_over: ["The mix goes over 0 dB", "It will distort once converted, and mastering needs headroom to work with."],
   true_peak_hot: ["Peaks are close to 0 dB", "Fine for a mix, but leaving 3–6 dB of headroom gives mastering room to work."],
@@ -869,6 +906,7 @@ let styleOptions = [];
 let aiInfo = { available: false, reason: "This copy of Seraphim is older than the notes feature. Restart it after updating." };
 let aiNotes = null, aiStale = false, aiBusy = false, aiError = "";
 let setupOptions = null;
+let sepInfo = { available: false, reason: "This copy of Seraphim is older than vocal splitting. Restart it after updating." };
 
 function loadSetup() {
   try { return JSON.parse(localStorage.getItem("mixcheck.setup")) || null; } catch { return null; }
@@ -883,6 +921,23 @@ const num = (v, digits = 1, signed = false) =>
 const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
+/* "Check the vocal too": splits the vocal from the beat. Needs the optional install; remembers the choice. */
+function initSplitOption() {
+  const box = $("split-vocal"), note = $("split-note");
+  if (!sepInfo.available) {
+    box.checked = false;
+    box.disabled = true;
+    $("split-opt").classList.add("off");
+    note.textContent = /optional packages/.test(sepInfo.reason)
+      ? "Needs a one-time install: double-click “Install Vocal Splitting.command” in the Seraphim folder, then start Seraphim again."
+      : sepInfo.reason;
+    return;
+  }
+  try { box.checked = localStorage.getItem("mixcheck.splitVocal") === "1"; } catch {}
+  box.addEventListener("change", () => { try { localStorage.setItem("mixcheck.splitVocal", box.checked ? "1" : "0"); } catch {} });
+}
+const splitWanted = () => $("split-vocal").checked && !$("split-vocal").disabled;
+
 /* Setup: the user's DAW and plugins, so every fix uses tools they own. */
 async function initSetup() {
   try {
@@ -891,12 +946,14 @@ async function initSetup() {
       const info = await res.json();
       setupOptions = info.setup_options;
       aiInfo = info.ai_notes || aiInfo;
+      sepInfo = info.separation || sepInfo;
       styleOptions = info.style_options || [];
     }
   } catch {}
   $("target-select").innerHTML = `<option value="">No preference</option>` +
     styleOptions.map((o) => `<option value="${esc(o.id)}">${esc(o.name)}</option>`).join("");
   $("target-select").value = styleOptions.some((o) => o.id === target) ? target : "";
+  initSplitOption();
   if (!setupOptions) return;
   const cur = setup || { daw: "", packages: [] };
   $("daw-choices").innerHTML = setupOptions.daws.map((d) => `
@@ -1236,7 +1293,7 @@ async function refreshFixes(stage) {
     const res = await fetch("/api/fixes", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ flags: report.flags, setup: setup || {}, stage, target, measures: report.measures,
-                             profile: report.profile, references }),
+                             profile: report.profile, references, vocal: !!(report.vocal && report.vocal.found) }),
     });
     if (!res.ok) throw new Error();
     const data = await res.json();
@@ -1400,10 +1457,15 @@ window.addEventListener("drop", (e) => {
 });
 $("file-input").addEventListener("change", (e) => { if (e.target.files[0]) analyze(e.target.files[0]); e.target.value = ""; });
 
-/* The seven lamps, one per stage of the analysis (analyze.PROGRESS_STAGES), lit as the server reports each. */
+/* The seven lamps (eight with the vocal), one per stage of the analysis (analyze.PROGRESS_STAGES), lit as the server reports each. */
 const LAMPS = [["loudness", "Loudness"], ["peaks", "Peaks"], ["stereo", "Stereo"], ["tone", "Tone"],
                ["edges", "Edges"], ["style", "Style"], ["references", "References"]];
-$("lamps").innerHTML = LAMPS.map(([id, name]) => `<li data-stage="${id}"><span class="flame"></span>${name}</li>`).join("");
+// The vocal lamp joins the row only when the vocal is being split (after Edges, as analyze.py reports it).
+function buildLamps(split) {
+  const list = split ? [...LAMPS.slice(0, 5), ["vocal", "Vocal"], ...LAMPS.slice(5)] : LAMPS;
+  $("lamps").innerHTML = list.map(([id, name]) => `<li data-stage="${id}"><span class="flame"></span>${name}</li>`).join("");
+}
+buildLamps(false);
 // Points of light around each wheel's rim: abstract, the "eyes" of Ezekiel's wheels.
 document.querySelectorAll(".wheel").forEach((w, k) => {
   const n = [10, 8, 6][k];
@@ -1466,13 +1528,18 @@ async function analyze(file) {
                 sub: "WAV, AIFF, FLAC or MP3.", error: `${file.name} isn't a supported format. Bounce to WAV, AIFF, FLAC or MP3.` });
     return;
   }
-  setStatus({ title: `Checking ${file.name}`, sub: "Measuring loudness, peaks and stereo. Long songs take a few seconds.", busy: true });
+  const split = splitWanted();
+  buildLamps(split);
+  setStatus({ title: `Checking ${file.name}`, busy: true,
+              sub: split ? "Measuring the mix, then splitting the vocal from the beat. This can take a few minutes."
+                         : "Measuring loudness, peaks and stereo. Long songs take a few seconds." });
   const body = new FormData();
   body.append("file", file);
   body.append("setup", JSON.stringify(setup || {}));
   body.append("target", target);
   body.append("references", JSON.stringify(references));
   body.append("progress", "1");
+  body.append("split_vocal", split ? "1" : "");
   try {
     const res = await fetch("/api/analyze", { method: "POST", body });
     if (!res.ok) {  // refused before the analysis started: wrong format, too big, empty
@@ -1515,6 +1582,7 @@ function render(r) {
     <span>${clock(f.duration_s)}</span>`;
   renderStage(r);
   renderScore(r);
+  renderVocal(r);
   renderStyle(r);
   renderRefs(r);
   renderVerdict(r);
@@ -1552,8 +1620,10 @@ function renderScore(r) {
       <li class="${a.lost ? "" : "clean"}"><span>${esc(a.name)}</span>
         <span class="bar"><span style="width:${Math.min(100, (a.lost / 3) * 100)}%"></span></span>
         <span class="pts">${a.lost ? "−" + a.lost.toFixed(1) : "0"}</span></li>`).join("") : "";
-  const gain = sc.if_fixed > sc.value
-    ? `<p class="score-next">Fix the red and amber items to reach <b>${sc.if_fixed.toFixed(1)}</b>.</p>` : "";
+  const gain = (sc.if_fixed > sc.value
+    ? `<p class="score-next">Fix the red and amber items to reach <b>${sc.if_fixed.toFixed(1)}</b>.</p>` : "") +
+    (!sc.vocal_checked && sc.areas.length
+      ? `<p class="score-next">The vocal wasn't checked, so this says nothing about it. Turn on <b>Check the vocal too</b> and check the bounce again.</p>` : "");
   el.innerHTML = `
     <div class="score-num ${sc.value >= 10 ? "whole" : ""}">
       <svg class="score-halo" viewBox="0 0 120 120" aria-hidden="true">
@@ -1566,7 +1636,7 @@ function renderScore(r) {
     </div>
     <div>
       <p class="score-label">${esc(sc.label)}</p>
-      <p class="score-kind">Technical score for a ${r.stage.value}: errors that are wrong in any genre (peaks, phase, edges).</p>
+      <p class="score-kind">Technical score for a ${r.stage.value}: errors that are wrong in any genre (peaks, phase, edges${sc.vocal_checked ? ", and the estimated vocal checks" : ""}).</p>
       <div class="score-scale" role="img" aria-label="${sc.value.toFixed(1)} out of 10">
         ${sc.if_fixed > sc.value ? `<span class="ghost" style="left:${scorePos(sc.if_fixed)}" title="After fixes: ${sc.if_fixed.toFixed(1)}"></span>` : ""}
         <span class="marker" style="left:${scorePos(shownScore ?? 1)}"></span>
@@ -1590,6 +1660,38 @@ function renderScore(r) {
     if (t < 1) requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
+}
+
+// The vocal's measurements, each with the finding that rates it. Estimates when the vocal was split from the mix.
+const VOCAL_ROWS = [
+  ["range_db", "Loud words above the typical word", "dB", ["vocal_uncompressed"], false],
+  ["crest_db", "Peaks above the average level", "dB", ["vocal_uncompressed"], false],
+  ["mud_db", "Mud, 200–500 Hz", "dB vs mids", ["vocal_muddy"], true],
+  ["body_db", "Body, 100–250 Hz", "dB vs mids", ["vocal_thin"], true],
+  ["rumble_db", "Rumble, below 80 Hz", "dB vs mids", ["vocal_rumble"], true],
+  ["sibilance_db", "Harshness, 5–9 kHz", "dB vs mids", ["vocal_sibilant"], true],
+  ["vocal_to_beat_db", "Vocal level vs beat", "dB", ["vocal_buried", "vocal_dominant"], true],
+];
+const VOCAL_STATE = { ok: "Fine", info: "Slight", warning: "Check", critical: "Check" };
+function renderVocal(r) {
+  const el = $("vocal"), v = r.vocal;
+  el.hidden = !v;
+  if (!v) return;
+  if (!v.found) {
+    el.innerHTML = `<h3>Vocal check</h3><p class="note">${esc(v.reason || "The vocal couldn't be checked.")}${
+      v.unavailable ? " To add it, double-click “Install Vocal Splitting.command” in the Seraphim folder, then start Seraphim again." : ""}</p>`;
+    return;
+  }
+  const flags = flagMap(r);
+  const rows = VOCAL_ROWS.filter(([key]) => v[key] !== null && v[key] !== undefined).map(([key, name, unit, ids, signed]) => {
+    const state = stateFor(flags, ids);
+    return `<li><span>${esc(name)}</span>
+      <span class="val">${num(v[key], 1, signed)}<small>${esc(unit)}</small></span>
+      <span class="st ${state}">${VOCAL_STATE[state]}</span></li>`;
+  }).join("");
+  el.innerHTML = `<h3>Vocal check ${v.source?.estimated ? `<span class="est">Estimate</span>` : ""}</h3>
+    <p class="note">${esc(v.disclaimer || "")}</p>
+    <ul class="vocal-rows">${rows}</ul>`;
 }
 
 function renderStyle(r) {
@@ -1694,7 +1796,7 @@ function checklistItem(f, i, stage) {
   const when = whenText(f);
   return `<li><details class="item ${f.start_s !== undefined ? "linked" : ""}" data-index="${i}" ${f.severity === "critical" ? "open" : ""}>
     <summary>
-      <span class="title">${esc(title)}</span>
+      <span class="title">${esc(title)}${f.estimated ? ` <span class="est">Estimate</span>` : ""}</span>
       ${when ? `<span class="when">${esc(when)}</span>` : ""}
       ${why ? `<span class="why">${esc(why)}</span>` : ""}
       <span class="toggle"><span class="show">How to fix it ›</span><span class="hide">Hide steps</span></span>
