@@ -87,7 +87,26 @@ How the blocks meet:
 - **Reference against sub-genre:** the reference sets the target; the sub-genre ranges are a sanity check
   ("your reference is brighter than typical for this style").
 
-## 6. Order of the work
+## 6. What the person sees (the display contract)
+
+The reasoning step is not an optional extra. It is the step that concludes the analysis, so its conclusion is what is
+shown, and everything else exists only as evidence for it.
+
+- **The conclusion leads.** The headline, the summary and the one to three diagnoses (the issue, why it likely
+  happened, how to fix it with the person's setup, and Vigil). There is no separate "engineer's notes" panel and no
+  button to ask for it: the reasoning runs as a stage of the analysis, and the loading page names it.
+- **Only relevant evidence is shown.** Each diagnosis carries the graphs, tables and numbers that support it, chosen by
+  the reasoning step from what the engine produced (an evidence registry: code renders it, the model picks it). A graph
+  or table that no diagnosis points to is not on the page.
+- **Every floor is covered.** Code checks that each floor finding at warning level or worse sits inside some
+  diagnosis. A floor can't be left out of the conclusion.
+- **The rest is secondary.** Measurements nobody pointed at are listed under a collapsed "also measured". The raw
+  checklist, the readings and the style and reference panels become supporting detail, not the headline.
+- **Without the reasoning step** (no subscription, the free run already used, or a failure) the person sees the
+  code-only view: the floors, the measurement graphs and tables, and the observations, labelled as not analysed, with
+  no diagnosis. Free analysis is exactly this view.
+
+## 7. Order of the work
 
 0. This document.
 1. The reverb measurement tool, standalone, tested against exactly known decay times.
@@ -113,6 +132,8 @@ How the blocks meet:
 - 2026-11-05: the output of a match work-up is the change to the person's chain, tested by re-rendering.
 - 2026-11-05: "resolved" means no open diagnoses, or the person marks it; the score alone never decides.
 - 2026-11-05: "Vigil" names the prevention section of a diagnosis.
+- 2026-11-05: the reasoning step's conclusion is the result; the "engineer's notes" panel is retired as a separate,
+  optional note. Only the graphs, tables and notes that support the conclusion are shown (section 6).
 - 2026-11-05 (step 2b, built): the old style, reference and vocal findings are gone, with no transition. The only
   findings are the floors (`analyze.FLOOR_IDS`). Everything contextual is an observation (`mixcheck/observations.py`):
   the measurement, the range it was compared with, the deviation, the trust in that range, the chain stage and a

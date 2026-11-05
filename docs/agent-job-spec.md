@@ -69,8 +69,9 @@ step in it.
 5. **Reason.** The reasoning model receives the results of steps 2 to 4. It may search the web (below) and writes the
    diagnoses.
 6. **Verify.** Code checks the answer (section 10).
-7. **Show.** The person sees a loading page that names each stage, then the diagnosis, then rates it good or bad
-   and may leave a comment.
+7. **Show.** The person sees a loading page that names each stage, then the conclusion: the diagnoses with only the
+   graphs, tables and notes that support them (see `contracts.md` section 6), then rates it good or bad and may leave
+   a comment. The reasoning is a stage of the analysis, not a button.
 8. **Record.** The case is recorded for review (section 13a). Nothing changes the product without approval.
 
 Other hard stops: a cost cap per run; a limit on web searches per run; a limit on retries; and a stop when the
