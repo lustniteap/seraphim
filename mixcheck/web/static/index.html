@@ -150,6 +150,15 @@
   .choice span:hover { border-color: var(--ink-soft); color: var(--ink); }
   .choice input:checked + span { border-color: var(--brand); color: var(--ink); background: rgba(240, 4, 24, 0.14); }
   .choice input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .choice .found { display: inline-block; margin-left: 6px; font-size: 11px; color: var(--ink-soft); border: 1px solid var(--card-edge); border-radius: 999px; padding: 0 7px; vertical-align: 1px; }
+  .tier-row { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin: 0 0 8px; }
+  .tier-row .note { margin: 0; font-size: 13px; color: var(--ink-soft); }
+  .tier-note { margin: 8px 0 0; font-size: 13px; color: var(--ink-soft); }
+  .scan-row[hidden] { display: none; }
+  .scan-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 16px; }
+  .scan-row .link-button { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: var(--brand); font-weight: 600; border-bottom: 1px solid currentColor; }
+  .scan-row .link-button:disabled { opacity: 0.5; cursor: default; }
+  .scan-note { margin: 0; font-size: 13px; color: var(--ink-soft); }
   .setup .actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
   .setup .actions p { margin: 0; font-size: 13px; color: var(--ink-soft); max-width: 36ch; }
 
@@ -203,6 +212,21 @@
     .dims .where { grid-column: 1 / -1; order: 4; text-align: left; }
   }
   @media (min-width: 700px) { .stage .why { flex-basis: auto; } }
+
+  /* Vocal check: the vocal on its own, split from the mix (an estimate) */
+  .vocal { background: var(--card); border: 1px solid var(--card-edge); border-radius: 10px; padding: 20px 26px; margin-bottom: 14px; }
+  .vocal h3 { margin: 0 0 2px; font-size: 17px; font-weight: 750; font-variation-settings: "wdth" 115; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .vocal .note { margin: 0; font-size: 13px; color: var(--ink-soft); max-width: 80ch; }
+  .vocal-rows { list-style: none; margin: 12px 0 0; padding: 0; }
+  .vocal-rows li { display: grid; grid-template-columns: minmax(0, 1fr) 130px 70px; gap: 12px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--rule); font-size: 14px; }
+  .vocal-rows li:last-child { border-bottom: 0; }
+  .vocal-rows .val { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+  .vocal-rows .val small { color: var(--ink-soft); font-weight: 400; margin-left: 3px; }
+  .vocal-rows .st { font-size: 13px; color: var(--ink-soft); text-align: right; }
+  .vocal-rows .st.warning, .vocal-rows .st.critical { color: var(--warning); font-weight: 650; }
+  .vocal-rows .st.info { color: var(--ink); }
+  .est { display: inline-block; font-size: 11px; font-weight: 650; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); border: 1px solid var(--card-edge); border-radius: 999px; padding: 1px 8px; }
+  .item .title .est { margin-left: 8px; vertical-align: middle; }
 
   /* Reference tracks: up to three songs to sound like, compared at matched volume */
   .refs {
@@ -298,6 +322,12 @@
   .steps { margin: 20px 0 0; padding: 0; list-style: none; display: flex; gap: 10px 28px; flex-wrap: wrap; color: var(--ink-soft); font-size: 14px; }
   .steps b { color: var(--wave); margin-right: 6px; }
   .pool.compact .steps { display: none; }
+  .opt { display: flex; align-items: flex-start; gap: 10px; margin: 16px 0 0; max-width: 58ch; cursor: pointer; font-size: 14px; color: var(--ink-soft); }
+  .opt input { margin-top: 3px; accent-color: var(--brand); cursor: inherit; }
+  .opt b { color: var(--ink); font-weight: 650; }
+  .opt small { display: block; font-size: 13px; }
+  .opt.off { cursor: default; }
+  .pool.compact .opt { margin-top: 8px; }
   .button {
     display: inline-block; cursor: pointer; border: 0; border-radius: 6px;
     background: var(--ink); color: var(--panel); padding: 12px 22px; font-weight: 650;
@@ -428,6 +458,22 @@
   .ai-meta { margin: 16px 0 0; font-size: 12px; color: var(--ink-soft); }
   .ai-stale { margin: 12px 0 0; font-size: 13px; color: var(--warning); font-weight: 600; }
   .ai-notes .progress { width: min(320px, 100%); }
+
+  /* Rating the notes: thumbs, optional reasons, kept on this computer */
+  .ai-feedback { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--rule); }
+  .ai-fb-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .ai-fb-row .q { font-weight: 600; margin-right: 4px; }
+  .thumb {
+    display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font: inherit; font-weight: 600;
+    background: #0A0D0F; color: var(--ink-soft); border: 1px solid var(--card-edge); border-radius: 8px; padding: 7px 13px;
+  }
+  .thumb svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .thumb:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .thumb[aria-pressed="true"] { border-color: var(--brand); color: var(--ink); background: rgba(240, 4, 24, 0.14); }
+  .ai-fb-reasons { margin-top: 12px; }
+  .ai-fb-reasons .note { margin: 0 0 8px; }
+  .ai-fb-foot { margin: 12px 0 0; font-size: 12px; color: var(--ink-soft); }
+  .ai-fb-foot .link-button { font-size: 12px; background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit; color: var(--brand); font-weight: 600; border-bottom: 1px solid currentColor; }
 
   /* Verdict */
   .verdict { border-left: 6px solid var(--ok); background: var(--ok-bg); padding: 20px 24px; border-radius: 0 6px 6px 0; }
@@ -601,6 +647,10 @@
     <form method="dialog" id="setup-form">
       <h2 id="setup-title">What do you work with?</h2>
       <p class="lede">Seraphim writes every fix for your DAW and the plugins you own, so the steps use controls you actually have.</p>
+      <div class="scan-row">
+        <button class="link-button" type="button" id="scan-btn">Scan this computer</button>
+        <p class="scan-note" id="scan-note" aria-live="polite">Finds your DAW and plugins and pre-ticks them. You confirm before saving.</p>
+      </div>
       <fieldset>
         <legend>Your DAW</legend>
         <div class="choices" id="daw-choices"></div>
@@ -627,6 +677,11 @@
         <li><b>2</b>Drag the file onto this page</li>
         <li><b>3</b>Get a checklist of anything to fix</li>
       </ol>
+      <label class="opt" id="split-opt">
+        <input type="checkbox" id="split-vocal">
+        <span><b>Check the vocal too</b>
+          <small id="split-note">Splits the vocal from the beat to judge its compression, tone and level. Slower, and an estimate.</small></span>
+      </label>
       <div class="throne" id="progress" hidden>
         <div class="wheels" aria-hidden="true"><div class="wheel w1"></div><div class="wheel w2"></div><div class="wheel w3"></div><i class="core"></i></div>
         <ol class="lamps" id="lamps" aria-label="Analysis progress"></ol>
@@ -652,6 +707,7 @@
       <span class="why" id="stage-why"></span>
     </div>
     <section class="score" id="score" aria-label="Technical score"></section>
+    <section class="vocal" id="vocal" aria-label="Vocal check" hidden></section>
     <section class="style-match" id="style-match" aria-label="Style match"></section>
     <section class="refs" id="refs" aria-label="Reference tracks"></section>
     <input type="file" id="ref-input" accept=".wav,.wave,.aif,.aiff,.flac,.mp3" multiple hidden>
@@ -835,6 +891,16 @@ Object.assign(PLAIN, {
   ref_narrower: ["Narrower than {ref}", "The loud sections have less stereo spread than {ref}."],
   ref_wider: ["Wider than {ref}", "The loud sections spread wider than {ref}. Check that it still holds up in mono."],
 });
+// The vocal on its own (vocal.py). Estimated when the vocal was split from the mix.
+Object.assign(PLAIN, {
+  vocal_uncompressed: ["The vocal sounds uncompressed", "Loud and quiet words are far apart, so some get lost under the beat while others jump out. A compressor evens that out."],
+  vocal_muddy: ["The vocal is muddy", "Too much energy around 200–500 Hz makes it sound boxy and covers up the words."],
+  vocal_thin: ["The vocal sounds thin", "There isn't much body in the low mids, so it can feel cold or small next to the beat."],
+  vocal_rumble: ["Low rumble under the vocal", "Energy below 80 Hz from the mic or plosives. It uses up headroom and muddies the bass."],
+  vocal_sibilant: ["Harsh 's' sounds", "The 's' and 't' sounds poke out and can sound sharp, especially on earbuds."],
+  vocal_buried: ["The vocal sits behind the beat", "The vocal is quieter than the beat while it is singing, so words can get lost."],
+  vocal_dominant: ["The vocal sits on top of the beat", "The vocal is much louder than the beat, so the beat can feel pushed back."],
+});
 const PLAIN_MIX = {
   true_peak_over: ["The mix goes over 0 dB", "It will distort once converted, and mastering needs headroom to work with."],
   true_peak_hot: ["Peaks are close to 0 dB", "Fine for a mix, but leaving 3–6 dB of headroom gives mastering room to work."],
@@ -866,9 +932,14 @@ let setup = loadSetup();   // null until the user has chosen
 let target = "";           // style the user is going for; "" means no preference
 try { target = localStorage.getItem("mixcheck.target") || ""; } catch {}
 let styleOptions = [];
+let styleAliases = {};     // ids a style used to have -> its current id (from the server)
+// Which computer Seraphim runs on, so the page says Mac or PC and names the right start file.
+let platformInfo = { id: "other", noun: "computer", launcher: "the start script" };
 let aiInfo = { available: false, reason: "This copy of Seraphim is older than the notes feature. Restart it after updating." };
 let aiNotes = null, aiStale = false, aiBusy = false, aiError = "";
+let fbReasons = [], fbStats = { count: 0 }, fbRating = { rating: null, reasons: [] }, fbError = "";
 let setupOptions = null;
+let sepInfo = { available: false, reason: "This copy of Seraphim is older than vocal splitting. Restart it after updating." };
 
 function loadSetup() {
   try { return JSON.parse(localStorage.getItem("mixcheck.setup")) || null; } catch { return null; }
@@ -883,7 +954,90 @@ const num = (v, digits = 1, signed = false) =>
 const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
+/* "Check the vocal too": splits the vocal from the beat. Needs the optional install; remembers the choice. */
+function initSplitOption() {
+  const box = $("split-vocal"), note = $("split-note");
+  if (!sepInfo.available) {
+    box.checked = false;
+    box.disabled = true;
+    $("split-opt").classList.add("off");
+    note.textContent = /optional packages/.test(sepInfo.reason)
+      ? "Needs a one-time install: double-click “Install Vocal Splitting.command” in the Seraphim folder, then start Seraphim again."
+      : sepInfo.reason;
+    return;
+  }
+  try { box.checked = localStorage.getItem("mixcheck.splitVocal") === "1"; } catch {}
+  box.addEventListener("change", () => { try { localStorage.setItem("mixcheck.splitVocal", box.checked ? "1" : "0"); } catch {} });
+}
+const splitWanted = () => $("split-vocal").checked && !$("split-vocal").disabled;
+
 /* Setup: the user's DAW and plugins, so every fix uses tools they own. */
+/* Scan this computer: pre-tick what's installed. Installed isn't licensed, so the user still confirms. */
+let scanFound = null;
+const scanLabel = (again) => `${again ? "Scan again" : `Scan this ${platformInfo.noun}`}`;
+async function scanMac() {
+  const btn = $("scan-btn"), note = $("scan-note");
+  btn.disabled = true; btn.textContent = "Scanning...";
+  try {
+    const res = await fetch("/api/scan");
+    if (!res.ok) throw new Error();
+    scanFound = await res.json();
+  } catch {
+    note.textContent = "Couldn't scan this computer. Choose your DAW and plugins below.";
+    btn.disabled = false; btn.textContent = scanLabel(false);
+    return;
+  }
+  btn.disabled = false; btn.textContent = scanLabel(true);
+
+  const dawNames = scanFound.daws.map((d) => setupOptions.daws.find((o) => o.id === d.id)?.name).filter(Boolean);
+  const pickedDaw = scanFound.daws[0]?.id;
+  if (pickedDaw) {
+    const radio = document.querySelector(`input[name="daw"][value="${pickedDaw}"]`);
+    if (radio) radio.checked = true;
+  }
+  const pkgFound = Object.keys(scanFound.packages);
+  for (const id of pkgFound) {
+    const box = document.querySelector(`input[name="pkg"][value="${id}"]`);
+    if (box) box.checked = true;
+  }
+  // Mark what was found on this computer, so the user can see why it's ticked.
+  document.querySelectorAll(".found").forEach((el) => el.remove());
+  for (const d of scanFound.daws) {
+    const radio = document.querySelector(`input[name="daw"][value="${d.id}"]`);
+    radio?.closest("label")?.querySelector("span").insertAdjacentHTML("afterend", `<span class="found">found on this ${platformInfo.noun}</span>`);
+  }
+  for (const id of pkgFound) {
+    const box = document.querySelector(`input[name="pkg"][value="${id}"]`);
+    box?.closest("label")?.querySelector("span").insertAdjacentHTML("afterend", `<span class="found">found on this ${platformInfo.noun}</span>`);
+  }
+
+  const parts = [];
+  if (dawNames.length) parts.push(dawNames.join(" and ") + (dawNames.length > 1 ? " are installed; pre-selected the first" : " found"));
+  if (pkgFound.length) parts.push(`${plural(pkgFound.length, "plugin set")} found`);
+  if (scanFound.waves_installed) parts.push("Waves is installed; pick your Waves bundle below");
+  note.textContent = parts.length
+    ? parts.join(". ") + ". Confirm, then save."
+    : "Nothing from our list was found. Choose your DAW and plugins below.";
+}
+$("scan-btn").addEventListener("click", scanMac);
+
+/* Waves bundle: picking one ticks the plugins it includes (that Seraphim writes fix steps for). */
+$("package-choices").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-tier]");
+  if (!btn || !setupOptions) return;
+  const tier = setupOptions.waves_tiers.find((t) => t.id === btn.dataset.tier);
+  if (!tier) return;
+  document.querySelectorAll("button[data-tier]").forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+  for (const id of tier.plugins) {
+    const box = document.querySelector(`input[name="pkg"][value="${id}"]`);
+    if (box) box.checked = true;
+  }
+  const outside = setupOptions.packages.filter((p) => p.group === "Waves" && !tier.plugins.includes(p.id)).map((p) => p.name);
+  const them = outside.length > 1 ? "them" : "it";
+  $("tier-note").textContent = `${tier.name} includes these. Untick any you don't have.` +
+    (outside.length ? ` ${outside.join(" and ")} ${outside.length > 1 ? "aren't" : "isn't"} in ${tier.name}, so tick ${them} yourself if you own ${them}.` : "");
+});
+
 async function initSetup() {
   try {
     const res = await fetch("/api/info");
@@ -891,23 +1045,48 @@ async function initSetup() {
       const info = await res.json();
       setupOptions = info.setup_options;
       aiInfo = info.ai_notes || aiInfo;
+      platformInfo = info.platform || platformInfo;
+      fbReasons = info.notes_feedback?.reasons || [];
+      fbStats = info.notes_feedback || fbStats;
+      sepInfo = info.separation || sepInfo;
       styleOptions = info.style_options || [];
+      styleAliases = info.style_aliases || {};
     }
   } catch {}
-  $("target-select").innerHTML = `<option value="">No preference</option>` +
-    styleOptions.map((o) => `<option value="${esc(o.id)}">${esc(o.name)}</option>`).join("");
+  // A style saved under an id it used to have (trap_hiphop) is now under its current id.
+  if (styleAliases[target]) { target = styleAliases[target]; try { localStorage.setItem("mixcheck.target", target); } catch {} }
+  $("target-select").innerHTML = `<option value="">No preference</option>` + styleGroups();
   $("target-select").value = styleOptions.some((o) => o.id === target) ? target : "";
+  initSplitOption();
   if (!setupOptions) return;
+  $("scan-btn").textContent = scanLabel(false);
+  $("scan-btn").closest(".scan-row").hidden = !["mac", "windows"].includes(platformInfo.id);  // nothing to scan elsewhere
+  if (setup) {  // older saved setups name packages that have since been split up
+    const legacy = setupOptions.legacy_packages || {};
+    const packages = [...new Set(setup.packages.flatMap((id) => legacy[id] || [id]))];
+    if (packages.length !== setup.packages.length || packages.some((id, i) => id !== setup.packages[i])) {
+      setup.packages = packages; saveSetup();
+    }
+  }
   const cur = setup || { daw: "", packages: [] };
-  $("daw-choices").innerHTML = setupOptions.daws.map((d) => `
+  // Logic Pro only runs on a Mac.
+  $("daw-choices").innerHTML = setupOptions.daws.filter((d) => !(platformInfo.id === "windows" && d.id === "logic")).map((d) => `
     <label class="choice"><input type="radio" name="daw" value="${esc(d.id)}" ${cur.daw === d.id ? "checked" : ""} required>
       <span>${esc(d.name)}</span></label>`).join("");
   const groups = [...new Set(setupOptions.packages.map((p) => p.group))];
+  const tierPicker = () => `
+    <div class="tier-row">
+      <span class="note">Pick your Waves bundle to tick what it includes, then untick anything you don't have.</span>
+      <span class="segmented" role="group" aria-label="Waves bundle">${(setupOptions.waves_tiers || []).map((t) => `
+        <button type="button" data-tier="${esc(t.id)}" aria-pressed="false">${esc(t.name)}</button>`).join("")}</span>
+    </div>`;
   $("package-choices").innerHTML = groups.map((g) => `
     <p class="group-name">${esc(g)}</p>
+    ${g === "Waves" && setupOptions.waves_tiers?.length ? tierPicker() : ""}
     <div class="choices">${setupOptions.packages.filter((p) => p.group === g).map((p) => `
       <label class="choice"><input type="checkbox" name="pkg" value="${esc(p.id)}" ${cur.packages.includes(p.id) ? "checked" : ""}>
-        <span>${esc(p.name)}</span></label>`).join("")}</div>`).join("");
+        <span>${esc(p.name)}</span></label>`).join("")}</div>
+    ${g === "Waves" ? `<p class="tier-note" id="tier-note" aria-live="polite"></p>` : ""}`).join("");
   showSetupLabel();
   if (!setup) intro.done.then(() => setTimeout(() => { if (!setup) $("setup-dialog").showModal(); }, 700));
 }
@@ -915,7 +1094,8 @@ async function initSetup() {
 function setupLabel(s) {
   if (!s || !setupOptions) return "your setup";
   const daw = setupOptions.daws.find((d) => d.id === s.daw)?.name || "Other DAW";
-  const n = s.packages.length;
+  const groupOf = Object.fromEntries(setupOptions.packages.map((p) => [p.id, p.group]));
+  const n = new Set(s.packages.map((id) => groupOf[id] || id)).size;  // Waves' eight plugins count as one set
   return n ? `${daw} + ${plural(n, "plugin set")}` : `${daw} stock tools`;
 }
 function showSetupLabel() {
@@ -937,6 +1117,15 @@ $("setup-dialog").addEventListener("close", () => {
 });
 
 /* What the user is going for: remembered, and applied without re-uploading. */
+// The style menu: each parent with its sub-genres under it.
+function styleGroups() {
+  return styleOptions.filter((o) => !o.parent).map((p) => {
+    const subs = styleOptions.filter((o) => o.parent === p.id);
+    return `<optgroup label="${esc(p.name)}"><option value="${esc(p.id)}">${esc(p.name)}: general</option>` +
+      subs.map((o) => `<option value="${esc(o.id)}">${esc(o.name)}</option>`).join("") + `</optgroup>`;
+  }).join("");
+}
+
 function setTarget(id) {
   target = id || "";
   $("target-select").value = target;
@@ -1000,7 +1189,7 @@ async function addReferenceFiles(files) {
       added.push(data);
     } catch (err) {
       refError = err instanceof TypeError
-        ? "Seraphim has stopped running. Double-click Seraphim.command to start it again, then try once more."
+        ? `Seraphim has stopped running. Double-click ${platformInfo.launcher} to start it again, then try once more.`
         : err.message;
     }
   }
@@ -1173,6 +1362,7 @@ async function writeNotes() {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.detail || `The notes couldn't be written (error ${res.status}).`);
     aiNotes = data; aiStale = false;
+    fbRating = { rating: null, reasons: [] }; fbError = "";  // new notes, new rating
   } catch (err) {
     aiError = err instanceof TypeError
       ? "Seraphim has stopped running. Start it again, then try once more."
@@ -1210,6 +1400,7 @@ function renderNotes(r) {
       ${priorities ? `<h4>What to do first</h4><ol class="ai-priorities">${priorities}</ol>` : ""}
       ${list("Listen for", n.listen_for)}
       ${list("Already working", n.strengths)}
+      <div class="ai-feedback" id="ai-feedback"></div>
       <p class="ai-meta">Written by ${esc(aiNotes.model)} from the measurements above (prompt ${esc(aiNotes.prompt_version)},
         ${(u.input_tokens || 0) + (u.output_tokens || 0)} tokens)${aiNotes.issues.length ? `; ${aiNotes.issues.length} unsupported reference(s) removed` : ""}.</p>`;
   }
@@ -1222,8 +1413,97 @@ function renderNotes(r) {
       </div>
       ${button}
     </div>${body}`;
+  renderFeedback();
 }
 $("ai-notes").addEventListener("click", (e) => { if (e.target.closest("#ai-write")) writeNotes(); });
+
+/* Rate the notes: thumbs up or down, and on a thumbs down optionally what was wrong. Ratings stay on
+   this computer; "Export my ratings" saves them to a file the person can choose to share. */
+const THUMB = {
+  up: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11v9H4v-9h3zM7 11l4-8c1.5 0 2.5 1.2 2.2 2.7L12.7 9H19a2 2 0 0 1 2 2.3l-1.2 6.4A3 3 0 0 1 16.9 20H7"/></svg>`,
+  down: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 13V4h3v9h-3zM17 13l-4 8c-1.5 0-2.5-1.2-2.2-2.7l.5-3.3H5a2 2 0 0 1-2-2.3l1.2-6.4A3 3 0 0 1 7.1 4H17"/></svg>`,
+};
+function renderFeedback() {
+  const el = $("ai-feedback");
+  if (!el || !aiNotes) return;
+  const active = document.activeElement?.dataset?.fb;
+  const r = fbRating;
+  const chips = r.rating === "down" && fbReasons.length ? `
+    <div class="ai-fb-reasons">
+      <p class="note">What was wrong? Optional, and you can pick more than one.</p>
+      <div class="choices">${fbReasons.map((o) => `
+        <label class="choice"><input type="checkbox" data-fb="reason-${esc(o.id)}" value="${esc(o.id)}" ${r.reasons.includes(o.id) ? "checked" : ""}>
+          <span>${esc(o.label)}</span></label>`).join("")}</div>
+    </div>` : "";
+  el.innerHTML = `
+    <div class="ai-fb-row">
+      <span class="q">Were these notes useful?</span>
+      <button class="thumb" type="button" data-fb="up" data-rating="up" aria-pressed="${r.rating === "up"}">${THUMB.up} Yes</button>
+      <button class="thumb" type="button" data-fb="down" data-rating="down" aria-pressed="${r.rating === "down"}">${THUMB.down} No</button>
+    </div>
+    ${chips}
+    ${fbError ? `<p class="error" role="alert">${esc(fbError)}</p>` : ""}
+    <p class="ai-fb-foot">${r.rating ? "Saved on this computer. " : "Ratings stay on this computer. "}${fbStats.count
+      ? `<button class="link-button" type="button" data-fb="export">Export my ratings (${fbStats.count})</button> to share them with the team; the file has the measurements and notes, never audio or file names.`
+      : "Nothing leaves it unless you export them."}</p>`;
+  if (active) el.querySelector(`[data-fb="${CSS.escape(active)}"]`)?.focus();
+}
+
+async function sendRating(rating, reasons) {
+  fbError = "";
+  try {
+    const res = await fetch("/api/notes/feedback", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes_id: aiNotes.notes_id, rating, reasons }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || `The rating couldn't be saved (error ${res.status}).`);
+    fbRating = { rating: data.rating, reasons: data.reasons };
+    fbStats = { ...fbStats, ...data };
+  } catch (err) {
+    fbError = err instanceof TypeError ? "Seraphim has stopped running. Start it again, then try once more." : err.message;
+  }
+  renderFeedback();
+}
+
+async function exportRatings() {
+  let name = "";
+  try { name = localStorage.getItem("mixcheck.feedbackName") || ""; } catch {}
+  if (!name) {
+    name = (window.prompt("A short name for the file, like sam. It becomes feedback-sam.jsonl, so each person's file stays separate.", "") || "").trim();
+    if (!name) return;
+    try { localStorage.setItem("mixcheck.feedbackName", name); } catch {}
+  }
+  try {
+    const res = await fetch(`/api/notes/feedback/export?name=${encodeURIComponent(name)}`);
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || "The export didn't work.");
+    const blob = await res.blob();
+    const link = Object.assign(document.createElement("a"), {
+      href: URL.createObjectURL(blob),
+      download: (res.headers.get("Content-Disposition") || "").match(/filename="([^"]+)"/)?.[1] || "feedback.jsonl",
+    });
+    document.body.append(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  } catch (err) {
+    fbError = err.message; renderFeedback();
+  }
+}
+
+$("ai-notes").addEventListener("click", (e) => {
+  const thumb = e.target.closest("button.thumb");
+  if (thumb && aiNotes) {
+    // Pressing the same thumb again takes the rating back.
+    const same = fbRating.rating === thumb.dataset.rating;
+    sendRating(same ? null : thumb.dataset.rating, same || thumb.dataset.rating === "up" ? [] : fbRating.reasons);
+  } else if (e.target.closest('[data-fb="export"]')) {
+    exportRatings();
+  }
+});
+$("ai-notes").addEventListener("change", (e) => {
+  if (!e.target.matches('input[data-fb^="reason-"]') || !aiNotes) return;
+  const picked = [...document.querySelectorAll('#ai-feedback input[data-fb^="reason-"]:checked')].map((i) => i.value);
+  sendRating("down", picked);
+});
 
 /* Mix / master: rebuild fixes without re-uploading. */
 $("stage").addEventListener("click", (e) => {
@@ -1236,7 +1516,7 @@ async function refreshFixes(stage) {
     const res = await fetch("/api/fixes", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ flags: report.flags, setup: setup || {}, stage, target, measures: report.measures,
-                             profile: report.profile, references }),
+                             profile: report.profile, references, vocal: !!(report.vocal && report.vocal.found) }),
     });
     if (!res.ok) throw new Error();
     const data = await res.json();
@@ -1400,10 +1680,15 @@ window.addEventListener("drop", (e) => {
 });
 $("file-input").addEventListener("change", (e) => { if (e.target.files[0]) analyze(e.target.files[0]); e.target.value = ""; });
 
-/* The seven lamps, one per stage of the analysis (analyze.PROGRESS_STAGES), lit as the server reports each. */
+/* The seven lamps (eight with the vocal), one per stage of the analysis (analyze.PROGRESS_STAGES), lit as the server reports each. */
 const LAMPS = [["loudness", "Loudness"], ["peaks", "Peaks"], ["stereo", "Stereo"], ["tone", "Tone"],
                ["edges", "Edges"], ["style", "Style"], ["references", "References"]];
-$("lamps").innerHTML = LAMPS.map(([id, name]) => `<li data-stage="${id}"><span class="flame"></span>${name}</li>`).join("");
+// The vocal lamp joins the row only when the vocal is being split (after Edges, as analyze.py reports it).
+function buildLamps(split) {
+  const list = split ? [...LAMPS.slice(0, 5), ["vocal", "Vocal"], ...LAMPS.slice(5)] : LAMPS;
+  $("lamps").innerHTML = list.map(([id, name]) => `<li data-stage="${id}"><span class="flame"></span>${name}</li>`).join("");
+}
+buildLamps(false);
 // Points of light around each wheel's rim: abstract, the "eyes" of Ezekiel's wheels.
 document.querySelectorAll(".wheel").forEach((w, k) => {
   const n = [10, 8, 6][k];
@@ -1466,13 +1751,18 @@ async function analyze(file) {
                 sub: "WAV, AIFF, FLAC or MP3.", error: `${file.name} isn't a supported format. Bounce to WAV, AIFF, FLAC or MP3.` });
     return;
   }
-  setStatus({ title: `Checking ${file.name}`, sub: "Measuring loudness, peaks and stereo. Long songs take a few seconds.", busy: true });
+  const split = splitWanted();
+  buildLamps(split);
+  setStatus({ title: `Checking ${file.name}`, busy: true,
+              sub: split ? "Measuring the mix, then splitting the vocal from the beat. This can take a few minutes."
+                         : "Measuring loudness, peaks and stereo. Long songs take a few seconds." });
   const body = new FormData();
   body.append("file", file);
   body.append("setup", JSON.stringify(setup || {}));
   body.append("target", target);
   body.append("references", JSON.stringify(references));
   body.append("progress", "1");
+  body.append("split_vocal", split ? "1" : "");
   try {
     const res = await fetch("/api/analyze", { method: "POST", body });
     if (!res.ok) {  // refused before the analysis started: wrong format, too big, empty
@@ -1487,7 +1777,7 @@ async function analyze(file) {
     $("choose").textContent = "Choose another file";
   } catch (err) {
     const msg = err instanceof TypeError
-      ? "Seraphim has stopped running. Double-click Seraphim.command to start it again, then try once more."
+      ? `Seraphim has stopped running. Double-click ${platformInfo.launcher} to start it again, then try once more.`
       : err.message;
     setStatus({ title: report ? "Drop another bounce to check it" : "Drop a bounce here to check it",
                 sub: "WAV, AIFF, FLAC or MP3.", error: msg });
@@ -1515,6 +1805,7 @@ function render(r) {
     <span>${clock(f.duration_s)}</span>`;
   renderStage(r);
   renderScore(r);
+  renderVocal(r);
   renderStyle(r);
   renderRefs(r);
   renderVerdict(r);
@@ -1552,8 +1843,10 @@ function renderScore(r) {
       <li class="${a.lost ? "" : "clean"}"><span>${esc(a.name)}</span>
         <span class="bar"><span style="width:${Math.min(100, (a.lost / 3) * 100)}%"></span></span>
         <span class="pts">${a.lost ? "−" + a.lost.toFixed(1) : "0"}</span></li>`).join("") : "";
-  const gain = sc.if_fixed > sc.value
-    ? `<p class="score-next">Fix the red and amber items to reach <b>${sc.if_fixed.toFixed(1)}</b>.</p>` : "";
+  const gain = (sc.if_fixed > sc.value
+    ? `<p class="score-next">Fix the red and amber items to reach <b>${sc.if_fixed.toFixed(1)}</b>.</p>` : "") +
+    (!sc.vocal_checked && sc.areas.length
+      ? `<p class="score-next">The vocal wasn't checked, so this says nothing about it. Turn on <b>Check the vocal too</b> and check the bounce again.</p>` : "");
   el.innerHTML = `
     <div class="score-num ${sc.value >= 10 ? "whole" : ""}">
       <svg class="score-halo" viewBox="0 0 120 120" aria-hidden="true">
@@ -1566,7 +1859,7 @@ function renderScore(r) {
     </div>
     <div>
       <p class="score-label">${esc(sc.label)}</p>
-      <p class="score-kind">Technical score for a ${r.stage.value}: errors that are wrong in any genre (peaks, phase, edges).</p>
+      <p class="score-kind">Technical score for a ${r.stage.value}: errors that are wrong in any genre (peaks, phase, edges${sc.vocal_checked ? ", and the estimated vocal checks" : ""}).</p>
       <div class="score-scale" role="img" aria-label="${sc.value.toFixed(1)} out of 10">
         ${sc.if_fixed > sc.value ? `<span class="ghost" style="left:${scorePos(sc.if_fixed)}" title="After fixes: ${sc.if_fixed.toFixed(1)}"></span>` : ""}
         <span class="marker" style="left:${scorePos(shownScore ?? 1)}"></span>
@@ -1592,6 +1885,38 @@ function renderScore(r) {
   requestAnimationFrame(tick);
 }
 
+// The vocal's measurements, each with the finding that rates it. Estimates when the vocal was split from the mix.
+const VOCAL_ROWS = [
+  ["range_db", "Loud words above the typical word", "dB", ["vocal_uncompressed"], false],
+  ["crest_db", "Peaks above the average level", "dB", ["vocal_uncompressed"], false],
+  ["mud_db", "Mud, 200–500 Hz", "dB vs mids", ["vocal_muddy"], true],
+  ["body_db", "Body, 100–250 Hz", "dB vs mids", ["vocal_thin"], true],
+  ["rumble_db", "Rumble, below 80 Hz", "dB vs mids", ["vocal_rumble"], true],
+  ["sibilance_db", "Harshness, 5–9 kHz", "dB vs mids", ["vocal_sibilant"], true],
+  ["vocal_to_beat_db", "Vocal level vs beat", "dB", ["vocal_buried", "vocal_dominant"], true],
+];
+const VOCAL_STATE = { ok: "Fine", info: "Slight", warning: "Check", critical: "Check" };
+function renderVocal(r) {
+  const el = $("vocal"), v = r.vocal;
+  el.hidden = !v;
+  if (!v) return;
+  if (!v.found) {
+    el.innerHTML = `<h3>Vocal check</h3><p class="note">${esc(v.reason || "The vocal couldn't be checked.")}${
+      v.unavailable ? " To add it, double-click “Install Vocal Splitting.command” in the Seraphim folder, then start Seraphim again." : ""}</p>`;
+    return;
+  }
+  const flags = flagMap(r);
+  const rows = VOCAL_ROWS.filter(([key]) => v[key] !== null && v[key] !== undefined).map(([key, name, unit, ids, signed]) => {
+    const state = stateFor(flags, ids);
+    return `<li><span>${esc(name)}</span>
+      <span class="val">${num(v[key], 1, signed)}<small>${esc(unit)}</small></span>
+      <span class="st ${state}">${VOCAL_STATE[state]}</span></li>`;
+  }).join("");
+  el.innerHTML = `<h3>Vocal check ${v.source?.estimated ? `<span class="est">Estimate</span>` : ""}</h3>
+    <p class="note">${esc(v.disclaimer || "")}</p>
+    <ul class="vocal-rows">${rows}</ul>`;
+}
+
 function renderStyle(r) {
   const el = $("style-match"), sm = r.style;
   if (!sm) {
@@ -1600,7 +1925,8 @@ function renderStyle(r) {
     el.innerHTML = `
       <h3>What are you going for?</h3>
       <p>Loudness, punch, contrast and tone depend on the style. Pick one to see how this ${r.stage.value} compares.</p>
-      <div class="choices">${styleOptions.map((o) => `<button type="button" data-target="${esc(o.id)}">${esc(o.name)}</button>`).join("")}</div>`;
+      <div class="choices">${styleOptions.filter((o) => !o.parent).map((o) => `<button type="button" data-target="${esc(o.id)}">${esc(o.name)}</button>`).join("")}</div>
+      <p class="note">For something more specific, such as drill or house, use the style menu above.</p>`;
     return;
   }
   el.className = "style-match";
@@ -1628,10 +1954,11 @@ function renderStyle(r) {
       <span class="where">${d.status === "in" ? "In range" : "See bands"}</span></li>` +
     (sm.tone || []).map((b) => row(b, b.name, "dB", "band", b.words)).join("")).join("");
   const notes = [
-    sm.songs ? `Ranges measured from ${sm.songs} ${sm.name} songs you calibrated with.`
-             : "The shaded zone is typical for this style.",
+    sm.source.kind === "estimated" ? "The shaded zone is a built-in estimate for this style."
+      : sm.source.kind === "inherited" ? `${sm.name} has no ranges of its own yet, so the zone is ${sm.source.from_name}'s: ${sm.source.parent_label}.`
+      : `Ranges: ${sm.source.label}.`,
     sm.stage === "mix" ? "Loudness isn't compared for a mix; mastering sets it." : "",
-    !sm.songs ? "Tone is compared once you calibrate this style with real releases (seraphim-calibrate)." : "",
+    !(sm.tone && sm.tone.length) ? "Tone is compared once this style has been calibrated with real releases (seraphim-calibrate)." : "",
   ].filter(Boolean).join(" ");
   el.innerHTML = `
     <div><div class="pct">${sm.percent}%</div><p class="pct-label">style match</p></div>
@@ -1694,7 +2021,7 @@ function checklistItem(f, i, stage) {
   const when = whenText(f);
   return `<li><details class="item ${f.start_s !== undefined ? "linked" : ""}" data-index="${i}" ${f.severity === "critical" ? "open" : ""}>
     <summary>
-      <span class="title">${esc(title)}</span>
+      <span class="title">${esc(title)}${f.estimated ? ` <span class="est">Estimate</span>` : ""}</span>
       ${when ? `<span class="when">${esc(when)}</span>` : ""}
       ${why ? `<span class="why">${esc(why)}</span>` : ""}
       <span class="toggle"><span class="show">How to fix it ›</span><span class="hide">Hide steps</span></span>

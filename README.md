@@ -37,20 +37,27 @@ their names, so existing installs, scripts and saved settings keep working; `ser
 | Tonal balance | Share of energy in sub / low / low-mid / high-mid / high bands, content above 16 kHz |
 | Edges | Head and tail silence, abrupt endings, quietest passage |
 | Streaming | Gain each platform's loudness normalization would apply |
+| Vocal (optional, estimated) | Compression (loud words vs the typical word, peak-to-average), mud, body, rumble, harsh 's' sounds, and vocal level against the beat, measured on the vocal split from the mix |
 
 ## Setup
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+source .venv/bin/activate        # Windows: .venv\Scripts\activate (PowerShell: .venv\Scripts\Activate.ps1)
 pip install -e .
 ```
 
 ## Web interface
 
-On a Mac, double-click `Seraphim.command` in Finder. The first run sets up Python packages
-(about a minute); after that it opens straight to the page. Keep the Terminal window it opens
-while you use Seraphim, and close it to quit. Launching it again while it's running just reopens the page.
+On a Mac, double-click `Seraphim.command` in Finder. On a Windows PC, double-click `Seraphim.bat` in File
+Explorer. The first run sets up Python packages (about a minute); after that it opens straight to the page.
+Keep the window it opens while you use Seraphim, and close it to quit. Launching it again while it's running
+just reopens the page.
+
+**On Windows you need Python 3.9 or newer.** If `Seraphim.bat` doesn't find it, it opens the download page.
+Install it from python.org and, on the installer's first screen, tick **Add python.exe to PATH**. Then
+double-click `Seraphim.bat` again. Windows may show a SmartScreen or firewall prompt the first time; Seraphim
+only listens on this computer, so there's nothing to allow beyond that.
 
 Or from a terminal:
 
@@ -88,6 +95,26 @@ seraphim my_mix.wav --json reports/mix.json  # also save the full report
 seraphim my_mix.wav --print-json             # JSON to stdout (for piping)
 ```
 
+## Windows and Mac
+
+Seraphim runs on Windows and macOS. The analysis, fixes, scores, references, styles and the page are the
+same on both; only the start file and the scan differ. Linux isn't supported yet: it starts, but there's no
+scan, so the user chooses their DAW and plugins by hand.
+
+- **Scan this PC** reads the standard places for DAWs (Pro Tools, Ableton Live, FL Studio) and for VST3,
+  VST2 and AAX plugins, going by file names and vendor folders, since Windows plugins carry no bundle
+  metadata. Logic Pro is Mac only, so the Windows setup screen doesn't offer it.
+- **Those Windows folder names haven't been checked on a real PC yet.** To check, on a Windows machine run
+  `python -m mixcheck.scan` in the project folder and send back what it prints: it lists the folders it
+  looked in and what it found.
+- Text files are always read and written as UTF-8 (a test fails if new code forgets), and command-line
+  output is switched to UTF-8, because Windows otherwise defaults to a legacy code page that can't show the
+  minus sign or angle quotes this app uses.
+- The tests run on Windows and macOS, on Python 3.9 and 3.13, on every push (`.github/workflows/tests.yml`).
+  On Windows that includes running `Seraphim.bat`'s setup, starting the real server and analyzing an upload
+  (`tests/smoke_server.py`). To run the tests yourself: `pip install -e ".[web,dev]"` then
+  `python tests/test_measurements.py`.
+
 ## Validation
 
 The measurements are checked against signals with known answers:
@@ -112,6 +139,31 @@ reference songs ──► profiles (reference.py)                 └──► A
 The JSON report is the contract between layers. When the engine is ported to C++ for a plugin,
 the report layer stays the same.
 
+## Checking the vocal (optional, estimated)
+
+A mix with a raw vocal can pass every technical check: no clipping, no phase problems, clean edges. The
+vocal's compression, mud and level are hidden under the beat in a stereo bounce. Turn on **Check the vocal
+too** (web page) or pass `--split-vocal` (command line) and Seraphim splits the vocal from the beat with
+the Demucs source-separation model, then measures the vocal on its own.
+
+```bash
+# One-time install (large download: PyTorch plus the model, a few GB; the model's weights, about 80 MB,
+# download on first use). On a Mac, double-click "Install Vocal Splitting.command" instead.
+pip install -e ".[web,separate]"
+
+seraphim my_mix.wav --split-vocal
+```
+
+It runs on this computer, and the audio never leaves it. A few minutes per song on a laptop CPU.
+
+**These are estimates.** The split leaves some of the beat in the vocal and takes some of the vocal's low
+end and reverb, so results are more accurate with the acapella and the beat uploaded separately (planned).
+Every vocal finding is marked "Estimate" and the numbers are shown on the page. The limits in
+`mixcheck/vocal.py` are starting points, not yet calibrated against real releases; tune them against your own
+bounces. When the vocal check runs, its findings cost points in their own "Vocal (estimated)" area of the
+technical score. When it hasn't run, a clean mix reads "No technical errors found" rather than "Ready for
+mastering", because nothing has judged the vocal.
+
 ## Technical score and style match
 
 Seraphim keeps two kinds of "good" apart.
@@ -122,22 +174,35 @@ per finding, scaled by how bad the measurement is, in capped areas so one kind o
 the whole score. It also shows the score after fixing everything but notes. Rules: `mixcheck/score.py`.
 
 **Style match (%)** compares loudness, punch (PLR) and contrast (LRA) with what the user is going for:
-Trap / hip-hop, EDM, Pop, Rock / metal, R&B / soul, Acoustic / jazz, Lo-fi, or Film / classical.
-A −6 LUFS master is right for trap and wrong for jazz, so these never cost technical points. For a mix,
+Hip-hop / rap, EDM, Pop, Rock / metal, R&B / soul, Acoustic / jazz, Lo-fi, or Film / classical.
+A −6 LUFS master is right for hip-hop and wrong for jazz, so these never cost technical points. For a mix,
 loudness isn't compared (mastering sets it) and punch is judged against looser ranges. Lo-fi doesn't
 flag a dull top end. Findings like "Louder than your style" come with fix steps for the user's tools.
 The built-in ranges in `mixcheck/style.py` are starting points from common practice. Calibrating a
 style with real releases (below) replaces them and adds tone targets.
 
+Each style has **sub-genres** (31 in all, such as Drill or Boom bap under Hip-hop / rap, or House under
+EDM), picked from the same menu. A sub-genre is only listed where its loudness, punch, contrast or tone
+should differ from its parent's. Until a sub-genre has ranges of its own it uses its parent's, and
+the page says so. Every range also says where it came from: a built-in estimate, **rough** (measured from
+fewer than 8 songs), **calibrated** (8 or more), or inherited from the parent style.
+
 ```bash
-seraphim my_master.wav --style trap_hiphop
+seraphim my_master.wav --style hiphop_rap
+seraphim my_master.wav --style hiphop_rap.drill   # a sub-genre: parent.sub
 ```
+
+The old id `trap_hiphop` still works everywhere (the command line, saved calibrations and the style the
+page remembers); it is now `hiphop_rap`, and Trap is one of its sub-genres.
 
 ### Calibrating styles with real releases
 
 `seraphim-calibrate` measures released songs in each style and sets that style's ranges from them.
-Put 10–20 songs per style in subfolders named after the styles (`trap`, `hip-hop`, `edm`, `pop`, `rock`,
-`rnb`, `acoustic`, `jazz`, `lofi`, `film`, or the style ids), then:
+Put 10–20 songs per style in subfolders named after the styles (`hip-hop`, `trap`, `edm`, `pop`, `rock`,
+`rnb`, `acoustic`, `jazz`, `lofi`, `film`, or the style ids). A bare name such as `trap` or `jazz` means the
+whole parent style. To calibrate a sub-genre, put a folder named for it inside its parent's
+(`hip-hop/drill/`, `hip-hop/boom_bap/`) or use `--style hiphop_rap.drill=FOLDER`; songs directly in the
+parent's folder calibrate the parent. Then:
 
 ```bash
 seraphim-calibrate ~/Music/refs --dry-run    # measure and show the new ranges without saving
@@ -155,8 +220,8 @@ seraphim-calibrate --reset                   # back to the built-in ranges
   Styles you don't calibrate keep their current ranges.
 - The report shows old and new ranges side by side, and names songs that fall outside the new ranges on
   two or more measures, in case they're in the wrong folder.
-- Calibrated styles are also judged on **tone**: "5.7 dB lighter below 100 Hz than typical for Trap /
-  hip-hop", with an EQ step for your tools. Lo-fi still isn't flagged for a dark top end.
+- Calibrated styles are also judged on **tone**: "5.7 dB lighter below 100 Hz than typical for Hip-hop /
+  rap", with an EQ step for your tools. Lo-fi still isn't flagged for a dark top end.
 - Results go to `~/.mixcheck/style_targets.json` (or `$MIXCHECK_HOME`) and apply straight away in the web
   page and the command line. Measurements are cached, so re-running after adding songs is quick.
 
@@ -256,6 +321,23 @@ Results land in `evals/runs/notes/<variant>/` (per-case rows, full traces, error
 each prompt change is a new `--variant` (v1, v2...), and `evals/FAILURE_LOG.md` records what failed, why,
 and what fixed it.
 
+**Ratings from the web page.** Under each set of engineer's notes, a thumbs up or down asks "Were these notes
+useful?". On a thumbs down, optional reasons say what was wrong, in plain words that map to the judge's
+criteria (made something up → `faithful`, wrong thing first → `priority_order`, too long → `concise`, and so on),
+so a rating with reasons doubles as a hand label. Pressing the same thumb again takes the rating back.
+
+- Ratings stay on this computer, in `~/.mixcheck/notes_feedback.jsonl`, next to the measurements the notes were
+  written from. Nothing is sent anywhere, and there's no free-text box, which is the one place a song title
+  could slip in.
+- **Export my ratings** (under the thumbs) downloads `feedback-<name>.jsonl`: the rating, the reasons, the notes
+  and the measurements they came from, the day (not the time), and never audio or a file name. Put the file in
+  `evals/feedback/`; one file per person, so nobody's files collide.
+- `python evals/notes_eval.py feedback` reads those files: how often notes were useful per prompt version (with
+  a 95% interval) and which mistakes people named. `--local` adds this computer's own ratings.
+
+These are opinions on real bounces, so they show what people find useful and which mistakes they notice. They
+don't replace the hand labels that check the judge.
+
 **Adding real bounces.** Save reports, then strip song titles before committing:
 
 ```bash
@@ -278,7 +360,18 @@ Fixes are built in two layers so they stay specific without being rewritten for 
 For each action the best tool the user owns is chosen; their other tools for the same job go
 under "More options", and anyone without a matching tool gets generic wording. Adding a plugin
 is one entry in `TOOLS`. Covered now: Pro Tools, Logic Pro, Ableton Live and FL Studio stock tools,
-Waves Essential plus S1 Imager/Shuffler, PAZ and WLM Plus, FabFilter, and iZotope Ozone/Insight.
+these Waves plugins (L2, F6, Renaissance EQ and Compressor, S1 Stereo Imager and Shuffler, PAZ Analyzer,
+WLM Plus), FabFilter, and iZotope Ozone/Insight.
+
+**Setup screen.** The user picks a DAW and the plugins they own. **Scan this Mac** (`mixcheck/scan.py`)
+reads which DAWs and plugins are installed and pre-ticks them, tagged "found on this Mac", and the user
+confirms; installed isn't licensed, since trials and expired licences show up too. Only bundle metadata is
+read (names and vendor IDs), nothing is loaded or sent anywhere, and it works on a Mac only so far. Waves
+loads every plugin through a shared shell, so the scan can only say Waves is installed; the user picks a
+Waves bundle, **Waves Essential** or **Waves Ultimate**, which ticks the plugins it includes (from Waves' own
+plugin list, `WAVES_TIERS` in `catalog.py`), then unticks what they don't have. S1 Shuffler isn't in either
+bundle, so it's chosen alone. The old `waves_essential` id still works and stands for L2, F6 and the two
+Renaissance plugins, so saved setups and scripts keep working.
 
 From the command line:
 

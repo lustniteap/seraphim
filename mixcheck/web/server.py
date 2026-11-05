@@ -18,19 +18,23 @@ from typing import Optional
 
 from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from .. import __version__
+from .. import feedback
 from .. import notes as ai_notes
 from .. import refsets
+from .. import separate
 from ..analyze import THRESHOLDS, analyze_file
 from ..catalog import options as setup_options
+from ..scan import LAUNCHERS, PLATFORM, PLATFORM_NAMES, scan_this_computer
 from ..reference import MAX_REFERENCES, apply_reference, profile_file, sanitize_profile
 from ..remediation import STAGES, attach_fixes, describe_setup, normalize_setup
 from ..score import score_flags
-from ..style import apply_style, style_match
+from ..style import LEGACY_IDS, apply_style, canonical, style_match
 from ..style import options as style_options
+from ..util import utf8_console
 
 STATIC_DIR = Path(__file__).parent / "static"
 ALLOWED_SUFFIXES = {".wav", ".wave", ".aif", ".aiff", ".flac", ".mp3"}
@@ -54,11 +58,16 @@ def info():
     return {
         "version": __version__,
         "setup_options": setup_options(),
+        "platform": {"id": PLATFORM, "noun": PLATFORM_NAMES[PLATFORM],
+                     "launcher": LAUNCHERS.get(PLATFORM, "the start script")},
         "style_options": style_options(),
+        "style_aliases": LEGACY_IDS,  # ids a style used to have, so the page can update what it saved
         "accepted_formats": sorted(ALLOWED_SUFFIXES),
         "thresholds": THRESHOLDS,
         "max_references": MAX_REFERENCES,
         "ai_notes": dict(zip(("available", "reason"), ai_notes.available())),
+        "notes_feedback": {"reasons": feedback.options(), **feedback.stats()},
+        "separation": dict(zip(("available", "reason"), separate.available())),
     }
 
 
@@ -118,15 +127,24 @@ def with_real_name(report, name):
     return report
 
 
+@app.get("/api/scan")
+def scan():
+    """What's installed on this computer, to pre-fill the setup screen. Reads bundle metadata only."""
+    return scan_this_computer()
+
+
 @app.post("/api/analyze")
 async def analyze(file: UploadFile = File(...), setup: str = Form("{}"), stage: str = Form("auto"),
-                  target: str = Form(""), references: str = Form("[]"), progress: str = Form("")):
+                  target: str = Form(""), references: str = Form("[]"), progress: str = Form(""),
+                  split_vocal: str = Form("")):
     """The report as JSON. With progress=1, newline-delimited JSON instead: {"stage": ...} as each
-    part of the analysis finishes (see analyze.PROGRESS_STAGES), then {"report": ...} or {"error": ...}."""
+    part of the analysis finishes (see analyze.PROGRESS_STAGES), then {"report": ...} or {"error": ...}.
+    With split_vocal=1 the mix is split into vocal and instrumental and the vocal is checked (slow)."""
     name = file.filename or "upload"
     user_setup = parse_setup(setup)
     refs = parse_references(parse_json(references, "references", []))
-    run = lambda path, done=None: analyze_file(path, user_setup, stage, target or None, refs, progress=done)
+    run = lambda path, done=None: analyze_file(path, user_setup, stage, target or None, refs, progress=done,
+                                               split_vocal=split_vocal == "1")
     if progress != "1":
         return with_real_name(await with_upload(file, run), name)
 
@@ -174,11 +192,33 @@ async def notes(report: dict = Body(..., embed=True)):
         raise HTTPException(503, str(exc))
     except (KeyError, TypeError, ValueError):
         raise HTTPException(422, "That report couldn't be read; check the bounce again.")
+    result["notes_id"] = feedback.remember(result)  # so these notes can be rated
     inp = result.pop("input")
     # Let the page show steps and findings by id without re-deriving MixCheck's numbering.
     result["steps"] = {s["id"]: s["text"] for f in inp["findings"] for s in f["steps"] + f["other_options"]}
     result["findings"] = {f["id"]: f["kind"] for f in inp["findings"]}
     return result
+
+
+@app.post("/api/notes/feedback")
+def rate_notes(notes_id: str = Body(...), rating: Optional[str] = Body(None), reasons: list = Body([])):
+    """Thumbs up or down on a set of notes (rating null clears it). Kept on this computer only."""
+    try:
+        return feedback.rate(notes_id, rating, reasons)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    except feedback.Gone:
+        raise HTTPException(404, "Those notes are no longer in memory (Seraphim was restarted). Rewrite them to rate them.")
+
+
+@app.get("/api/notes/feedback/export")
+def export_feedback(name: str = ""):
+    """Download the ratings as one file: measurements, notes and ratings, with no audio and no file name."""
+    filename, text, count = feedback.export(name)
+    if not count:
+        raise HTTPException(404, "Nothing to export yet. Rate some notes first.")
+    return Response(text, media_type="application/x-ndjson",
+                    headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
 @app.put("/api/reference-sets")
@@ -205,9 +245,9 @@ def delete_reference_set(name: str):
 @app.post("/api/fixes")
 def fixes(flags: list = Body(...), setup: dict = Body({}), stage: str = Body("mix"),
           target: str = Body(""), measures: dict = Body({}), profile: Optional[dict] = Body(None),
-          references: list = Body([])):
+          references: list = Body([]), vocal: bool = Body(False)):
     """Rebuild findings, fixes and scores for a new setup, stage, target or set of
-    references, without re-analyzing."""
+    references, without re-analyzing. vocal: the report includes the vocal checks."""
     if stage not in STAGES:
         raise HTTPException(422, f"stage must be one of {', '.join(STAGES)}")
     for f in flags:
@@ -220,10 +260,10 @@ def fixes(flags: list = Body(...), setup: dict = Body({}), stage: str = Body("mi
     flags = attach_fixes(flags, user_setup, stage)
     return {
         "flags": flags,
-        "score": score_flags(flags, stage),
+        "score": score_flags(flags, stage, vocal=vocal),
         "style": style_match(measures, target, stage),
         "reference": comparison,
-        "target": target or None,
+        "target": canonical(target),
         "setup": {**user_setup, "label": describe_setup(user_setup)},
         "stage": stage,
     }
@@ -258,6 +298,8 @@ app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
 
 def main():
     import argparse
+
+    utf8_console()
 
     import uvicorn
 

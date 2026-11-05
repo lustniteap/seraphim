@@ -18,7 +18,7 @@ SCENARIOS = {
     # The other stage and a different toolset: stage-appropriate advice, and only owned tools.
     "other_stage": {"stage": "flip", "setup": {"daw": "logic", "packages": ["fabfilter"]}, "target": ""},
     # A style to aim for, with stock tools only.
-    "trap_target": {"stage": None, "setup": {"daw": "ableton", "packages": []}, "target": "trap_hiphop"},
+    "trap_target": {"stage": None, "setup": {"daw": "ableton", "packages": []}, "target": "hiphop_rap"},
 }
 
 
@@ -40,7 +40,8 @@ def rejudge(report, stage=None, setup=None, target=None):
     flags = attach_fixes(apply_style(flags, r["measures"], target, stage), setup, stage)
     r.update(
         flags=flags,
-        score=score_flags(flags, stage),
+        # The vocal checks count (and can earn "Ready for mastering") only if the report ran them, as on the page.
+        score=score_flags(flags, stage, vocal=bool((r.get("vocal") or {}).get("found"))),
         style=style_match(r["measures"], target, stage),
         target=target or None,
         setup={**setup, "label": describe_setup(setup)},

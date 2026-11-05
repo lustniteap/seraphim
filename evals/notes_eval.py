@@ -6,8 +6,10 @@
     python evals/notes_eval.py run --judge              # ...plus the LLM judge
     python evals/notes_eval.py run --variant v1         # after changing the prompt: a new variant
     python evals/notes_eval.py summary                  # scores per variant, failures with reasons
-    python evals/notes_eval.py label                    # grade some notes yourself...
-    python evals/notes_eval.py agreement                # ...and see how often the judge agrees with you
+    python evals/notes_eval.py regrade                  # re-score saved notes after a check changes (free)
+    python evals/notes_eval.py label --by sam           # grade some notes yourself...
+    python evals/notes_eval.py agreement                # ...and see how often the judge agrees with everyone
+    python evals/notes_eval.py feedback                 # thumbs people gave notes in the web page (evals/feedback/)
 
 Cases: every report in evals/reports (real bounces) and evals/synthetic (known problems), each
 judged three ways (scenarios.py). Results go to evals/runs/notes/<variant>/: results.jsonl (one row
@@ -31,6 +33,7 @@ sys.path.insert(0, str(ROOT))
 from evals import graders  # noqa: E402
 from evals.judge import CRITERIA, DEFAULT_JUDGE, judge  # noqa: E402
 from evals.scenarios import cases_for  # noqa: E402
+from mixcheck import feedback as page_feedback  # noqa: E402
 from mixcheck import notes  # noqa: E402
 
 EVALS = Path(__file__).parent
@@ -48,7 +51,7 @@ def load_cases(only=None):
     out = []
     for source, folder in SOURCES.items():
         for path in sorted(folder.glob("*.json")):
-            report = json.loads(path.read_text())
+            report = json.loads(path.read_text(encoding="utf-8"))
             for case_id, scenario, r in cases_for(path.stem, report):
                 if only and only not in case_id:
                     continue
@@ -106,7 +109,7 @@ def cmd_run(args):
     results = out / "results.jsonl"
     done = set()
     if results.exists():
-        done = {(r["prompt_id"], r["rep"]) for r in map(json.loads, results.read_text().splitlines())}
+        done = {(r["prompt_id"], r["rep"]) for r in map(json.loads, results.read_text(encoding="utf-8").splitlines())}
     todo = [(c, rep) for c in cases for rep in range(args.reps) if (c["id"], rep) not in done]
     print(f"{len(cases)} cases x {args.reps} rep(s): {len(todo)} to run, {len(done)} already done -> {out}")
     if not todo:
@@ -130,7 +133,7 @@ def cmd_run(args):
             sys.exit("Nothing run.")
     (out / "run.json").write_text(json.dumps({
         "model": model, "prompt_version": notes.PROMPT_VERSION, "judge_model": args.judge_model if judge_client else None,
-        "reps": args.reps, "started": time.strftime("%Y-%m-%d %H:%M")}, indent=2))
+        "reps": args.reps, "started": time.strftime("%Y-%m-%d %H:%M")}, indent=2), encoding="utf-8")
 
     lock = threading.Lock()
     with ThreadPoolExecutor(args.jobs) as pool:
@@ -140,14 +143,14 @@ def cmd_run(args):
             try:
                 row, trace = fut.result()
             except Exception as exc:  # a failed call is plumbing, not a model score
-                with lock, open(out / "errors.jsonl", "a") as fh:
+                with lock, open(out / "errors.jsonl", "a", encoding="utf-8") as fh:
                     fh.write(json.dumps({"prompt_id": c["id"], "rep": rep, "error": type(exc).__name__,
                                          "message": str(exc)[:500], "at": time.strftime("%H:%M:%S")}) + "\n")
                 print(f"  [{i}/{len(todo)}] {c['id']} rep {rep}: ERROR {type(exc).__name__}: {str(exc)[:120]}")
                 continue
             with lock:
-                (out / "traces" / f"{c['id']}_rep{rep}.json").write_text(json.dumps(trace, indent=1, ensure_ascii=False))
-                with open(results, "a") as fh:
+                (out / "traces" / f"{c['id']}_rep{rep}.json").write_text(json.dumps(trace, indent=1, ensure_ascii=False), encoding="utf-8")
+                with open(results, "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(row, ensure_ascii=False) + "\n")
             failed = [k for k, v in row["grade"].items() if v < 1]
             print(f"  [{i}/{len(todo)}] {c['id']} rep {rep}: " + (f"fails {', '.join(failed)}" if failed else "all pass"))
@@ -168,7 +171,7 @@ def wilson(passes, n, z=1.96):
 
 def load_rows(variant_dir):
     path = variant_dir / "results.jsonl"
-    return [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()] if path.exists() else []
 
 
 def summarize(flow):
@@ -179,15 +182,19 @@ def summarize(flow):
     metrics = [m for m in metrics if any(m in r["grade"] for rows in data.values() for r in rows)]
     lines = [f"# Engineer's notes eval: {flow.name}", ""]
     for name, rows in data.items():
-        run = json.loads((flow / name / "run.json").read_text()) if (flow / name / "run.json").exists() else {}
-        errors = len((flow / name / "errors.jsonl").read_text().splitlines()) if (flow / name / "errors.jsonl").exists() else 0
+        run = json.loads((flow / name / "run.json").read_text(encoding="utf-8")) if (flow / name / "run.json").exists() else {}
+        # An error only counts while that (case, rep) has no result: a later successful run supersedes it.
+        done = {(r["prompt_id"], r["rep"]) for r in rows}
+        err_path = flow / name / "errors.jsonl"
+        err_rows = [json.loads(line) for line in err_path.read_text(encoding="utf-8").splitlines()] if err_path.exists() else []
+        errors = len({(e["prompt_id"], e["rep"]) for e in err_rows} - done)
         ok = [r for r in rows if r["status"] == "ok"]
         spend = sum(r.get("cost_usd", 0) + r.get("judge_cost_usd", 0) for r in rows)
         change = (flow / name / "change.md")
         lines.append(f"**{name}**: {run.get('model', '?')}, prompt {run.get('prompt_version', '?')}, "
-                     f"{len(ok)} ok / {len(rows) - len(ok)} truncated / {errors} errors, ${spend:.2f}"
+                     f"{len(ok)} ok / {len(rows) - len(ok)} truncated / {errors} unresolved errors, ${spend:.2f}"
                      + (f"; median {median(r['latency_s'] for r in ok):.1f} s, {median(r['words'] for r in ok):.0f} words" if ok else "")
-                     + (f". {change.read_text().strip().splitlines()[0]}" if change.exists() else ""))
+                     + (f". {change.read_text(encoding='utf-8').strip().splitlines()[0]}" if change.exists() else ""))
     lines += ["", "| metric | " + " | ".join(data) + " |", "|---|" + "---|" * len(data)]
     for m in metrics:
         cells = []
@@ -208,10 +215,10 @@ def summarize(flow):
             detail = r["details"].get(m)
             if detail is None and m.startswith("judge_"):
                 trace = flow / last / "traces" / f"{r['prompt_id']}_rep{r['rep']}.json"
-                detail = json.loads(trace.read_text()).get("judge", {}).get(m[6:], "") if trace.exists() else ""
+                detail = json.loads(trace.read_text(encoding="utf-8")).get("judge", {}).get(m[6:], "") if trace.exists() else ""
             lines.append(f"- **{m}** · {r['prompt_id']}: {detail}")
     text = "\n".join(lines) + "\n"
-    (flow / "summary.md").write_text(text)
+    (flow / "summary.md").write_text(text, encoding="utf-8")
     print("\n" + text)
 
 
@@ -219,21 +226,68 @@ def cmd_summary(args):
     summarize(RUNS / (f"notes-fake-{args.fake}" if args.fake else "notes"))
 
 
+def cmd_regrade(args):
+    """Re-score saved notes with the current checks, without calling Claude (free). Use after a check changes:
+    stored grades are from the checks as they were when the notes were written."""
+    flow = RUNS / (f"notes-fake-{args.fake}" if args.fake else "notes")
+    setups = {c["id"]: c["report"]["setup"] for c in load_cases()}
+    for vdir in sorted(d for d in flow.iterdir() if d.is_dir() and (d / "results.jsonl").exists()):
+        rows, changed = load_rows(vdir), 0
+        for r in rows:
+            trace_path = vdir / "traces" / f"{r['prompt_id']}_rep{r['rep']}.json"
+            if not trace_path.exists() or r["prompt_id"] not in setups:
+                continue
+            trace = json.loads(trace_path.read_text(encoding="utf-8"))
+            grade, details = graders.grade({"notes": trace["notes"], "issues": trace["issues"]},
+                                           trace["input"], setups[r["prompt_id"]])
+            new = {**{k: v for k, v in r["grade"].items() if k.startswith("judge_")},
+                   **{k: v for k, v in grade.items() if v is not None}}
+            if new != r["grade"]:
+                changed += 1
+                print(f"  {vdir.name} {r['prompt_id']}: " + ", ".join(
+                    f"{k} {r['grade'].get(k)} -> {new.get(k)}" for k in sorted(set(new) | set(r["grade"]))
+                    if new.get(k) != r["grade"].get(k)))
+            r["grade"], r["details"] = new, details
+            trace["checks"] = details
+            trace_path.write_text(json.dumps(trace, indent=1, ensure_ascii=False), encoding="utf-8")
+        (vdir / "results.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+        print(f"{vdir.name}: {changed} of {len(rows)} rows changed")
+    summarize(flow)
+
+
 # ---------------------------------------------------------------- human labels
+
+def labels_file(out, who):
+    """Each person's labels in their own file, so several people can label and push without conflicts."""
+    name = "".join(ch for ch in (who or "").lower() if ch.isalnum() or ch == "-")
+    return out / (f"labels-{name}.jsonl" if name else "labels.jsonl")
+
+
+def load_labels(out, who=None):
+    """[(labeller, prompt_id, labels)] from one person's file, or from everyone's."""
+    paths = [labels_file(out, who)] if who else sorted(out.glob("labels*.jsonl"))
+    rows = []
+    for path in paths:
+        if path.exists():
+            by = path.stem[len("labels-"):] if path.stem.startswith("labels-") else "(unnamed)"
+            rows += [(by, row["prompt_id"], row["labels"])
+                     for row in map(json.loads, path.read_text(encoding="utf-8").splitlines()) if row.get("labels")]
+    return rows
+
 
 def cmd_label(args):
     """Grade notes yourself on the judge's criteria, to check the judge agrees with you."""
     out = RUNS / "notes" / args.variant
     rows = load_rows(out)
-    labels_path = out / "labels.jsonl"
-    labelled = {json.loads(line)["prompt_id"] for line in labels_path.read_text().splitlines()} if labels_path.exists() else set()
+    labels_path = labels_file(out, args.by)
+    labelled = {json.loads(line)["prompt_id"] for line in labels_path.read_text(encoding="utf-8").splitlines()} if labels_path.exists() else set()
     todo = [r for r in rows if r["prompt_id"] not in labelled and r["rep"] == 0]
     random.Random(7).shuffle(todo)
     print(f"{len(labelled)} labelled so far. For each criterion type p (pass), f (fail), n (n/a); Enter skips; q quits.\n")
     rubric = {line.split(":")[0].strip("- "): line.split(":", 1)[1].strip()
-              for line in (EVALS / "prompts" / "judge_notes.md").read_text().splitlines() if line.startswith("- ")}
+              for line in (EVALS / "prompts" / "judge_notes.md").read_text(encoding="utf-8").splitlines() if line.startswith("- ")}
     for r in todo[:args.n]:
-        trace = json.loads((out / "traces" / f"{r['prompt_id']}_rep0.json").read_text())
+        trace = json.loads((out / "traces" / f"{r['prompt_id']}_rep0.json").read_text(encoding="utf-8"))
         inp, n = trace["input"], trace["notes"]
         print("=" * 78, f"\n{r['prompt_id']}  ({inp['stage']}, {inp['setup']})\nFindings:")
         for f in inp["findings"]:
@@ -246,19 +300,21 @@ def cmd_label(args):
                 return
             if ans in ("p", "f", "n"):
                 labels[c] = {"p": 1.0, "f": 0.0, "n": None}[ans]
-        with open(labels_path, "a") as fh:
+        with open(labels_path, "a", encoding="utf-8") as fh:
             fh.write(json.dumps({"prompt_id": r["prompt_id"], "labels": labels}) + "\n")
 
 
 def cmd_agreement(args):
     out = RUNS / "notes" / args.variant
-    labels = {json.loads(line)["prompt_id"]: json.loads(line)["labels"]
-              for line in (out / "labels.jsonl").read_text().splitlines()}
+    labels = load_labels(out, args.by)
+    if not labels:
+        sys.exit(f"No labels yet for {args.variant}. Run: python evals/notes_eval.py label --by <your name>")
     rows = {r["prompt_id"]: r for r in load_rows(out) if r["rep"] == 0}
-    print(f"{len(labels)} cases labelled by you\n")
-    print(f"{'criterion':20} {'agree':>7}  {'n':>3}  judge said pass/you said fail, and the reverse")
+    people = sorted({by for by, _, _ in labels})
+    print(f"{len(labels)} labelled cases from {', '.join(f'{p} ({sum(b == p for b, _, _ in labels)})' for p in people)}\n")
+    print(f"{'criterion':20} {'agree':>7}  {'n':>3}  judge said pass/person said fail, and the reverse")
     for c in CRITERIA:
-        pairs = [(lab[c], rows[pid]["grade"].get(f"judge_{c}")) for pid, lab in labels.items()
+        pairs = [(lab[c], rows[pid]["grade"].get(f"judge_{c}")) for _, pid, lab in labels
                  if c in lab and pid in rows and f"judge_{c}" in rows[pid]["grade"] and lab[c] is not None]
         if not pairs:
             print(f"{c:20} {'–':>7}")
@@ -267,6 +323,34 @@ def cmd_agreement(args):
         lenient = sum(h == 0 and j == 1 for h, j in pairs)
         strict = sum(h == 1 and j == 0 for h, j in pairs)
         print(f"{c:20} {100 * agree / len(pairs):6.0f}%  {len(pairs):3}  {lenient} too lenient, {strict} too strict")
+
+
+def cmd_feedback(args):
+    """What people said about real notes in the web page: how often they were useful, and what went wrong."""
+    paths = [Path(f) for f in args.files] if args.files else sorted((EVALS / "feedback").glob("feedback-*.jsonl"))
+    if args.local:
+        paths.append(page_feedback.feedback_file())
+    rows = page_feedback.load_exports([p for p in paths if p.exists()])
+    if not rows:
+        sys.exit("No ratings yet. In the web page, rate some engineer's notes, use Export my ratings, "
+                 "and put the file in evals/feedback/ (or pass it here).")
+    people = len([p for p in paths if p.exists()])
+    print(f"{len(rows)} rating(s) from {people} file(s).\n")
+    print(f"{'prompt version':16} {'n':>4}  {'useful':>7}  95% interval   what people said was wrong")
+    for version in sorted({r["prompt_version"] for r in rows}):
+        mine = [r for r in rows if r["prompt_version"] == version]
+        up = sum(r["rating"] == "up" for r in mine)
+        lo, hi = wilson(up, len(mine))
+        reasons = {}
+        for r in mine:
+            for reason in r["reasons"]:
+                reasons[reason] = reasons.get(reason, 0) + 1
+        said = ", ".join(f"{k} {v}" for k, v in sorted(reasons.items(), key=lambda kv: -kv[1])) or "-"
+        print(f"{version:16} {len(mine):4}  {100 * up / len(mine):6.0f}%  {100 * lo:4.0f}-{100 * hi:.0f}%       {said}")
+    labelled = sum(bool(r.get("labels")) for r in rows)
+    print(f"\n{labelled} of {len(rows)} ratings name a reason, so they also work as hand labels for the criteria in judge.py "
+          f"(reason -> criterion: {', '.join(f'{k} -> {v[1]}' for k, v in page_feedback.REASONS.items())}).")
+    print("Opinions on real bounces, not ground truth: use label/agreement to check the judge.")
 
 
 def main():
@@ -285,13 +369,21 @@ def main():
     r.add_argument("--yes", action="store_true", help="don't ask before spending")
     s = sub.add_parser("summary", help="scores per variant")
     s.add_argument("--fake", choices=["oracle", "null", "sloppy"])
+    rg = sub.add_parser("regrade", help="re-score saved notes with the current checks (free)")
+    rg.add_argument("--fake", choices=["oracle", "null", "sloppy"])
     lab = sub.add_parser("label", help="grade notes yourself")
     lab.add_argument("--variant", default="baseline")
     lab.add_argument("-n", type=int, default=15, help="how many cases this session")
-    a = sub.add_parser("agreement", help="how often the judge agrees with your labels")
+    lab.add_argument("--by", help="your name; your labels go to labels-<name>.jsonl")
+    a = sub.add_parser("agreement", help="how often the judge agrees with people's labels")
     a.add_argument("--variant", default="baseline")
+    a.add_argument("--by", help="only this person's labels (default: everyone's)")
+    fb = sub.add_parser("feedback", help="ratings people gave notes in the web page")
+    fb.add_argument("files", nargs="*", help="exported feedback files (default: evals/feedback/feedback-*.jsonl)")
+    fb.add_argument("--local", action="store_true", help="also read this computer's own ratings in ~/.mixcheck")
     args = p.parse_args()
-    {"run": cmd_run, "summary": cmd_summary, "label": cmd_label, "agreement": cmd_agreement}[args.cmd](args)
+    {"run": cmd_run, "summary": cmd_summary, "regrade": cmd_regrade, "label": cmd_label,
+     "agreement": cmd_agreement, "feedback": cmd_feedback}[args.cmd](args)
 
 
 if __name__ == "__main__":

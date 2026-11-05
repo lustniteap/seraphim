@@ -102,7 +102,9 @@ def _finding_ids():
     from mixcheck import analyze
     from mixcheck.reference import REFERENCE_IDS
     from mixcheck.style import STYLE_IDS
-    return set(re.findall(r'flag\("(\w+)"', inspect.getsource(analyze.build_flags))) | STYLE_IDS | REFERENCE_IDS
+    from mixcheck.vocal import VOCAL_IDS
+    return (set(re.findall(r'flag\("(\w+)"', inspect.getsource(analyze.build_flags)))
+            | STYLE_IDS | REFERENCE_IDS | VOCAL_IDS)
 
 
 def test_every_finding_has_a_fix():
@@ -198,6 +200,8 @@ def test_every_finding_is_scored():
                "no_air": 0.001, "phase_section": None}
     from mixcheck.reference import REFERENCE_IDS
     from mixcheck.style import STYLE_IDS
+    from mixcheck.vocal import VOCAL_IDS
+    typical.update({fid: 1.0 for fid in VOCAL_IDS})  # estimated vocal findings cost points in their own area
     for fid in _finding_ids() - {"silent"} - STYLE_IDS - REFERENCE_IDS:
         flag = {"id": fid, "severity": "warning", "value": typical[fid]}
         assert max(_points(flag, st)[1] for st in ("mix", "master")) > 0, f"{fid} is never scored"
@@ -206,7 +210,7 @@ def test_every_finding_is_scored():
 def test_style_is_judged_against_the_target():
     from mixcheck.style import apply_style, style_flags, style_match
     loud = {"lufs": -7.0, "plr": 8.0, "lra": 4.0, "air_pct": 0.001}
-    trap, jazz = style_match(loud, "trap_hiphop", "master"), style_match(loud, "acoustic", "master")
+    trap, jazz = style_match(loud, "hiphop_rap", "master"), style_match(loud, "acoustic", "master")
     assert trap["percent"] == 100 and jazz["percent"] < 50
     assert {f["id"] for f in style_flags(loud, "acoustic", "master")} >= {"louder_than_target", "more_limited_than_target"}
     # Lo-fi is dull on purpose; other styles still get the note.
@@ -219,7 +223,7 @@ def test_style_is_judged_against_the_target():
     assert "very_loud" in {f["id"] for f in style_flags(loud, None, "master")}
     # Changing target swaps the style findings and leaves the rest alone.
     flags = [{"id": "clipping", "severity": "warning"}] + style_flags(loud, "acoustic", "master")
-    swapped = apply_style(flags, loud, "trap_hiphop", "master")
+    swapped = apply_style(flags, loud, "hiphop_rap", "master")
     assert [f["id"] for f in swapped] == ["clipping", "no_air"]
 
 
@@ -309,7 +313,7 @@ def _calibrate_to(styles):
     import json
     from mixcheck.style import calibration_path
     calibration_path().parent.mkdir(parents=True, exist_ok=True)
-    with open(calibration_path(), "w") as fh:
+    with open(calibration_path(), "w", encoding="utf-8") as fh:
         json.dump({"version": 1, "styles": styles}, fh)
     os.utime(calibration_path(), ns=(0, len(json.dumps(styles))))  # so the cache sees each rewrite
 
@@ -320,28 +324,28 @@ def test_calibrated_style_ranges_and_tone():
     m = {"lufs": -7.0, "plr": 8.0, "lra": 4.0, "air_pct": 0.1,
          "tone": {"lows": -28.0, "low_mids": -24.0, "mids": -15.0, "presence": -11.0, "highs": -10.0}}
     try:
-        _calibrate_to({"trap_hiphop": {"songs": 12, "lufs": [-8, -5], "plr": [5, 8], "lra": [3, 6], "tone": tone},
+        _calibrate_to({"hiphop_rap": {"songs": 12, "lufs": [-8, -5], "plr": [5, 8], "lra": [3, 6], "tone": tone},
                        "lofi": {"songs": 6, "lufs": [-14, -9], "plr": [8, 12], "lra": [3, 8], "tone": tone},
                        "pop": {"lufs": "loud", "tone": {"lows": [3, 1]}}})
         t = targets()
-        assert t["trap_hiphop"]["lufs"] == (-8, -5) and t["trap_hiphop"]["songs"] == 12
+        assert t["hiphop_rap"]["lufs"] == (-8, -5) and t["hiphop_rap"]["songs"] == 12
         assert t["pop"]["lufs"] == (-10.0, -7.0) and "tone" not in t["pop"]  # malformed values are ignored
         assert t["edm"]["lufs"] == (-8.0, -5.0)  # styles that weren't calibrated keep their ranges
-        assert {o["id"]: o["songs"] for o in options()}["trap_hiphop"] == 12
+        assert {o["id"]: o["songs"] for o in options()}["hiphop_rap"] == 12
 
-        sm = style_match(m, "trap_hiphop", "mix")
+        sm = style_match(m, "hiphop_rap", "mix")
         assert sm["songs"] == 12 and [d["id"] for d in sm["dims"]] == ["plr", "lra", "tone"]
         lows = next(b for b in sm["tone"] if b["id"] == "lows")
         assert lows["status"] == "low" and lows["off_by"] == 4.0
-        tone_flags = [f for f in style_flags(m, "trap_hiphop", "master") if f["id"] == "tone_less_than_target"]
+        tone_flags = [f for f in style_flags(m, "hiphop_rap", "master") if f["id"] == "tone_less_than_target"]
         assert [f["band"] for f in tone_flags] == ["lows", "highs"]
-        assert "4.0 dB lighter below 100 Hz than typical for Trap / hip-hop" in tone_flags[0]["message"]
+        assert "4.0 dB lighter below 100 Hz than typical for Hip-hop / rap" in tone_flags[0]["message"]
         # Lo-fi's dull top end is the point, not a finding.
         lofi = [f for f in style_flags(m, "lofi", "master") if f["id"] == "tone_less_than_target"]
         assert [f["band"] for f in lofi] == ["lows"]
     finally:
         calibration_path().unlink()
-    assert targets()["trap_hiphop"]["lufs"] == (-9.0, -6.0) and "tone" not in targets()["trap_hiphop"]
+    assert targets()["hiphop_rap"]["lufs"] == (-9.0, -6.0) and "tone" not in targets()["hiphop_rap"]
 
 
 def test_calibrate_builds_ranges_from_songs():
@@ -351,9 +355,10 @@ def test_calibrate_builds_ranges_from_songs():
     assert spread([-8.2, -7.9, -7.5, -7.1, -6.6], 2.0) == [-8.5, -6.0]
     assert spread([-7.0] * 5, 2.0) == [-8.0, -6.0]
     names = aliases()
-    assert names["trap"] == names["hiphop"] == names["traphiphop"] == "trap_hiphop"
+    assert names["trap"] == names["hiphop"] == names["traphiphop"] == "hiphop_rap"
     assert names["lofi"] == "lofi" and names["rb"] == "rnb" and names["jazz"] == "acoustic"
 
+    import json
     import tempfile
     import soundfile as sf
     root = tempfile.mkdtemp()
@@ -363,16 +368,182 @@ def test_calibrate_builds_ranges_from_songs():
         sf.write(os.path.join(root, "Hip-Hop", f"s{i}.wav"), _song(seconds=31, bass_db=6.0, seed=i) * 2.5, FS)
     sf.write(os.path.join(root, "Hip-Hop", "clip.wav"), _song(seconds=10, seed=9), FS)
     groups, unknown = collect(root)
-    assert list(groups) == ["trap_hiphop"] and len(groups["trap_hiphop"]) == 4 and unknown == ["not a style"]
+    assert list(groups) == ["hiphop_rap"] and len(groups["hiphop_rap"]) == 4 and unknown == ["not a style"]
     try:
+        _calibrate_to({"trap_hiphop": {"songs": 99, "lufs": [-30, -29]}, "lofi": {"songs": 6, "lufs": [-14, -9]}})
         assert calibrate(groups, min_songs=4, jobs=1, out=lambda *a: None) == {}  # the clip is too short to count
-        new = calibrate(groups, min_songs=3, jobs=1, out=lambda *a: None)["trap_hiphop"]
+        new = calibrate(groups, min_songs=3, jobs=1, out=lambda *a: None)["hiphop_rap"]
         assert new["songs"] == 3 and len(new["tone"]) == 5
-        t = targets()["trap_hiphop"]
+        t = targets()["hiphop_rap"]
         assert t["songs"] == 3 and list(t["lufs"]) == new["lufs"]
         assert t["lufs"][1] - t["lufs"][0] >= 2.0
+        # A calibration saved under the old id moves to the new one when the file is rewritten; others are kept.
+        with open(calibration_path(), encoding="utf-8") as fh:
+            saved = json.load(fh)["styles"]
+        assert "trap_hiphop" not in saved and saved["hiphop_rap"]["songs"] == 3 and saved["lofi"]["songs"] == 6
     finally:
         calibration_path().unlink()
+
+
+def test_old_style_id_keeps_working():
+    import argparse
+    import tempfile
+    from scipy.io import wavfile
+    from mixcheck.cli import style_arg
+    from mixcheck.style import canonical, style_flags, style_match
+    assert canonical("trap_hiphop") == canonical("hiphop_rap") == "hiphop_rap"
+    assert canonical("hiphop_rap.drill") == "hiphop_rap.drill"
+    assert canonical("nope") is None and canonical(None) is None and canonical("") is None and canonical(["x"]) is None
+
+    loud = {"lufs": -7.0, "plr": 8.0, "lra": 4.0, "air_pct": 0.001}
+    assert style_match(loud, "trap_hiphop", "master") == style_match(loud, "hiphop_rap", "master")
+    assert style_flags(loud, "trap_hiphop", "master") == style_flags(loud, "hiphop_rap", "master")
+    assert style_match(loud, "nope", "master") is None
+
+    # The command line takes the old id and the new ones, and says which ids exist when it's wrong.
+    assert style_arg("trap_hiphop") == "hiphop_rap" and style_arg("hiphop_rap.drill") == "hiphop_rap.drill"
+    try:
+        style_arg("rock_n_roll")
+        assert False, "an unknown style should be refused"
+    except argparse.ArgumentTypeError as exc:
+        assert "hiphop_rap" in str(exc) and "hiphop_rap.drill" in str(exc)
+
+    # A whole analysis: the report records the current id, and an unknown one still means no preference.
+    path = os.path.join(tempfile.mkdtemp(), "tone.wav")
+    wavfile.write(path, FS, (stereo(sine(220, -12.0)) * 32767).astype(np.int16))
+    report = analyze_file(path, target="trap_hiphop")
+    assert report["target"] == "hiphop_rap" and report["style"]["name"] == "Hip-hop / rap"
+    assert analyze_file(path, target="nope")["target"] is None
+
+    # The page: it's told the old ids, the style list is grouped, and /api/fixes answers with the current id.
+    try:
+        from fastapi.testclient import TestClient
+    except (ImportError, RuntimeError):  # the web extra or httpx isn't installed
+        return
+    from mixcheck.web import server
+    client = TestClient(server.app)
+    info = client.get("/api/info").json()
+    ids = [o["id"] for o in info["style_options"]]
+    assert info["style_aliases"] == {"trap_hiphop": "hiphop_rap"}
+    assert ids[0] == "hiphop_rap" and "hiphop_rap.drill" in ids and len(ids) == 39
+    res = client.post("/api/fixes", json={"flags": [], "stage": "master", "target": "trap_hiphop", "measures": loud})
+    body = res.json()
+    assert res.status_code == 200 and body["target"] == "hiphop_rap" and body["style"]["name"] == "Hip-hop / rap"
+
+
+def test_calibration_saved_under_the_old_id_still_applies():
+    from mixcheck.style import calibration_path, targets
+    try:
+        _calibrate_to({"trap_hiphop": {"songs": 9, "lufs": [-8, -5]}})
+        t = targets()
+        assert t["hiphop_rap"]["lufs"] == (-8, -5) and t["hiphop_rap"]["source"]["label"] == "calibrated (9 songs)"
+        assert t["hiphop_rap.drill"]["lufs"] == (-8, -5)  # its sub-genres follow it
+        # If a file somehow holds both, the current id wins.
+        _calibrate_to({"trap_hiphop": {"songs": 9, "lufs": [-8, -5]}, "hiphop_rap": {"songs": 10, "lufs": [-7, -4]}})
+        assert targets()["hiphop_rap"]["lufs"] == (-7, -4) and targets()["hiphop_rap"]["songs"] == 10
+    finally:
+        calibration_path().unlink()
+
+
+def test_subgenres_use_their_parents_ranges_until_calibrated():
+    from mixcheck.style import SUBGENRES, TARGETS, calibration_path, options, style_flags, style_ids, style_match, targets
+    # The table: 31 sub-genres, each under a real parent, keyed parent.sub, with a calibration priority.
+    assert len(SUBGENRES) == 31 and len(style_ids()) == 39
+    for sid, sub in SUBGENRES.items():
+        assert sid == f"{sub['parent']}.{sub['slug']}" and sub["parent"] in TARGETS and sub["priority"] in (1, 2, 3)
+    assert len({(s["parent"], s["name"]) for s in SUBGENRES.values()}) == 31
+    assert all(sum(s["parent"] == p for s in SUBGENRES.values()) >= 2 for p in TARGETS)
+    ids = style_ids()
+    assert ids[:7] == ["hiphop_rap", "hiphop_rap.trap", "hiphop_rap.drill", "hiphop_rap.boom_bap",
+                       "hiphop_rap.rage", "hiphop_rap.melodic", "edm"]
+    opts = options()
+    assert [o["id"] for o in opts] == ids
+    assert opts[0]["parent"] is None and opts[0]["name"] == "Hip-hop / rap"
+    assert opts[1]["parent"] == "hiphop_rap" and opts[1]["group"] == "Hip-hop / rap" and opts[1]["name"] == "Trap"
+
+    # Nothing calibrated: every sub-genre has exactly its parent's numbers, and says so.
+    t = targets()
+    for sid, sub in SUBGENRES.items():
+        assert all(t[sid][d] == t[sub["parent"]][d] for d in ("lufs", "plr", "lra"))
+        assert t[sid]["source"]["kind"] == "inherited" and t[sid]["source"]["from"] == sub["parent"]
+        assert "songs" not in t[sid]
+    assert t["hiphop_rap"]["source"]["label"] == "built-in estimate"
+    drill = t["hiphop_rap.drill"]
+    assert drill["source"]["label"] == "inherited from Hip-hop / rap: built-in estimate"
+    assert drill["source"]["from_name"] == "Hip-hop / rap" and drill["source"]["parent_label"] == "built-in estimate"
+    assert t["hiphop_rap"]["source"]["from"] is None and t["hiphop_rap"]["source"]["parent_label"] is None
+    assert drill["name"] == "Drill" and drill["full_name"] == "Drill (Hip-hop / rap)"
+
+    # Flags come down too: lo-fi is dull on purpose, so its sub-genre isn't told it has no air.
+    quiet_top = {"air_pct": 0.001}
+    assert "no_air" not in {f["id"] for f in style_flags(quiet_top, "lofi.chillhop", "master")}
+    assert "no_air" in {f["id"] for f in style_flags(quiet_top, "pop.dance_pop", "master")}
+
+    tone = {"lows": [-24, -20], "low_mids": [-26, -22], "mids": [-17, -13], "presence": [-13, -9], "highs": [-8, -4]}
+    try:
+        _calibrate_to({"hiphop_rap": {"songs": 12, "lufs": [-8, -5], "plr": [5, 8], "lra": [3, 6], "tone": tone},
+                       "hiphop_rap.drill": {"songs": 4, "lufs": [-12, -7]}})
+        t = targets()
+        assert t["hiphop_rap"]["source"]["label"] == "calibrated (12 songs)"
+        # Trap has nothing of its own, so it follows the parent's calibration, tone included.
+        trap = t["hiphop_rap.trap"]
+        assert trap["lufs"] == (-8, -5) and trap["tone"] == t["hiphop_rap"]["tone"]
+        assert trap["source"]["label"] == "inherited from Hip-hop / rap: calibrated (12 songs)"
+        # Drill has its own loudness and takes the rest from the parent, which is unaffected.
+        d = t["hiphop_rap.drill"]
+        assert d["lufs"] == (-12, -7) and d["plr"] == (5, 8) and d["lra"] == (3, 6) and d["tone"] == t["hiphop_rap"]["tone"]
+        assert d["songs"] == 4 and d["source"]["kind"] == "rough" and d["source"]["inherits"] == ["plr", "lra", "tone"]
+        assert d["source"]["label"] == "rough (4 songs); punch, contrast, tone from Hip-hop / rap"
+        assert t["hiphop_rap"]["lufs"] == (-8, -5) and t["hiphop_rap"]["songs"] == 12
+        # What the user sees names the sub-genre and its parent, and where the numbers came from.
+        sm = style_match({"lufs": -20.0, "plr": 6.0, "lra": 4.0}, "hiphop_rap.drill", "master")
+        assert sm["name"] == "Drill (Hip-hop / rap)" and sm["source"]["kind"] == "rough"
+        quiet = next(f for f in style_flags({"lufs": -20.0}, "hiphop_rap.drill", "master") if f["id"] == "quieter_than_target")
+        assert "typical for Drill (Hip-hop / rap) is -12 to -7 LUFS" in quiet["message"]
+        # Under 8 songs is rough; 8 or more is calibrated.
+        _calibrate_to({"pop": {"songs": 7, "lufs": [-9, -7]}, "rock": {"songs": 8, "lufs": [-9, -7]},
+                       "edm": {"songs": 1, "lufs": [-9, -7]}})
+        t = targets()
+        assert t["pop"]["source"]["label"] == "rough (7 songs)" and t["rock"]["source"]["label"] == "calibrated (8 songs)"
+        assert t["edm"]["source"]["label"] == "rough (1 song)"
+    finally:
+        calibration_path().unlink()
+
+
+def test_calibrate_finds_subgenre_folders():
+    import tempfile
+    from pathlib import Path
+    from mixcheck.calibrate import collect, style_for
+    # Qualified names mean a sub-genre; a bare name keeps meaning the whole parent, as it always did.
+    assert style_for("hiphop_rap.drill") == style_for("Hip-hop / rap Drill") == "hiphop_rap.drill"
+    assert style_for("trap") == style_for("rap") == style_for("trap_hiphop") == "hiphop_rap"
+    assert style_for("jazz") == "acoustic" and style_for("classical") == "film" and style_for("Boom bap") is None
+
+    root = Path(tempfile.mkdtemp())
+    for rel in ("Hip-Hop/a.wav", "Hip-Hop/drill/b.wav", "Hip-Hop/drill/deeper/c.wav", "Hip-Hop/Boom Bap/d.wav",
+                "Hip-Hop/other/e.wav", "EDM/house/f.wav"):
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_bytes(b"")
+    groups, unknown = collect(root)
+    names = lambda sid: sorted(p.name for p in groups[sid])
+    assert unknown == []
+    # Songs in a sub-genre's folder calibrate the sub-genre, not the parent; everything else stays with the parent.
+    assert names("hiphop_rap.drill") == ["b.wav", "c.wav"] and names("hiphop_rap.boom_bap") == ["d.wav"]
+    assert names("hiphop_rap") == ["a.wav", "e.wav"]
+    # A parent folder holding nothing but sub-genre folders doesn't also ask to calibrate the parent on no songs.
+    assert names("edm.house") == ["f.wav"] and "edm" not in groups
+
+    # --style takes the current id, a sub-genre, or an id the style used to have.
+    folder = root / "refs"
+    folder.mkdir()
+    (folder / "x.flac").write_bytes(b"")
+    groups, _ = collect(None, [f"trap_hiphop={folder}", f"hiphop_rap.rage={folder}"])
+    assert sorted(groups) == ["hiphop_rap", "hiphop_rap.rage"]
+    try:
+        collect(None, [f"made_up={folder}"])
+        assert False, "an unknown style should be refused"
+    except ValueError as exc:
+        assert "hiphop_rap.drill" in str(exc)
 
 
 class _FakeClient:
@@ -456,7 +627,7 @@ def test_notes_request_and_checks():
 def test_notes_endpoint():
     try:
         from fastapi.testclient import TestClient
-    except ImportError:  # the web extra isn't installed
+    except (ImportError, RuntimeError):  # the web extra or httpx isn't installed
         return
     from mixcheck import notes
     from mixcheck.web import server
@@ -483,7 +654,7 @@ def test_notes_endpoint():
 def test_analyze_streams_progress():
     try:
         from fastapi.testclient import TestClient
-    except ImportError:  # the web extra isn't installed
+    except (ImportError, RuntimeError):  # the web extra or httpx isn't installed
         return
     import io
     import json
@@ -501,8 +672,10 @@ def test_analyze_streams_progress():
     # A file that isn't audio ends the stream with an error the page can show.
     bad = client.post("/api/analyze", data={"progress": "1"}, files={"file": ("x.wav", b"not audio", "audio/wav")})
     error = json.loads(bad.text.splitlines()[-1])["error"]
-    assert "couldn't be read as audio" in error and "/tmp" not in error
-    assert "/tmp" not in client.post("/api/analyze", files={"file": ("x.wav", b"not audio", "audio/wav")}).json()["detail"]
+    import tempfile
+    temp = tempfile.gettempdir()  # the real temp folder on this system, not a guess like /tmp
+    assert "couldn't be read as audio" in error and temp not in error
+    assert temp not in client.post("/api/analyze", files={"file": ("x.wav", b"not audio", "audio/wav")}).json()["detail"]
     # Without progress=1, the plain JSON report as before.
     assert "flags" in client.post("/api/analyze", files={"file": ("a.wav", buf.getvalue(), "audio/wav")}).json()
 
@@ -568,6 +741,11 @@ def test_eval_scenarios_rejudge_like_the_page():
     assert "Utility" in tp["fix"]["steps"][0]["text"]
     ids = [c[0] for c in cases_for("song01", report)]
     assert ids == ["song01__as_recorded", "song01__other_stage", "song01__trap_target"]
+    # A report whose vocal was checked keeps the label the page showed; one that wasn't can't earn it.
+    report["flags"] = [f for f in report["flags"] if f["id"] not in ("true_peak_over", "true_peak_hot", "clipping")]
+    checked = rejudge({**report, "vocal": {"found": True}}, stage="mix")
+    unchecked = rejudge({**report, "vocal": None}, stage="mix")
+    assert checked["score"]["vocal_checked"] and not unchecked["score"]["vocal_checked"]
 
 
 def test_eval_number_check_is_fair_to_rounding_but_not_to_invention():
@@ -581,6 +759,524 @@ def test_eval_number_check_is_fair_to_rounding_but_not_to_invention():
     assert numbers_grounded(notes("−14.2 dB"), inp)[0] == 0.0  # right number, wrong quantity
     assert numbers_grounded(notes("Check 0:42, then 2:10."), inp)[0] == 0.0
     assert numbers_grounded(notes("No numbers."), inp)[0] is None
+    # Found in the first real pilot: "808s" (the drum machine) was read as 808 seconds.
+    assert numbers_grounded(notes("Let the 808s carry the low end."), inp)[0] is None
+    assert numbers_grounded(notes("Trim the last 30 s."), inp)[0] == 0.0
+    # Found in the baseline: a 0:40 song is "the whole 40 seconds"; times in m:ss count as seconds too.
+    assert numbers_grounded(notes("Check the 42 seconds mark."), inp)[0] == 1.0
+    assert numbers_grounded(notes("Check the 50 seconds mark."), inp)[0] == 0.0
+
+
+def _fake_bundle(folder, name, suffix, bundle_id, app=False):
+    import plistlib
+    path = folder / (name + suffix)
+    (path / "Contents").mkdir(parents=True)
+    with open(path / "Contents" / "Info.plist", "wb") as fh:
+        plistlib.dump({"CFBundleIdentifier": bundle_id, "CFBundleShortVersionString": "1.0"}, fh)
+
+
+def test_scan_maps_installed_plugins_and_daws():
+    import tempfile
+    from pathlib import Path
+    from mixcheck import scan
+    tmp_path = Path(tempfile.mkdtemp())
+    plugins, apps = tmp_path / "plugins", tmp_path / "apps"
+    plugins.mkdir(); apps.mkdir()
+    _fake_bundle(plugins, "iZOzone8 Maximizer", ".vst3", "com.izotope.audioplugins")
+    _fake_bundle(plugins, "iZOzone8 Insight", ".aaxplugin", "com.izotope.audioplugins")
+    _fake_bundle(plugins, "Neutron 2 Compressor", ".vst3", "com.izotope.audioplugins")
+    _fake_bundle(plugins, "WaveShell1-AU 16.2", ".component", "com.WavesAudio.WaveShell1-AU")
+    _fake_bundle(plugins, "UAD API 2500", ".component", "com.uaudio.api2500")
+    _fake_bundle(apps, "Pro Tools", ".app", "com.avid.ProTools")
+    _fake_bundle(apps, "FL Studio 2026", ".app", "com.image-line.flstudio")
+    _fake_bundle(apps, "Notes", ".app", "com.apple.Notes")
+    old = (scan.PLUGIN_FOLDERS, scan.APP_FOLDERS, scan.PLATFORM)
+    scan.PLUGIN_FOLDERS, scan.APP_FOLDERS, scan.PLATFORM = [plugins], [apps], "mac"
+    try:
+        r = scan.scan_this_computer()
+    finally:
+        scan.PLUGIN_FOLDERS, scan.APP_FOLDERS, scan.PLATFORM = old
+    assert set(r["packages"]) == {"izotope_ozone", "izotope_insight"}
+    assert r["packages"]["izotope_ozone"]["count"] == 1 and r["packages"]["izotope_insight"]["count"] == 1
+    assert r["waves_installed"] is True
+    assert [d["id"] for d in r["daws"]] == ["pro_tools", "fl_studio"]  # Pro Tools pre-selected
+    assert "com.uaudio" in r["other_vendors"] and "com.izotope" in r["other_vendors"]
+
+
+def test_scan_never_reports_plugins_it_cannot_identify():
+    from mixcheck.scan import _package_for, _vendor
+    assert _package_for("Waves L2", "com.WavesAudio.WaveShell1-AAX") == "waves"  # shell only, never a fake Waves plugin
+    assert _package_for("Serum", "com.xfer.serum") is None
+    assert _vendor("jp.co.roland.TR-808") == "jp.co.roland"
+    assert _vendor("com.arturia.component.Pigments") == "com.arturia"
+
+
+def test_waves_tiers_and_the_old_waves_essential_id():
+    from mixcheck.catalog import DAWS, LEGACY_PACKAGES, PACKAGES, TOOLS, WAVES_TIERS, expand_packages, options, owned_tools
+    from mixcheck.remediation import attach_fixes, describe_setup, normalize_setup
+    waves = {k for k, v in PACKAGES.items() if v["group"] == "Waves"}
+    ess, ult = set(WAVES_TIERS["essential"]["plugins"]), set(WAVES_TIERS["ultimate"]["plugins"])
+    assert ess <= waves and ult <= waves and ess <= ult  # Ultimate has everything Essential has
+    assert waves - ult == {"waves_s1_shuffler"}  # not in either bundle on Waves' own list, so it's chosen alone
+    assert {t["id"] for t in options()["waves_tiers"]} == {"essential", "ultimate"}
+    # No tool belongs to a DAW or package that doesn't exist, so every tool can be owned from the setup screen.
+    for tid, tool in TOOLS.items():
+        assert set(tool["in"]) <= set(DAWS) | set(PACKAGES), f"{tid} is in an unknown package"
+    # Older saved setups, scripts and eval cases name "waves_essential"; it still means the same four plugins.
+    assert expand_packages(["waves_essential", "waves_l2", "nonsense"]) == LEGACY_PACKAGES["waves_essential"]
+    setup = normalize_setup({"daw": "pro_tools", "packages": ["waves_essential", "fabfilter"]})
+    assert setup["packages"] == LEGACY_PACKAGES["waves_essential"] + ["fabfilter"]
+    assert describe_setup(setup) == "Pro Tools + Waves (L2, F6, Renaissance EQ, Renaissance Compressor) + FabFilter (Pro-L 2, Pro-Q, Pro-C 2)"
+    flags = [{"id": "true_peak_over", "severity": "critical", "message": "", "value": 1.0}]
+    names = {s["tool"] for s in attach_fixes(flags, {"daw": "pro_tools", "packages": ["waves_essential"]}, "master")[0]["fix"]["more"]}
+    assert "Waves L2" in names
+    # Owning only L2 gives the L2 and none of the other Waves plugins.
+    assert {t["name"] for t in owned_tools({"daw": "other", "packages": ["waves_l2"]}).values()} == {"Waves L2"}
+
+
+def _touch(path, text="x"):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def test_scan_finds_windows_daws_and_plugins():
+    import tempfile
+    from pathlib import Path
+    from mixcheck import scan
+    root = Path(tempfile.mkdtemp())
+    pf, common, data, local = root / "Program Files", root / "Common Files", root / "ProgramData", root / "Local"
+    _touch(pf / "Avid" / "Pro Tools" / "ProTools.exe")
+    _touch(pf / "Image-Line" / "FL Studio 2026" / "FL64.exe")
+    _touch(data / "Ableton" / "Live 12 Suite" / "Program" / "Ableton Live 12 Suite.exe")
+    _touch(pf / "Avid" / "Other App" / "other.exe")  # not a DAW
+    _touch(common / "VST3" / "iZotope" / "Ozone 9.vst3")                       # vendor sub-folder, single file
+    _touch(common / "VST3" / "iZotope" / "Insight 2.vst3")
+    _touch(common / "VST3" / "Waves 16.0" / "WaveShell1-VST3 16.0_x64.vst3")   # a folder name with a dot
+    _touch(common / "VST3" / "Solo Synth.vst3")                                 # no vendor folder: no vendor to report
+    _touch(common / "VST3" / "FabFilter" / "FabFilter Pro-L 2.vst3" / "Contents" / "x86_64-win" / "FabFilter Pro-L 2.vst3")
+    _touch(common / "Avid" / "Audio" / "Plug-Ins" / "WaveShell1-AAX 16.0.aaxplugin" / "Contents" / "x64" / "WaveShell1-AAX 16.0.aaxplugin")
+    _touch(pf / "VSTPlugins" / "Old Delay.dll")
+    _touch(pf / "VSTPlugins" / "Insight Other Company.dll")                     # "insight" without iZotope is not Insight
+    names = ["ProgramFiles", "ProgramW6432", "ProgramFiles(x86)", "CommonProgramFiles", "CommonProgramFiles(x86)",
+             "CommonProgramW6432", "ProgramData", "LOCALAPPDATA"]
+    saved = {n: os.environ.get(n) for n in names}
+    old_platform = scan.PLATFORM
+    try:
+        for n in names:
+            os.environ.pop(n, None)
+        os.environ.update({"ProgramFiles": str(pf), "CommonProgramFiles": str(common),
+                           "ProgramData": str(data), "LOCALAPPDATA": str(local)})
+        scan.PLATFORM = "windows"
+        r = scan.scan_this_computer()
+    finally:
+        scan.PLATFORM = old_platform
+        for n, v in saved.items():
+            os.environ.pop(n, None) if v is None else os.environ.__setitem__(n, v)
+    assert r["platform"] == "windows" and r["supported"] is True
+    assert [d["id"] for d in r["daws"]] == ["pro_tools", "ableton", "fl_studio"]  # Pro Tools pre-selected first
+    assert {d["id"]: d["app"] for d in r["daws"]}["ableton"] == "Ableton Live 12 Suite"
+    assert set(r["packages"]) == {"izotope_ozone", "izotope_insight"}
+    assert r["waves_installed"] is True
+    assert "fabfilter" in r["other_vendors"] and "vst3" not in r["other_vendors"]  # a vendor folder, not the plugin folder
+
+
+def test_scan_on_other_systems_says_it_is_unsupported():
+    from mixcheck import scan
+    old = scan.PLATFORM
+    scan.PLATFORM = "other"
+    try:
+        r = scan.scan_this_computer()
+    finally:
+        scan.PLATFORM = old
+    assert r["supported"] is False and r["daws"] == [] and r["packages"] == {} and r["waves_installed"] is False
+
+
+def test_console_output_survives_a_legacy_code_page():
+    import subprocess
+    code = "from mixcheck.util import utf8_console; utf8_console(); print('Out Ceiling to \u22121.0 dB \u203a Bounce')"
+    env = {**os.environ, "PYTHONIOENCODING": "cp1252", "PYTHONUTF8": "0"}  # what a Windows redirect can default to
+    root = os.path.join(os.path.dirname(__file__), "..")
+    env["PYTHONPATH"] = root
+    out = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, check=True).stdout
+    assert out.decode("utf-8").strip() == "Out Ceiling to \u22121.0 dB \u203a Bounce"
+    # Without the helper the same print fails on that code page, which is what the helper is for.
+    bare = subprocess.run([sys.executable, "-c", "print('\u22121.0')"], env=env, capture_output=True)
+    assert bare.returncode != 0 and b"UnicodeEncodeError" in bare.stderr
+
+
+def test_every_text_file_is_opened_with_an_explicit_encoding():
+    # Windows reads and writes text in a legacy code page unless told otherwise, and this app's text
+    # has characters like the minus sign and angle quotes. Fails the moment new code forgets.
+    import ast
+    import pathlib
+    root = pathlib.Path(__file__).resolve().parent.parent
+    problems = []
+    for path in sorted(list((root / "mixcheck").rglob("*.py")) + list((root / "evals").rglob("*.py"))):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if not isinstance(node, ast.Call):
+                continue
+            f = node.func
+            name = f.id if isinstance(f, ast.Name) else f.attr if isinstance(f, ast.Attribute) else ""
+            owner = f.value.id if isinstance(f, ast.Attribute) and isinstance(f.value, ast.Name) else ""
+            is_open = (name == "open" and not owner) or (name == "fdopen" and owner == "os")
+            if not (is_open or name in ("read_text", "write_text")):
+                continue
+            if any(k.arg == "encoding" for k in node.keywords):
+                continue
+            if is_open and any(isinstance(a, ast.Constant) and isinstance(a.value, str) and "b" in a.value for a in node.args[1:2]):
+                continue  # binary
+            problems.append(f"{path.relative_to(root)}:{node.lineno} {name}(...)")
+    assert not problems, "text opened without encoding=: " + ", ".join(problems)
+
+
+def test_info_says_which_system_this_is():
+    try:
+        from fastapi.testclient import TestClient
+    except (ImportError, RuntimeError):  # the web extra or httpx isn't installed
+        return
+    from mixcheck.web import server
+    info = TestClient(server.app).get("/api/info").json()["platform"]
+    assert info["id"] in ("mac", "windows", "other") and info["noun"] and info["launcher"]
+
+
+class _TempHome:
+    """A fresh MIXCHECK_HOME for one test, so ratings from another test can't leak in."""
+
+    def __enter__(self):
+        import tempfile
+        self.old = os.environ.get("MIXCHECK_HOME")
+        os.environ["MIXCHECK_HOME"] = tempfile.mkdtemp()
+        return self
+
+    def __exit__(self, *exc):
+        if self.old is None:
+            os.environ.pop("MIXCHECK_HOME", None)
+        else:
+            os.environ["MIXCHECK_HOME"] = self.old
+
+
+def _written_notes(report=None):
+    """(result of write_notes, report) with canned notes; the result is what the server remembers."""
+    from mixcheck.notes import write_notes
+    report = report or _clipped_report()
+    canned = {"headline": "h", "summary": "s", "listen_for": [], "strengths": [],
+              "priorities": [{"finding_ids": ["F1"], "title": "t", "why": "w", "step_ids": ["F1.1"]}]}
+    return write_notes(report, client=_FakeClient(canned)), report
+
+
+def test_feedback_ratings_are_saved_changed_and_cleared():
+    from mixcheck import feedback
+    with _TempHome():
+        result, _ = _written_notes()
+        nid = feedback.remember(result)
+        assert feedback.stats() == {"count": 0, "up": 0, "down": 0}
+        assert feedback.rate(nid, "up", ["too_long"])["reasons"] == []  # reasons only go with a thumbs down
+        assert feedback.stats() == {"count": 1, "up": 1, "down": 0}
+        out = feedback.rate(nid, "down", ["made_something_up", "too_long", "too_long"])
+        assert out["rating"] == "down" and out["reasons"] == ["made_something_up", "too_long"]
+        assert feedback.stats() == {"count": 1, "up": 0, "down": 1}  # a changed rating replaces the old one
+        assert feedback.rate(nid, None)["count"] == 0  # clearing takes it back
+        for bad in (lambda: feedback.rate(nid, "sideways"), lambda: feedback.rate(nid, "down", ["rude"])):
+            try:
+                bad()
+                raise AssertionError("a bad rating was saved")
+            except ValueError:
+                pass
+        try:
+            feedback.rate("not-a-real-id", "up")
+            raise AssertionError("notes that were never written were rated")
+        except feedback.Gone:
+            pass
+        # After a restart the page can still change a rating it already made.
+        feedback.rate(nid, "up")
+        feedback._recent.clear()
+        assert feedback.rate(nid, "down", ["generic"])["reasons"] == ["generic"]
+        assert feedback.stats()["down"] == 1
+
+
+def test_feedback_export_has_no_audio_or_file_name():
+    import json
+    from mixcheck import feedback
+    with _TempHome():
+        result, report = _written_notes()
+        assert report["file"]["name"] == "secret-song-name.wav"
+        nid = feedback.remember(result)
+        feedback.rate(nid, "down", ["made_something_up", "wrong_stage"])
+        name, text, count = feedback.export("Sam K!")
+        assert name == "feedback-samk.jsonl" and count == 1
+        assert "secret-song-name" not in text and nid not in text and '"at"' not in text
+        row = json.loads(text)
+        assert row["rating"] == "down" and row["prompt_version"] and row["input"]["findings"]
+        assert row["labels"] == {"faithful": 0.0, "stage_appropriate": 0.0}  # only what the person said
+        assert len(row["day"]) == 10
+        # A thumbs up labels no criterion; nothing rated means nothing to export.
+        feedback.rate(nid, "up")
+        assert json.loads(feedback.export()[1])["labels"] == {}
+        feedback.rate(nid, None)
+        assert feedback.export()[2] == 0
+
+
+def test_feedback_reasons_match_the_judges_criteria():
+    from evals.judge import CRITERIA
+    from mixcheck import feedback
+    # Every criterion can be labelled from the page, and no reason points at one that doesn't exist.
+    assert sorted(c for _, c in feedback.REASONS.values()) == sorted(CRITERIA)
+
+
+def test_feedback_endpoints():
+    try:
+        from fastapi.testclient import TestClient
+    except ImportError:  # the web extra isn't installed
+        return
+    from mixcheck import notes
+    from mixcheck.web import server
+    client = TestClient(server.app)
+    real = notes.write_notes
+    with _TempHome():
+        try:
+            import copy
+            canned, report = _written_notes()  # built before patching, so it can't call the stand-in
+            notes.write_notes = lambda r: copy.deepcopy(canned)  # the server removes "input" from what it gets
+            reasons = client.get("/api/info").json()["notes_feedback"]["reasons"]
+            assert {r["id"] for r in reasons} >= {"made_something_up", "too_long"}
+            assert client.get("/api/notes/feedback/export").status_code == 404  # nothing yet
+            data = client.post("/api/notes", json={"report": report}).json()
+            nid = data["notes_id"]
+            assert nid and "input" not in data
+            ok = client.post("/api/notes/feedback", json={"notes_id": nid, "rating": "down", "reasons": ["too_long"]})
+            assert ok.status_code == 200 and ok.json()["down"] == 1
+            assert client.get("/api/info").json()["notes_feedback"]["count"] == 1
+            assert client.post("/api/notes/feedback", json={"notes_id": nid, "rating": "meh"}).status_code == 422
+            assert client.post("/api/notes/feedback", json={"notes_id": nid, "rating": "up", "reasons": ["rude"]}).status_code == 422
+            assert client.post("/api/notes/feedback", json={"notes_id": "nope", "rating": "up"}).status_code == 404
+            export = client.get("/api/notes/feedback/export", params={"name": "sam"})
+            assert export.status_code == 200
+            assert 'filename="feedback-sam.jsonl"' in export.headers["content-disposition"]
+            assert "secret-song-name" not in export.text
+        finally:
+            notes.write_notes = real
+
+
+def test_feedback_summary_reads_exports():
+    import contextlib
+    import io
+    from pathlib import Path
+    from types import SimpleNamespace as NS
+    from evals import notes_eval
+    from mixcheck import feedback, notes
+    with _TempHome():
+        result, _ = _written_notes()
+        for rating, why in (("up", []), ("down", ["too_long"]), ("down", ["too_long", "generic"])):
+            feedback.rate(feedback.remember(result), rating, why)
+        _, text, _ = feedback.export("sam")
+        path = Path(os.environ["MIXCHECK_HOME"]) / "feedback-sam.jsonl"
+        path.write_text(text, encoding="utf-8")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            notes_eval.cmd_feedback(NS(files=[str(path)], local=False))
+        summary = out.getvalue()
+        assert "3 rating(s)" in summary and notes.PROMPT_VERSION in summary and "33%" in summary
+        assert "too_long 2" in summary and "generic 1" in summary
+
+
+# ---------------------------------------------------------------- vocal checks (vocal.py, separate.py)
+
+VFS = 44100  # the rate the separation model works at
+
+
+def _voice(levels_db, rumble=False, mud_db=None, sib_db=None, thin=False, seconds=24, seed=1):
+    """A stand-in vocal: half-second 'words' with a harmonic tone, one level per word (cycled)."""
+    from scipy.signal import butter, sosfilt
+    from scipy.signal.windows import tukey
+    rng = np.random.default_rng(seed)
+    n = int(seconds * VFS)
+    t = np.arange(n) / VFS
+    base = sum(np.sin(2 * np.pi * k * 160 * t + rng.uniform(0, 6.28)) / k ** 0.75 for k in range(1, 30))
+    if thin:
+        base = sosfilt(butter(4, 300, "high", fs=VFS, output="sos"), base)
+    mud = sum(np.sin(2 * np.pi * f * t) for f in (250, 320, 400)) / 3
+    hiss = sosfilt(butter(4, [5000, 9000], "band", fs=VFS, output="sos"), rng.standard_normal(n))
+    out, pos, i = np.zeros(n), 0.0, 0
+    while pos + 0.5 < seconds:
+        a, b = int(pos * VFS), int((pos + 0.5) * VFS)
+        seg = base[a:b] / (np.sqrt(np.mean(base[a:b] ** 2)) + 1e-9)
+        if mud_db is not None:
+            seg = seg + mud[a:b] * 10 ** (mud_db / 20)
+        if rumble:
+            seg = seg + 0.5 * np.sin(2 * np.pi * 45 * t[a:b])
+        if sib_db is not None:
+            seg = seg + hiss[a:b] / np.sqrt(np.mean(hiss[a:b] ** 2)) * 10 ** (sib_db / 20)
+        seg = seg * tukey(b - a, 0.3)  # flat-topped, like a sustained word
+        out[a:b] += seg / (np.sqrt(np.mean(seg ** 2)) + 1e-9) * 10 ** (levels_db[i % len(levels_db)] / 20)
+        pos, i = pos + 0.8, i + 1
+    return np.column_stack([out, out])
+
+
+def _beat(db, seconds=24):
+    rng = np.random.default_rng(2)
+    n = int(seconds * VFS)
+    t = np.arange(n) / VFS
+    b = 0.5 * np.sin(2 * np.pi * 55 * t) + 0.2 * np.sin(2 * np.pi * 110 * t) + 0.05 * rng.standard_normal(n)
+    return stereo(b / np.sqrt(np.mean(b ** 2)) * 10 ** (db / 20))
+
+
+EVEN = [-18, -17, -18, -19, -17, -18]
+
+
+def _vocal_ids(vocal, beat_db=-20):
+    from mixcheck.vocal import measure_vocal, vocal_flags
+    return {f["id"]: f["severity"] for f in vocal_flags(measure_vocal(vocal, _beat(beat_db), VFS))}
+
+
+def test_vocal_dynamics_tell_a_raw_vocal_from_a_compressed_one():
+    raw = _vocal_ids(_voice([-30, -14, -22, -10, -26, -12]))
+    assert raw.get("vocal_uncompressed") == "warning"
+    assert "vocal_uncompressed" not in _vocal_ids(_voice(EVEN))  # an even vocal isn't flagged
+
+
+def test_vocal_tone_findings():
+    assert _vocal_ids(_voice(EVEN, thin=True)).get("vocal_thin") == "warning"
+    assert _vocal_ids(_voice(EVEN, rumble=True)).get("vocal_rumble") == "warning"
+    assert _vocal_ids(_voice(EVEN, mud_db=14)).get("vocal_muddy") == "warning"
+    assert _vocal_ids(_voice(EVEN, sib_db=4)).get("vocal_sibilant") == "warning"
+    # A plain, evenly-leveled vocal trips none of them.
+    assert _vocal_ids(_voice(EVEN)) == {}
+
+
+def test_vocal_level_against_the_beat():
+    assert _vocal_ids(_voice(EVEN), beat_db=-6).get("vocal_buried") == "warning"
+    assert _vocal_ids(_voice(EVEN), beat_db=-40).get("vocal_dominant") == "warning"
+
+
+def test_no_vocal_means_no_verdict_on_it():
+    from mixcheck.vocal import measure_vocal, vocal_flags
+    quiet = measure_vocal(np.zeros((VFS * 10, 2)), _beat(-20, 10), VFS)
+    assert quiet["found"] is False and "instrumental" in quiet["reason"]
+    assert vocal_flags(quiet) == []
+    assert measure_vocal(np.zeros((100, 2)), np.zeros((100, 2)), VFS)["found"] is False  # too short
+
+
+def _with_fake_split(vocal, instrumental, work):
+    from mixcheck import separate
+    real = separate.separate_vocals
+    separate.separate_vocals = lambda x, fs: (vocal, instrumental, VFS)
+    try:
+        return work()
+    finally:
+        separate.separate_vocals = real
+
+
+def _clean_mix_file():
+    import tempfile
+    from scipy.io import wavfile
+    path = os.path.join(tempfile.mkdtemp(), "mix.wav")
+    wavfile.write(path, FS, (stereo(sine(220, -18)) * 32767).astype(np.int16))
+    return path
+
+
+def test_split_vocal_adds_estimated_findings_and_changes_the_verdict():
+    path = _clean_mix_file()
+    unchecked = analyze_file(path, stage="mix")
+    assert unchecked["vocal"] is None and unchecked["score"]["vocal_checked"] is False
+    assert unchecked["score"]["label"] == "No technical errors found"  # nothing has judged the vocal
+    assert all(a["id"] != "vocal" for a in unchecked["score"]["areas"])
+
+    raw, beat = _voice([-30, -14, -22, -10, -26, -12]), _beat(-20)
+    stages = []
+    checked = _with_fake_split(raw, beat, lambda: analyze_file(path, stage="mix", split_vocal=True, progress=stages.append))
+    from mixcheck.analyze import PROGRESS_STAGES
+    assert stages == [*PROGRESS_STAGES[:5], "vocal", *PROGRESS_STAGES[5:]]
+    v = checked["vocal"]
+    assert v["found"] and v["source"] == {"method": "split", "model": "htdemucs", "estimated": True}
+    assert "more accurate" in v["disclaimer"]
+    flag = next(f for f in checked["flags"] if f["id"] == "vocal_uncompressed")
+    assert flag["estimated"] and flag["fix"]["steps"]  # steps written for the user's tools
+    assert checked["score"]["vocal_checked"] and any(a["id"] == "vocal" and a["lost"] > 0 for a in checked["score"]["areas"])
+    assert checked["score"]["value"] < unchecked["score"]["value"]
+
+    # A well-made vocal that was checked earns the label.
+    good = _with_fake_split(_voice(EVEN), beat, lambda: analyze_file(path, stage="mix", split_vocal=True))
+    assert good["score"]["label"] == "Ready for mastering" and not any(f["id"].startswith("vocal_") for f in good["flags"])
+
+
+def test_split_vocal_when_it_cannot_run_still_gives_the_report():
+    from mixcheck import separate
+    real = separate.separate_vocals
+
+    def fail(x, fs):
+        raise separate.SeparationUnavailable("Vocal splitting needs the optional packages.")
+    separate.separate_vocals = fail
+    try:
+        report = analyze_file(_clean_mix_file(), stage="mix", split_vocal=True)
+    finally:
+        separate.separate_vocals = real
+    assert report["vocal"]["found"] is False and report["vocal"]["unavailable"] is True
+    assert not any(f["id"].startswith("vocal_") for f in report["flags"])
+    assert report["score"]["vocal_checked"] is False
+
+
+def test_separation_availability_is_honest():
+    import importlib.util
+    from mixcheck import separate
+    real_find, real_env = importlib.util.find_spec, os.environ.get("MIXCHECK_SEPARATION")
+    try:
+        importlib.util.find_spec = lambda name, *a, **k: None if name in ("torch", "demucs") else real_find(name, *a, **k)
+        ok, why = separate.available()
+        assert not ok and "optional packages" in why
+        try:
+            separate.separate_vocals(stereo(sine(220, -18, seconds=1)), FS)
+            assert False, "should refuse without the packages"
+        except separate.SeparationUnavailable:
+            pass
+        importlib.util.find_spec = real_find
+        os.environ["MIXCHECK_SEPARATION"] = "off"
+        assert not separate.available()[0]
+    finally:
+        importlib.util.find_spec = real_find
+        if real_env is None:
+            os.environ.pop("MIXCHECK_SEPARATION", None)
+        else:
+            os.environ["MIXCHECK_SEPARATION"] = real_env
+
+
+def test_notes_see_the_vocal_numbers_only_when_they_exist():
+    from mixcheck.notes import notes_input
+    path = _clean_mix_file()
+    assert not any(k.startswith("vocal_") for k in notes_input(analyze_file(path, stage="mix"))["measurements"])
+    report = _with_fake_split(_voice([-30, -14, -22, -10, -26, -12]), _beat(-20),
+                              lambda: analyze_file(path, stage="mix", split_vocal=True))
+    m = notes_input(report)["measurements"]
+    assert m["vocal_range_db"] == report["vocal"]["range_db"] and "vocal_to_beat_db" in m
+    assert any(f["kind"] == "vocal_uncompressed" for f in notes_input(report)["findings"])
+
+
+def test_web_split_vocal_option():
+    try:
+        from fastapi.testclient import TestClient
+    except ImportError:  # the web extra isn't installed
+        return
+    import io
+    import json
+    from scipy.io import wavfile
+    from mixcheck.web import server
+    client = TestClient(server.app)
+    sep = client.get("/api/info").json()["separation"]
+    assert set(sep) == {"available", "reason"}
+    buf = io.BytesIO()
+    wavfile.write(buf, FS, (stereo(sine(220, -18, seconds=4)) * 32767).astype(np.int16))
+    post = lambda **data: client.post("/api/analyze", data={"progress": "1", **data},
+                                      files={"file": ("a.wav", buf.getvalue(), "audio/wav")})
+    # Without the option, nothing changes: no vocal stage, no vocal block.
+    plain = [json.loads(line) for line in post().text.splitlines()]
+    assert "vocal" not in [e.get("stage") for e in plain] and plain[-1]["report"]["vocal"] is None
+    events = _with_fake_split(_voice([-30, -14, -22, -10, -26, -12]), _beat(-20),
+                              lambda: [json.loads(line) for line in post(split_vocal="1").text.splitlines()])
+    assert "vocal" in [e.get("stage") for e in events] and events[-1]["report"]["vocal"]["found"]
+    # Fixes rebuilt for a new stage keep the vocal in the score.
+    report = events[-1]["report"]
+    fixed = client.post("/api/fixes", json={"flags": report["flags"], "stage": "mix", "measures": report["measures"],
+                                            "vocal": True}).json()
+    assert fixed["score"]["vocal_checked"] and any(f["id"] == "vocal_uncompressed" for f in fixed["flags"])
 
 
 if __name__ == "__main__":

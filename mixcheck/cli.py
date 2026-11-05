@@ -7,7 +7,8 @@ from . import refsets
 from .analyze import analyze_file
 from .catalog import DAWS, PACKAGES
 from .reference import MAX_REFERENCES, profile_file
-from .style import TARGETS
+from .style import canonical, style_ids
+from .util import utf8_console
 
 ICONS = {"critical": "[!!]", "warning": "[! ]", "info": "[i ]"}
 
@@ -25,8 +26,7 @@ def print_summary(r, show_fixes=True):
         print(f"  After fixing issues   {sc['if_fixed']:.1f} / 10")
     if r["style"]:
         sm = r["style"]
-        source = f"ranges from {sm['songs']} songs you measured" if sm.get("songs") else "built-in ranges"
-        print(f"  Style match           {sm['percent']}% to {sm['name']}  ({source})")
+        print(f"  Style match           {sm['percent']}% to {sm['name']}; ranges: {sm['source']['label']}")
         for d in sm["dims"]:
             if d["id"] == "tone":
                 print("    Tone at matched volume, against typical for the style:")
@@ -62,6 +62,9 @@ def print_summary(r, show_fixes=True):
           f"{' (detected: ' + st['reason'] + ')' if st['value'] == st['detected'] else ' (you chose this)'}")
     print(f"  Fixes written for: {r['setup']['label']}")
 
+    if r.get("vocal"):
+        print_vocal(r["vocal"])
+
     print("\n  Findings:")
     if not r["flags"]:
         print("    No technical issues found.")
@@ -74,6 +77,21 @@ def print_summary(r, show_fixes=True):
                 print(f"            ({len(fl['fix']['more'])} more option(s) in the JSON report or web page)")
     print()
     print("  Timestamps are measured from the start of the bounced file.\n")
+
+
+def print_vocal(v):
+    print("\n  Vocal (split from the mix; estimates)")
+    if not v.get("found"):
+        print(f"    {v['reason']}")
+        return
+    rows = [("Loud words vs typical", v.get("range_db"), "dB"), ("Peaks over average", v.get("crest_db"), "dB"),
+            ("Mud, 200-500 Hz", v.get("mud_db"), "dB vs mids"), ("Body, 100-250 Hz", v.get("body_db"), "dB vs mids"),
+            ("Rumble, below 80 Hz", v.get("rumble_db"), "dB vs mids"), ("Sibilance, 5-9 kHz", v.get("sibilance_db"), "dB vs mids"),
+            ("Vocal vs beat", v.get("vocal_to_beat_db"), "dB")]
+    for name, value, unit in rows:
+        if value is not None:
+            print(f"    {name:<22}{value:>7.1f} {unit}")
+    print(f"    {v['disclaimer']}")
 
 
 def print_reference(ref):
@@ -119,7 +137,16 @@ def load_references(args, parser):
     return refs
 
 
+def style_arg(value):
+    """A --style value as the current style id. Ids a style used to have (trap_hiphop) still work."""
+    sid = canonical(value)
+    if sid is None:
+        raise argparse.ArgumentTypeError(f"unknown style {value!r}. Choose from: {', '.join(style_ids())}")
+    return sid
+
+
 def main(argv=None):
+    utf8_console()
     parser = argparse.ArgumentParser(prog="seraphim", description="Seraphim: technical QC for mixes and masters.")
     parser.add_argument("file", help="Audio file (WAV; AIFF/FLAC/MP3 with soundfile installed)")
     parser.add_argument("--json", metavar="PATH", help="Write the full report to a JSON file")
@@ -130,12 +157,17 @@ def main(argv=None):
                         help="Plugin packages you own, comma-separated: " + ", ".join(sorted(PACKAGES)))
     parser.add_argument("--stage", default="auto", choices=["auto", "mix", "master"],
                         help="Is this a mix or a master? (default: guess from loudness)")
-    parser.add_argument("--style", default=None, choices=sorted(TARGETS),
-                        help="What you're going for, so loudness, punch and contrast are judged against that style")
+    parser.add_argument("--style", default=None, type=style_arg, metavar="STYLE",
+                        help="What you're going for, so loudness, punch and contrast are judged against that style. "
+                             "A parent style (hiphop_rap) or a sub-genre (hiphop_rap.drill); a sub-genre "
+                             "uses its parent's ranges until it has its own")
     parser.add_argument("--ref", action="append", metavar="FILE",
                         help=f"A song you want to sound like (repeat for up to {MAX_REFERENCES})")
     parser.add_argument("--ref-set", metavar="NAME", help="Compare with a saved reference set")
     parser.add_argument("--save-ref-set", metavar="NAME", help="Save the --ref songs as a reference set for later")
+    parser.add_argument("--split-vocal", action="store_true",
+                        help="Split the vocal out of the mix and check it (slow; needs the optional 'separate' install). "
+                             "The result is an estimate.")
     parser.add_argument("--no-fixes", action="store_true", help="Hide fix suggestions in the summary")
     parser.add_argument("--notes", action="store_true",
                         help="Also write engineer's notes with Claude (optional; sends the measurements, not the audio)")
@@ -148,7 +180,8 @@ def main(argv=None):
     references = load_references(args, parser)
     try:
         report = analyze_file(args.file, setup={"daw": args.daw, "packages": packages},
-                              stage=args.stage, target=args.style, references=references)
+                              stage=args.stage, target=args.style, references=references,
+                              split_vocal=args.split_vocal)
     except Exception as exc:  # show a clean message rather than a traceback
         print(f"mixcheck: {exc}", file=sys.stderr)
         sys.exit(1)
@@ -163,7 +196,7 @@ def main(argv=None):
             print(f"mixcheck: no engineer's notes: {exc}", file=sys.stderr)
 
     if args.json:
-        with open(args.json, "w") as fh:
+        with open(args.json, "w", encoding="utf-8") as fh:
             json.dump(report, fh, indent=2)
     if args.print_json:
         print(json.dumps(report, indent=2))

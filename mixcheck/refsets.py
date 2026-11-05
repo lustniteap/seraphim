@@ -21,7 +21,7 @@ def store_path():
 
 def _load():
     try:
-        with open(store_path()) as fh:
+        with open(store_path(), encoding="utf-8") as fh:
             data = json.load(fh)
     except (OSError, ValueError):
         return {}
@@ -33,7 +33,7 @@ def _write(sets):
     path.parent.mkdir(parents=True, exist_ok=True)
     # Write to a temporary file and swap it in, so a crash can't leave half a file.
     fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
-    with os.fdopen(fd, "w") as fh:
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
         json.dump(sets, fh, indent=2)
     os.replace(tmp, path)
 

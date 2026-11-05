@@ -18,7 +18,7 @@ from typing import List
 from .util import fmt_time
 
 PROMPT_FILE = Path(__file__).parent / "prompts" / "notes.md"
-PROMPT_VERSION = "notes-v1"  # bump whenever prompts/notes.md or notes_input() changes
+PROMPT_VERSION = "notes-v4"  # bump whenever prompts/notes.md or notes_input() changes. v2 = the pensive-fermi prompt; v3 = v2 + vocal estimates; v4 = style provenance label
 DEFAULT_MODEL = "claude-opus-5"
 MAX_TOKENS = 16000
 # If the model declines, the API retries the same request on a fallback model it picks.
@@ -44,11 +44,23 @@ def available():
 
 # ---------------------------------------------------------------- input
 
+# The vocal measurements the notes can quote (vocal.py); the rest of that block is bookkeeping.
+VOCAL_NOTE_KEYS = ("range_db", "crest_db", "mud_db", "body_db", "rumble_db", "sibilance_db")
+
 def _when(flag):
     if "start_s" in flag:
         return f"{fmt_time(flag['start_s'])}–{fmt_time(flag['end_s'])}"
     times = list(dict.fromkeys(fmt_time(t) for t in flag.get("times_s") or []))
     return ", ".join(times[:5]) or None
+
+
+def _vocal_measurements(vocal):
+    if not vocal or not vocal.get("found"):
+        return {}
+    out = {f"vocal_{k}": vocal[k] for k in VOCAL_NOTE_KEYS if vocal.get(k) is not None}
+    if vocal.get("vocal_to_beat_db") is not None:
+        out["vocal_to_beat_db"] = vocal["vocal_to_beat_db"]
+    return out
 
 
 def notes_input(report):
@@ -86,10 +98,11 @@ def notes_input(report):
                 "mono_loss_db": st.get("mono_loudness_loss_db"),
                 "left_right_balance_db": st.get("left_right_balance_db"),
             } if st else {}),
+            **_vocal_measurements(report.get("vocal")),
         },
         "style": {
             "going_for": style["name"], "match_percent": style["percent"],
-            "ranges_from": f"{style['songs']} measured releases" if style.get("songs") else "built-in starting points",
+            "ranges_from": style["source"]["label"],  # e.g. "calibrated (12 songs)", "built-in estimate"
         } if style else None,
         "reference": {
             "songs": len(ref["references"]), "match_percent": ref["percent"],
@@ -165,7 +178,7 @@ def write_notes(report, client=None, model_id=None):
             max_tokens=MAX_TOKENS,
             # The prompt never changes, so it's marked for caching. It's short, so it may fall under
             # the model's minimum cacheable size; check usage.cache_read_input_tokens before counting on it.
-            system=[{"type": "text", "text": PROMPT_FILE.read_text(), "cache_control": {"type": "ephemeral"}}],
+            system=[{"type": "text", "text": PROMPT_FILE.read_text(encoding="utf-8"), "cache_control": {"type": "ephemeral"}}],
             messages=[{"role": "user", "content": "MixCheck analysis:\n" + json.dumps(inp, indent=1, ensure_ascii=False)}],
             thinking={"type": "adaptive"},
             output_config={"effort": "medium"},

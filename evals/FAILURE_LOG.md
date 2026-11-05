@@ -6,7 +6,9 @@ Scores come from `python evals/notes_eval.py summary`; each prompt change is a n
 
 | # | Found in | Symptom | Metric | Root cause | Fix | Before → after |
 |---|---|---|---|---|---|---|
-| | | | | | | |
+| 1 | baseline (notes-v1) | Describes how the track sounds ("solid-sounding master", listen for "the grit and pumping that was there before") | judge_faithful 78% | The prompt says to use only the analysis, but never says the model can't hear the file, so it fills in plausible sound | notes-v2: "You can't hear the file" | pending v1 run |
+| 2 | baseline (notes-v1) | Calls an unflagged measurement a problem: song01 as a master is "quiet at -17.11 LUFS, worth a look" with no loudness finding and no style target | judge_faithful, judge_stage_appropriate | Nothing says a measurement without a finding isn't a problem; the model applies its own loudness norms | notes-v2: "Only the findings are problems" | pending v1 run |
+| 3 | baseline (notes-v1) | Every list filled to the maximum: 3-4 listen-for items and 3 strengths even on a clean report; the same number in headline, summary and priority | judge_concise 85% | The prompt asked for "two to four" and "up to three", which the model treated as targets | notes-v2: 1-3 tied to priorities, at most 2 strengths, each number once | pending v1 run |
 
 ## Fixes to the eval itself
 
@@ -22,6 +24,26 @@ found by running stand-in writers (`--fake oracle|null|sloppy`) through the whol
    number could match a different one-decimal measurement. Fix: tolerance follows the quoted precision
    (±0.005 for two decimals, ±0.5 for whole numbers, so honest rounding still passes). Numbers are also matched
    by unit, so "14 LUFS" can't be justified by an unrelated "14 dB".
+
+3. **"808s" was read as 808 seconds.** Found in the first real pilot (`song01__trap_target`, notes-v1): the only
+   failure was `numbers_grounded` on notes that said to let "the 808s" carry the low end, the drum machine, not a
+   duration. The number pattern accepted a bare "s" straight after a number as seconds. Fix: a bare "s" only
+   counts after a space ("30 s"). Pilot: numbers_grounded 83% → 100% on the same saved notes (`regrade`, no new
+   calls); the oracle and sloppy stand-ins score as before. Lesson: read every failure before trusting a score;
+   the model's first "mistake" was the grader's.
+
+4. **A 0:40 song's "whole 40 seconds" counted as invented.** Found in the baseline (`clean_master__trap_target`,
+   `polarity_mix__other_stage`): the report gives durations and times as m:ss ("0:40"), and the check only
+   accepted seconds written as "40 s". Fix: every m:ss time in the report also counts as that many seconds.
+   Baseline numbers_grounded 93% → 100% by `regrade`: both failures were the grader's.
+
+## Judge disagreements to settle with hand labels
+
+- **`polarity_mix__other_stage`, judge_faithful and judge_groups_causes both failed.** The notes say one side's flipped
+  polarity is "one problem showing up in four ways; fix the polarity first and the rest should follow". That is
+  correct: the whole song is inverted on one side, which causes the negative correlation, the thin mono low end and
+  the mono loss. The judge failed it because the report lists them as separate findings with separate fixes. If hand
+  labels agree the judge is too strict here, the rubric needs "causes that follow from how audio works are fine".
 
 ## Entry template
 

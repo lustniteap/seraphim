@@ -15,12 +15,14 @@ from .peaks import measure_peaks
 from .reference import apply_reference, measure_profile
 from .remediation import STAGES, attach_fixes, describe_setup, detect_stage, normalize_setup
 from .score import score_flags
-from .style import TARGETS, measures, style_flags, style_match
+from .style import canonical, measures, style_flags, style_match
+from . import separate
 from .spectrum import measure_spectrum
 from .stereo import measure_stereo
 from .util import fmt_time
+from .vocal import ESTIMATE_NOTE, measure_vocal, vocal_flags
 
-SCHEMA_VERSION = "1.2"
+SCHEMA_VERSION = "1.3"
 
 # Loudness normalization references (LUFS). Platforms change these, so
 # verify against their current documentation before relying on them.
@@ -48,16 +50,20 @@ THRESHOLDS = {
 
 # The stages analyze_file() reports as it finishes them, in order (the web page lights one lamp each).
 PROGRESS_STAGES = ("loudness", "peaks", "stereo", "tone", "edges", "style", "references")
+# With split_vocal on, "vocal" is reported between "edges" and "style".
+VOCAL_STAGE = "vocal"
 
 
-def analyze_file(path, setup=None, stage="auto", target=None, references=None, progress=None):
+def analyze_file(path, setup=None, stage="auto", target=None, references=None, progress=None, split_vocal=False):
     """Measure a file and attach fixes for this user's setup.
 
     setup: {"daw": id, "packages": [ids]} from catalog.py.
     stage: "mix", "master", or "auto" to guess from loudness.
-    target: a style id from style.TARGETS, or None for no preference.
+    target: a style id from style.py (a parent, a "parent.sub" sub-genre, or an id it used to have), or None for no preference.
     references: 1–3 profiles from reference.py to compare with, or None.
     progress: called with each name in PROGRESS_STAGES as that part finishes, or None.
+    split_vocal: split the mix into vocal and instrumental and check the vocal (slow; needs the
+        optional separation packages, see separate.py). The result is an estimate.
     """
     done = progress or (lambda _stage: None)
     path = Path(path)
@@ -78,6 +84,9 @@ def analyze_file(path, setup=None, stage="auto", target=None, references=None, p
     done("tone")
     edges = measure_edges(x, fs)
     done("edges")
+    vocal = split_and_measure(x, fs) if split_vocal else None
+    if split_vocal:
+        done(VOCAL_STAGE)
 
     report = {
         "schema_version": SCHEMA_VERSION,
@@ -98,6 +107,7 @@ def analyze_file(path, setup=None, stage="auto", target=None, references=None, p
         "stereo": stereo,
         "spectrum": spectrum,
         "edges": edges,
+        "vocal": vocal,
         "streaming": streaming_adjustments(integrated),
         "profile": profile,
     }
@@ -106,17 +116,30 @@ def analyze_file(path, setup=None, stage="auto", target=None, references=None, p
     setup = normalize_setup(setup)
     report["stage"] = {"value": stage, "detected": detected, "reason": reason}
     report["setup"] = {**setup, "label": describe_setup(setup)}
-    target = target if target in TARGETS else None
+    target = canonical(target)
     report["measures"] = measures(report)
     report["target"] = target
-    flags = build_flags(report) + style_flags(report["measures"], target, stage)
+    flags = build_flags(report) + style_flags(report["measures"], target, stage) + vocal_flags(vocal)
     done("style")
     flags, report["reference"] = apply_reference(flags, report["profile"], references, stage)
     done("references")
     report["flags"] = attach_fixes(flags, setup, stage)
-    report["score"] = score_flags(report["flags"], stage)
+    report["score"] = score_flags(report["flags"], stage, vocal=bool(vocal and vocal.get("found")))
     report["style"] = style_match(report["measures"], target, stage)
     return clean(report)
+
+
+def split_and_measure(x, fs):
+    """Vocal measurements from splitting the mix, or {"found": False, "reason": ...} when it can't be done."""
+    try:
+        vocals, instrumental, rate = separate.separate_vocals(x, fs)
+    except separate.SeparationUnavailable as exc:
+        return {"found": False, "unavailable": True, "reason": str(exc)}
+    result = measure_vocal(vocals, instrumental, rate)
+    result["source"] = {"method": "split", "model": separate.MODEL_NAME, "estimated": True}
+    if result["found"]:
+        result["disclaimer"] = ESTIMATE_NOTE
+    return result
 
 
 def safe_profile(x, fs, name):
