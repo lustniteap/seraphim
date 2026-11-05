@@ -1383,7 +1383,7 @@ function renderNotes(r) {
   else if (aiError) body = `<p class="error">${esc(aiError)}</p>`;
   if (aiNotes && !aiBusy) {
     const n = aiNotes.notes;
-    const flagFor = (fid) => r.flags[Number(fid.slice(1)) - 1];
+    const flagFor = (fid) => fid[0] === "O" ? obsItems(r)[Number(fid.slice(1)) - 1] : r.flags[Number(fid.slice(1)) - 1];
     const priorities = n.priorities.map((p) => {
       const labels = aiStale ? [] : p.finding_ids.map((fid) => plainFor(aiNotes.findings[fid], r.stage.value, flagFor(fid))?.[0]).filter(Boolean);
       return `<li><b>${esc(p.title)}</b>
@@ -1516,11 +1516,13 @@ async function refreshFixes(stage) {
     const res = await fetch("/api/fixes", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ flags: report.flags, setup: setup || {}, stage, target, measures: report.measures,
-                             profile: report.profile, references, vocal: !!(report.vocal && report.vocal.found) }),
+                             profile: report.profile, references, vocal: !!(report.vocal && report.vocal.found),
+                             observations: report.observations || [] }),
     });
     if (!res.ok) throw new Error();
     const data = await res.json();
     report.flags = data.flags;
+    report.observations = data.observations || [];
     report.score = data.score;
     report.style = data.style;
     report.reference = data.reference;
@@ -1785,9 +1787,17 @@ async function analyze(file) {
 }
 
 /* Rendering */
+// Observations outside their range, as neutral items: a measurement against a range, never above "info".
+// Their playbook keys are the ids the text tables above already use.
+function obsItems(r) {
+  return (r.observations || []).filter((o) => o.status !== "in").map((o) => ({
+    id: o.playbook || o.id, severity: "info", message: o.summary, fix: o.fix, estimated: o.estimated,
+    observation: true, style: r.style?.name, ...o.context,
+  }));
+}
 function flagMap(r) {
   const m = {};
-  for (const f of r.flags) (m[f.id] ||= []).push(f);
+  for (const f of [...r.flags, ...obsItems(r)]) (m[f.id] ||= []).push(f);
   return m;
 }
 function stateFor(flags, ids) {
@@ -1984,9 +1994,8 @@ function renderVerdict(r) {
     sub = "Nothing will break on playback, but these could be better. Open each item for the fix.";
   } else {
     state = "ok";
-    title = "No technical problems. Ready for your ears.";
-    sub = n.info ? "A few notes below are for your information only; nothing needs fixing."
-                 : "Peaks, stereo and loudness all look healthy.";
+    title = "No technical errors found.";
+    sub = "That only means nothing is broken. Whether the mix is ready depends on its style, tone and dynamics, which are shown below as observations and haven't been judged yet.";
   }
   $("verdict").dataset.state = state;
   $("verdict").innerHTML = `<h2>${esc(title)}</h2><p>${esc(sub)}</p>`;
@@ -2004,7 +2013,7 @@ function whenText(f) {
 
 function renderChecklist(r) {
   $("groups").innerHTML = GROUPS[r.stage.value].map(([sev, heading]) => {
-    const items = r.flags.map((f, i) => [f, i]).filter(([f]) => f.severity === sev);
+    const items = [...r.flags, ...obsItems(r)].map((f, i) => [f, i]).filter(([f]) => f.severity === sev);
     if (!items.length) return "";
     return `<section class="group" data-sev="${sev}">
       <h2>${heading}</h2>

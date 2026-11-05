@@ -46,13 +46,6 @@ DIMS = {
 # A dimension scores 0% once it's this many tolerances outside the references.
 MISS_SCALE = 3.0
 
-REFERENCE_IDS = {
-    "ref_louder", "ref_quieter", "ref_more_limited", "ref_more_dynamic",
-    "ref_less_contrast", "ref_more_contrast", "ref_narrower", "ref_wider",
-    "ref_tone_more", "ref_tone_less",
-}
-
-
 # ---------------------------------------------------------------- measuring
 
 def loud_mask(y, fs, powers=None, starts=None):
@@ -247,59 +240,3 @@ def compare(profile, references, stage):
         "count": len(refs), "stage": stage, "percent": percent,
         "dims": dims, "tone": tone, "skipped": skipped,
     }
-
-
-def reference_flags(cmp):
-    """Findings that say how the file differs from the references, in their terms."""
-    if not cmp:
-        return []
-    flags = []
-    than = "than your reference" if cmp["count"] == 1 else "than your references on average"
-    vs = "your reference" if cmp["count"] == 1 else "your references"
-
-    def flag(fid, row, message, **data):
-        # Past the zone by half a tolerance or more is worth a look; closer is a note.
-        severity = "warning" if row["off_by"] >= row["tolerance"] / 2 else "info"
-        flags.append({"id": fid, "severity": severity,
-                      "message": message, "value": row["value"], "reference": row["ref"],
-                      "diff": row["diff"], "off_by": row["off_by"], "references": cmp["count"], **data})
-
-    for d in cmp["dims"]:
-        if d["id"] == "tone" or d["status"] == "in":
-            continue
-        diff, v, ref, high = abs(d["diff"]), d["value"], d["ref"], d["status"] == "high"
-        if d["id"] == "loudness":
-            flag("ref_louder" if high else "ref_quieter", d,
-                 f"The loud sections are {diff:.1f} LU {'louder' if high else 'quieter'} {than} "
-                 f"({v:.1f} vs {ref:.1f} LUFS).")
-        elif d["id"] == "punch":
-            mix = " A mix should keep 2–6 dB more than the finished master." if cmp["stage"] == "mix" else ""
-            flag("ref_more_dynamic" if high else "ref_more_limited", d,
-                 f"Peaks stand {v:.1f} dB above the loud sections, against {ref:.1f} dB in {vs}.{mix}")
-        elif d["id"] == "contrast":
-            flag("ref_more_contrast" if high else "ref_less_contrast", d,
-                 f"Loudness range is {diff:.1f} LU {'wider' if high else 'narrower'} {than} "
-                 f"({v:.1f} vs {ref:.1f} LU).")
-        elif d["id"] == "width":
-            flag("ref_wider" if high else "ref_narrower", d,
-                 f"The loud sections are {diff:.1f} dB {'wider' if high else 'narrower'} {than} "
-                 f"(side vs mid {v:.1f} dB, against {ref:.1f} dB).")
-
-    for b in cmp["tone"]:
-        if b["status"] == "in":
-            continue
-        high = b["status"] == "high"
-        amount = min(6.0, max(1.0, round(abs(b["diff"]) * 2) / 2))
-        flag("ref_tone_more" if high else "ref_tone_less", b,
-             f"{abs(b['diff']):.1f} dB {b['words'][0 if high else 1]} {b['phrase']} {than}, at matched volume.",
-             band=b["id"], band_name=b["band"], phrase=b["phrase"], word=b["words"][0 if high else 1],
-             shape=b["shape"], amount=f"{amount:g}")
-
-    order = {"warning": 0, "info": 1}
-    return sorted(flags, key=lambda f: (order[f["severity"]], -f["off_by"]))
-
-
-def apply_reference(flags, profile, references, stage):
-    """Replace any reference findings for these references and this stage. Returns (flags, comparison)."""
-    cmp = compare(profile, references, stage)
-    return [f for f in flags if f["id"] not in REFERENCE_IDS] + reference_flags(cmp), cmp

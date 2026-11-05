@@ -1,7 +1,9 @@
 """Turn findings into short fixes for one user's setup and stage.
 
-Each finding id maps to a list of steps, either the same for mixes and masters
-or split by stage. A step is one of:
+Each key maps to a list of steps, either the same for mixes and masters or split by
+stage. The keys are the floors' ids (analyze.build_flags) and the *playbook keys* that
+observations.py uses for a measurement that is outside its range (for example
+"louder_than_target" or "vocal_muddy"). A playbook key is a recipe, not a finding. A step is one of:
 
     do("action")    an action from catalog.ACTIONS; rendered with the best tool
                     the user owns, or the generic wording if they own none
@@ -183,8 +185,6 @@ FIXES = {
 STAGE_SEVERITY = {
     "mix": {
         "true_peak_hot": "info",   # fine for a mix; mastering sets the final ceiling
-        "very_loud": "warning",    # a limited mix leaves mastering nothing to work with
-        "low_plr": "warning",
     },
 }
 SEVERITY_ORDER = {"critical": 0, "warning": 1, "info": 2}

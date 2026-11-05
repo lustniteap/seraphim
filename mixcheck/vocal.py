@@ -36,11 +36,6 @@ LIMITS = {
 }
 LOWER_IS_WORSE = {"body_db", "beat_gap_db"}
 
-VOCAL_IDS = {
-    "vocal_uncompressed", "vocal_muddy", "vocal_thin", "vocal_rumble",
-    "vocal_sibilant", "vocal_buried", "vocal_dominant",
-}
-
 ESTIMATE_NOTE = (
     "The vocal was split from the mix by a model, so these numbers are estimates: the split leaves some of "
     "the beat in the vocal and takes some of its low end and reverb. Results are more accurate when you "
@@ -122,51 +117,3 @@ def measure_vocal(vocal, instrumental, fs):
     beat = float(_db(np.mean(_window_power(i, fs)[0][active])))
     out["vocal_to_beat_db"] = round(level - beat, 1) if beat > -90 else None
     return out
-
-
-def _rate(name, value):
-    """"warning", "info" or None for one measurement."""
-    if value is None:
-        return None
-    info, warn = LIMITS[name]
-    if name in LOWER_IS_WORSE:
-        return "warning" if value <= warn else "info" if value <= info else None
-    return "warning" if value >= warn else "info" if value >= info else None
-
-
-def vocal_flags(v):
-    """Findings from measure_vocal(); none if no vocal was found."""
-    if not v or not v.get("found"):
-        return []
-    flags = []
-
-    def flag(fid, severity, message, **data):
-        if severity:
-            flags.append({"id": fid, "severity": severity, "message": message, "estimated": True, **data})
-
-    crest, spread = v["crest_db"], v["range_db"]
-    ranks = {"warning": 2, "info": 1, None: 0}
-    worst = max((_rate("crest_db", crest), _rate("range_db", spread)), key=ranks.get)
-    flag("vocal_uncompressed", worst,
-         f"The vocal looks uncompressed: its loud words sit {spread:.1f} dB above the typical word and its peaks sit "
-         f"{crest:.1f} dB above its average.", value=spread, crest_db=crest)
-    if "mud_db" in v:
-        flag("vocal_muddy", _rate("mud_db", v["mud_db"]),
-             f"The vocal is heavy at 200–500 Hz ({v['mud_db']:+.1f} dB against its mids), which reads as muddy.",
-             value=v["mud_db"])
-        flag("vocal_thin", _rate("body_db", v["body_db"]),
-             f"The vocal has little body at 100–250 Hz ({v['body_db']:+.1f} dB against its mids); it may sound thin.",
-             value=v["body_db"])
-        flag("vocal_rumble", _rate("rumble_db", v["rumble_db"]),
-             f"There is low rumble in the vocal below 80 Hz ({v['rumble_db']:+.1f} dB against its mids); "
-             "it looks like there is no high-pass.", value=v["rumble_db"])
-        flag("vocal_sibilant", _rate("sibilance_db", v["sibilance_db"]),
-             f"The vocal's 's' sounds are strong: 5–9 kHz peaks sit {v['sibilance_db']:+.1f} dB over its mids.",
-             value=v["sibilance_db"])
-    gap = v.get("vocal_to_beat_db")
-    if gap is not None:
-        flag("vocal_buried", _rate("beat_gap_db", gap),
-             f"The vocal sits {abs(gap):.1f} dB below the beat while it is singing, so it may be buried.", value=gap)
-        flag("vocal_dominant", _rate("beat_over_db", gap),
-             f"The vocal sits {gap:.1f} dB above the beat while it is singing, so the beat may feel pushed back.", value=gap)
-    return flags

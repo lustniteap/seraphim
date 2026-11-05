@@ -12,17 +12,18 @@ from .audio_io import load_audio
 from .edges import measure_edges
 from .loudness import measure_loudness
 from .peaks import measure_peaks
-from .reference import apply_reference, measure_profile
+from .observations import attach_observation_fixes, build_observations
+from .reference import compare, measure_profile
 from .remediation import STAGES, attach_fixes, describe_setup, detect_stage, normalize_setup
 from .score import score_flags
-from .style import canonical, measures, style_flags, style_match
+from .style import canonical, measures, style_match
 from . import separate
 from .spectrum import measure_spectrum
 from .stereo import measure_stereo
 from .util import fmt_time
-from .vocal import ESTIMATE_NOTE, measure_vocal, vocal_flags
+from .vocal import ESTIMATE_NOTE, measure_vocal
 
-SCHEMA_VERSION = "1.3"
+SCHEMA_VERSION = "2.0"  # 2.0: the style, reference and vocal findings are gone; they are observations now
 
 # Loudness normalization references (LUFS). Platforms change these, so
 # verify against their current documentation before relying on them.
@@ -45,7 +46,13 @@ THRESHOLDS = {
     "long_tail_silence_s": 5.0,
     "abrupt_end_rms_dbfs": -30.0,
 }
-# Loudness, punch, contrast and top end are style, judged in style.py against the user's target.
+# Loudness, punch, contrast, tone and the vocal are not findings: they are observations (observations.py).
+
+# Every finding build_flags can raise: the floors. A test keeps this in step with the code below.
+FLOOR_IDS = {
+    "true_peak_over", "true_peak_hot", "clipping", "negative_correlation", "mono_loss", "wide_low_end",
+    "phase_section", "imbalance", "dc_offset", "silent", "long_head", "long_tail", "abrupt_end",
+}
 
 
 # The stages analyze_file() reports as it finishes them, in order (the web page lights one lamp each).
@@ -119,13 +126,16 @@ def analyze_file(path, setup=None, stage="auto", target=None, references=None, p
     target = canonical(target)
     report["measures"] = measures(report)
     report["target"] = target
-    flags = build_flags(report) + style_flags(report["measures"], target, stage) + vocal_flags(vocal)
+    flags = build_flags(report)  # the floors: the only findings, hard facts with a standard
+    report["style"] = style_match(report["measures"], target, stage)
     done("style")
-    flags, report["reference"] = apply_reference(flags, report["profile"], references, stage)
+    report["reference"] = compare(report["profile"], references, stage)
     done("references")
     report["flags"] = attach_fixes(flags, setup, stage)
+    # Everything contextual is an observation: a measurement against a range, with no verdict (see observations.py).
+    report["observations"] = attach_observation_fixes(
+        build_observations(report["measures"], stage, target, report["style"], report["reference"], vocal), setup, stage)
     report["score"] = score_flags(report["flags"], stage, vocal=bool(vocal and vocal.get("found")))
-    report["style"] = style_match(report["measures"], target, stage)
     return clean(report)
 
 

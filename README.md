@@ -70,7 +70,7 @@ A browser tab opens at http://127.0.0.1:8000. Drag a bounce onto the page (or ch
 
 - a loudness timeline across the whole track, with phase problems and clipping marked where they happen
 - meter readouts for integrated loudness, true peak, loudness range, PLR, correlation and mono loss
-- a verdict and checklist of findings, with fix steps written for your DAW and plugins
+- a checklist of findings (the hard technical facts) and observations (measurements against a style, a reference or the vocal, with no severity), each with fix steps written for your DAW and plugins
 - a comparison with up to three reference songs, if you add them (see below)
 - streaming normalization, stereo details and tonal balance
 
@@ -83,7 +83,7 @@ API: `POST /api/analyze` with a multipart `file` field (plus optional `setup` JS
 `references` JSON) returns the JSON report; with `progress=1` it streams newline-delimited JSON instead,
 `{"stage": ...}` as each part finishes (loudness, peaks, stereo, tone, edges, style, references), then
 `{"report": ...}` or `{"error": ...}`, which is what lights the page's seven lamps; `POST /api/fixes` with `{flags, setup, stage, target, measures,
-profile, references}` rebuilds findings and fixes without re-analyzing; `POST /api/reference` with a `file`
+profile, references, observations}` rebuilds the findings, observations and fixes without re-analyzing; `POST /api/reference` with a `file`
 returns a reference profile; `GET`/`PUT /api/reference-sets` and `DELETE /api/reference-sets/{name}` list,
 save and delete reference sets; `GET /api/info` returns the version and setup options.
 
@@ -158,10 +158,9 @@ It runs on this computer, and the audio never leaves it. A few minutes per song 
 
 **These are estimates.** The split leaves some of the beat in the vocal and takes some of the vocal's low
 end and reverb, so results are more accurate with the acapella and the beat uploaded separately (planned).
-Every vocal finding is marked "Estimate" and the numbers are shown on the page. The limits in
+Every vocal observation is marked "Estimate" and the numbers are shown on the page. The limits in
 `mixcheck/vocal.py` are starting points, not yet calibrated against real releases; tune them against your own
-bounces. When the vocal check runs, its findings cost points in their own "Vocal (estimated)" area of the
-technical score.
+bounces. The vocal estimates are observations, so they never cost technical points.
 
 ## Technical score and style match
 
@@ -172,15 +171,17 @@ peaks and clipping, phase and mono problems, and file/edge problems. It starts a
 per finding, scaled by how bad the measurement is, in capped areas so one kind of problem can't sink
 the whole score. It also shows the score after fixing everything but notes. Rules: `mixcheck/score.py`.
 Its labels say only what was found ("No technical errors found", "Minor technical issues", and so on). A clean
-score is not a verdict on the mix: a mix with no plugins on it can score 10. "Ready for mastering" and
-"Release-ready" can only come from the reasoning step's verdict, and code checks the conditions first: a score of
-9.0 or more, no open diagnoses, and no floor finding at warning level or worse.
+score is not a verdict on the mix: a mix with no plugins on it can score 10. "Ready for Wings" can only come
+from the reasoning step's verdict, and code checks the conditions first: a score of 9.0 or more, no open
+diagnoses, and no floor finding at warning level or worse.
 
 **Style match (%)** compares loudness, punch (PLR) and contrast (LRA) with what the user is going for:
 Hip-hop / rap, EDM, Pop, Rock / metal, R&B / soul, Acoustic / jazz, Lo-fi, or Film / classical.
 A −6 LUFS master is right for hip-hop and wrong for jazz, so these never cost technical points. For a mix,
 loudness isn't compared (mastering sets it) and punch is judged against looser ranges. Lo-fi doesn't
-flag a dull top end. Findings like "Louder than your style" come with fix steps for the user's tools.
+flag a dull top end. Where a measure sits outside the style's range it becomes an **observation** ("Loudness is
+-12.0 LUFS; the range for Drill is -9 to -6"), tagged to a stage of the signal chain and with fix steps for the
+user's tools. An observation is not an error and carries no severity.
 The built-in ranges in `mixcheck/style.py` are starting points from common practice. Calibrating a
 style with real releases (below) replaces them and adds tone targets.
 
@@ -249,7 +250,7 @@ How the comparison stays fair (`mixcheck/reference.py`):
   than the finished masters it's compared with.
 
 Tone uses five bands: lows (below 100 Hz), low mids (100–300 Hz), mids (300 Hz–2 kHz), presence
-(2–6 kHz) and highs (above 6 kHz). Like style, reference findings never cost technical points.
+(2–6 kHz) and highs (above 6 kHz). Like style, reference differences are observations and never cost technical points.
 
 Only a small profile of numbers is kept for each reference, never the audio, so a **reference set** can
 be saved under a name and reused. Sets live in `~/.mixcheck/reference_sets.json` (or `$MIXCHECK_HOME`)

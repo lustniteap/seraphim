@@ -18,7 +18,7 @@ from typing import List
 from .util import fmt_time
 
 PROMPT_FILE = Path(__file__).parent / "prompts" / "notes.md"
-PROMPT_VERSION = "notes-v4"  # bump whenever prompts/notes.md or notes_input() changes. v2 = the pensive-fermi prompt; v3 = v2 + vocal estimates; v4 = style provenance label
+PROMPT_VERSION = "notes-v5"  # bump whenever prompts/notes.md or notes_input() changes. v2 = the pensive-fermi prompt; v3 = v2 + vocal estimates; v4 = style provenance label; v5 = observations instead of style, reference and vocal findings
 DEFAULT_MODEL = "claude-opus-5"
 MAX_TOKENS = 16000
 # If the model declines, the API retries the same request on a fallback model it picks.
@@ -80,6 +80,22 @@ def notes_input(report):
             **({"when": _when(f)} if _when(f) else {}),
             "steps": steps[:len(fix["steps"])], "other_options": steps[len(fix["steps"]):],
         })
+    # Observations outside their range, as neutral items to judge. The ones inside their range are only named.
+    observations, in_range = [], []
+    for o in report.get("observations") or []:
+        if o["status"] == "in":
+            in_range.append(o["id"])
+            continue
+        k = len(observations) + 1
+        fix = o.get("fix") or {"steps": [], "more": []}
+        steps = [{"id": f"O{k}.{j}", "text": s["text"], "tool": s["tool"]}
+                 for j, s in enumerate(fix["steps"] + fix["more"], 1)]
+        observations.append({
+            "id": f"O{k}", "kind": o["playbook"] or o["id"], "observation": o["id"], "stage": o["stage"],
+            "scope": o["scope"], "measured": o["summary"], "trust": o["trust"]["label"],
+            **({"estimated": True} if o.get("estimated") else {}),
+            "steps": steps[:len(fix["steps"])], "other_options": steps[len(fix["steps"]):],
+        })
     style, ref, score = report.get("style"), report.get("reference"), report["score"]
     return {
         "stage": report["stage"]["value"],
@@ -109,6 +125,8 @@ def notes_input(report):
             "compared": [d["id"] for d in ref["dims"]], "not_compared": ref["skipped"],
         } if ref else None,
         "findings": findings,
+        "observations": observations,
+        "in_range": in_range,
     }
 
 
@@ -139,14 +157,16 @@ def _schema():
 def check(notes, inp):
     """Drop ids that don't exist in the input and list what was wrong. Returns (notes, issues)."""
     findings = {f["id"]: f for f in inp["findings"]}
-    steps = {s["id"] for f in inp["findings"] for s in f["steps"] + f["other_options"]}
+    observations = inp.get("observations", [])
+    known = {**findings, **{o["id"]: o for o in observations}}
+    steps = {s["id"] for f in [*inp["findings"], *observations] for s in f["steps"] + f["other_options"]}
     issues, kept = [], []
     for p in notes["priorities"]:
-        bad_f = [i for i in p["finding_ids"] if i not in findings]
+        bad_f = [i for i in p["finding_ids"] if i not in known]
         bad_s = [i for i in p["step_ids"] if i not in steps]
         issues += [{"type": "unknown_finding", "id": i} for i in bad_f]
         issues += [{"type": "unknown_step", "id": i} for i in bad_s]
-        p = {**p, "finding_ids": [i for i in p["finding_ids"] if i in findings],
+        p = {**p, "finding_ids": [i for i in p["finding_ids"] if i in known],
              "step_ids": [i for i in p["step_ids"] if i in steps]}
         if p["finding_ids"]:
             kept.append(p)
@@ -239,7 +259,8 @@ def _plain_error(exc):
 def format_notes(result):
     """Plain-text notes for the terminal, with step ids turned back into the steps themselves."""
     n, inp = result["notes"], result["input"]
-    steps = {s["id"]: s["text"] for f in inp["findings"] for s in f["steps"] + f["other_options"]}
+    steps = {s["id"]: s["text"] for f in [*inp["findings"], *inp.get("observations", [])]
+             for s in f["steps"] + f["other_options"]}
     lines = [n["headline"], "", n["summary"]]
     if n["priorities"]:
         lines.append("")

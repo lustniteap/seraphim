@@ -96,15 +96,33 @@ def test_full_report_on_file(tmp_path=None):
     assert "clipping" in ids and "abrupt_end" in ids
 
 
-def _finding_ids():
+def _floor_ids():
+    """Every finding build_flags can raise: the floors."""
     import inspect
     import re
     from mixcheck import analyze
-    from mixcheck.reference import REFERENCE_IDS
-    from mixcheck.style import STYLE_IDS
-    from mixcheck.vocal import VOCAL_IDS
-    return (set(re.findall(r'flag\("(\w+)"', inspect.getsource(analyze.build_flags)))
-            | STYLE_IDS | REFERENCE_IDS | VOCAL_IDS)
+    return set(re.findall(r'flag\("(\w+)"', inspect.getsource(analyze.build_flags)))
+
+
+def _finding_ids():
+    """The floors plus the playbook keys observations use: every key that has fix steps."""
+    from mixcheck.observations import PLAYBOOK
+    return _floor_ids() | set(PLAYBOOK.values())
+
+
+def _observations(m, target, stage, reference=None, vocal=None):
+    from mixcheck.observations import build_observations
+    from mixcheck.style import canonical, style_match
+    return build_observations(m, stage, canonical(target), style_match(m, target, stage), reference, vocal)
+
+
+def test_floors_are_the_only_findings():
+    from mixcheck.analyze import FLOOR_IDS
+    assert FLOOR_IDS == _floor_ids()  # the named set and the code that raises findings agree
+    path = _clean_mix_file()
+    report = analyze_file(path, stage="master", target="hiphop_rap")
+    assert {f["id"] for f in report["flags"]} <= FLOOR_IDS
+    assert report["observations"] and all("severity" not in o for o in report["observations"])
 
 
 def test_every_finding_has_a_fix():
@@ -194,37 +212,70 @@ def test_score_rewards_clean_and_scales_with_severity():
 def test_every_finding_is_scored():
     from mixcheck.score import _points
     # Realistic values for each finding; every one must cost points on at least one stage.
-    typical = {"true_peak_over": 0.5, "true_peak_hot": -0.5, "clipping": 3, "very_loud": -7.0, "low_plr": 6.0,
-               "low_lra": 3.0, "negative_correlation": -0.3, "mono_loss": 4.0, "wide_low_end": 0.2,
-               "imbalance": 2.0, "dc_offset": -40.0, "long_head": 3.0, "long_tail": 6.0, "abrupt_end": -20.0,
-               "no_air": 0.001, "phase_section": None}
-    from mixcheck.reference import REFERENCE_IDS
-    from mixcheck.style import STYLE_IDS
-    from mixcheck.vocal import VOCAL_IDS
-    typical.update({fid: 1.0 for fid in VOCAL_IDS})  # estimated vocal findings cost points in their own area
-    for fid in _finding_ids() - {"silent"} - STYLE_IDS - REFERENCE_IDS:
+    typical = {"true_peak_over": 0.5, "true_peak_hot": -0.5, "clipping": 3, "negative_correlation": -0.3,
+               "mono_loss": 4.0, "wide_low_end": 0.2, "imbalance": 2.0, "dc_offset": -40.0, "long_head": 3.0,
+               "long_tail": 6.0, "abrupt_end": -20.0, "phase_section": None}
+    for fid in _floor_ids() - {"silent"}:
         flag = {"id": fid, "severity": "warning", "value": typical[fid]}
         assert max(_points(flag, st)[1] for st in ("mix", "master")) > 0, f"{fid} is never scored"
 
 
+def test_observations_are_complete_and_every_one_outside_its_range_has_steps():
+    from mixcheck.observations import CHAIN, PLAYBOOK, STAGE_OF
+    assert set(CHAIN) == set(range(1, 11)) and set(STAGE_OF.values()) <= set(CHAIN)
+    assert {dim for (_, dim, _) in PLAYBOOK} <= set(STAGE_OF)
+    report = analyze_file(_clean_mix_file(), stage="master", target="acoustic")
+    outside = [o for o in report["observations"] if o["status"] != "in"]
+    assert outside, "the test file should sit outside the acoustic ranges"
+    for o in outside:
+        assert o["playbook"] and o["fix"]["steps"], o["id"]  # steps written for the person's own tools
+        assert 1 <= o["stage_no"] <= 10 and o["trust"]["label"] and o["range"].keys() == {"low", "high"}
+    assert all(o.get("fix") is None for o in report["observations"] if o["status"] == "in")
+
+
+def test_fixes_rebuilds_observations_for_a_new_stage():
+    try:
+        from fastapi.testclient import TestClient
+    except (ImportError, RuntimeError):
+        return
+    from mixcheck.web import server
+    client = TestClient(server.app)
+    body = {"flags": [], "measures": {"lufs": -20.0, "plr": 10.0, "lra": 5.0}, "target": "acoustic"}
+    master = client.post("/api/fixes", json={**body, "stage": "master"}).json()
+    mix = client.post("/api/fixes", json={**body, "stage": "mix"}).json()
+    assert "style.loudness" in {o["id"] for o in master["observations"]}
+    assert "style.loudness" not in {o["id"] for o in mix["observations"]}  # a mix isn't judged on loudness
+    assert master["score"]["verdict"] is None and master["score"]["label"] == "No technical errors found"
+
 def test_style_is_judged_against_the_target():
-    from mixcheck.style import apply_style, style_flags, style_match
+    from mixcheck.observations import CHAIN
+    from mixcheck.style import style_match
     loud = {"lufs": -7.0, "plr": 8.0, "lra": 4.0, "air_pct": 0.001}
     trap, jazz = style_match(loud, "hiphop_rap", "master"), style_match(loud, "acoustic", "master")
     assert trap["percent"] == 100 and jazz["percent"] < 50
-    assert {f["id"] for f in style_flags(loud, "acoustic", "master")} >= {"louder_than_target", "more_limited_than_target"}
-    # Lo-fi is dull on purpose; other styles still get the note.
-    assert "no_air" not in {f["id"] for f in style_flags(loud, "lofi", "master")}
-    assert "no_air" in {f["id"] for f in style_flags(loud, "pop", "master")}
+    # Observations say where each measure sits against the range, tagged to a stage, with no severity.
+    acoustic = {o["id"]: o for o in _observations(loud, "acoustic", "master")}
+    assert acoustic["style.loudness"]["status"] == "high" and acoustic["style.loudness"]["playbook"] == "louder_than_target"
+    assert acoustic["style.punch"]["status"] == "low" and acoustic["style.punch"]["playbook"] == "more_limited_than_target"
+    assert acoustic["style.loudness"]["stage_no"] == 10 and acoustic["style.contrast"]["stage_no"] == 4
+    assert all(o["stage"] == CHAIN[o["stage_no"]] and "severity" not in o for o in acoustic.values())
+    # Inside the range there is nothing to fix.
+    inside = {o["id"]: o for o in _observations(loud, "hiphop_rap", "master")}
+    assert inside["style.loudness"]["status"] == "in" and inside["style.loudness"]["playbook"] is None
+    # Lo-fi is dull on purpose, so its missing top end isn't pointed out; other styles still get the note.
+    assert "file.top_end" not in {o["id"] for o in _observations(loud, "lofi", "master")}
+    top = {o["id"]: o for o in _observations(loud, "pop", "master")}["file.top_end"]
+    assert top["status"] == "low" and top["playbook"] == "no_air"
     # A mix isn't judged on loudness.
     assert "lufs" not in {d["id"] for d in style_match(loud, "acoustic", "mix")["dims"]}
-    # No target: the neutral notes, and no match.
+    assert "style.loudness" not in {o["id"] for o in _observations(loud, "acoustic", "mix")}
+    # No style chosen: no match, and neutral defaults instead.
     assert style_match(loud, None, "master") is None
-    assert "very_loud" in {f["id"] for f in style_flags(loud, None, "master")}
-    # Changing target swaps the style findings and leaves the rest alone.
-    flags = [{"id": "clipping", "severity": "warning"}] + style_flags(loud, "acoustic", "master")
-    swapped = apply_style(flags, loud, "hiphop_rap", "master")
-    assert [f["id"] for f in swapped] == ["clipping", "no_air"]
+    default = {o["id"]: o for o in _observations(loud, None, "master")}
+    assert default["default.loudness"]["status"] == "high" and default["default.loudness"]["playbook"] == "very_loud"
+    assert not any(i.startswith("style.") for i in default)
+    # Changing the style swaps the style observations and leaves the file's alone.
+    assert {i for i in {o["id"] for o in _observations(loud, "hiphop_rap", "master")} if i.startswith("file.")} == {"file.top_end"}
 
 
 def _song(seconds=30, bass_db=0.0, width=0.3, seed=1):
@@ -260,27 +311,28 @@ def test_reference_uses_the_loudest_sections():
     assert all(abs(alone["tone_db"][k] - with_intro["tone_db"][k]) < 0.5 for k in alone["tone_db"])
 
 
-def test_reference_findings_are_relative():
-    from mixcheck.reference import compare, measure_profile, reference_flags
-    from mixcheck.remediation import attach_fixes
+def test_reference_observations_are_relative():
+    from mixcheck.observations import attach_observation_fixes, reference_observations
+    from mixcheck.reference import compare, measure_profile
     ref = measure_profile(_song(seed=2), FS, "Ref")
     same = compare(measure_profile(_song(seed=3), FS), [ref], "master")
-    assert same["percent"] == 100 and not reference_flags(same)
+    assert same["percent"] == 100 and all(o["status"] == "in" for o in reference_observations(same, "master"))
 
     light = compare(measure_profile(_song(bass_db=-3.5, width=0.15, seed=3) * 0.4, FS), [ref], "master")
-    flags = {f["id"]: f for f in reference_flags(light)}
-    assert set(flags) == {"ref_tone_less", "ref_narrower", "ref_quieter"}
-    assert flags["ref_tone_less"]["band"] == "lows" and -4.0 < flags["ref_tone_less"]["diff"] < -2.8
-    assert "lighter below 100 Hz than your reference" in flags["ref_tone_less"]["message"]
-    assert light["percent"] < 70
-    fix = attach_fixes([flags["ref_tone_less"]], {"daw": "ableton", "packages": ["fabfilter"]}, "master")[0]["fix"]
-    assert "the lows (below 100 Hz)" in fix["steps"][0]["text"] and fix["steps"][0]["tool"] == "FabFilter Pro-Q"
+    obs = {o["id"]: o for o in reference_observations(light, "master") if o["status"] != "in"}
+    assert set(obs) == {"reference.tone.lows", "reference.width", "reference.loudness"}
+    lows = obs["reference.tone.lows"]
+    assert -4.0 < lows["value"] - lows["reference"] < -2.8 and lows["stage_no"] == 3
+    assert "lighter below 100 Hz than your reference" in lows["summary"]
+    assert obs["reference.width"]["stage_no"] == 9 and obs["reference.loudness"]["stage_no"] == 10
+    assert all("severity" not in o for o in obs.values()) and light["percent"] < 70
+    attach_observation_fixes([lows], {"daw": "ableton", "packages": ["fabfilter"]}, "master")
+    assert "the lows (below 100 Hz)" in lows["fix"]["steps"][0]["text"] and lows["fix"]["steps"][0]["tool"] == "FabFilter Pro-Q"
 
-    # A mix isn't compared on loudness, and reference findings never cost technical points.
+    # A mix isn't compared on loudness.
     mix = compare(measure_profile(_song(seed=3) * 0.2, FS), [ref], "mix")
     assert "loudness" in mix["skipped"] and "loudness" not in {d["id"] for d in mix["dims"]}
-    from mixcheck.score import score_flags
-    assert score_flags(reference_flags(light), "master")["value"] == 10.0
+    assert "reference.loudness" not in {o["id"] for o in reference_observations(mix, "mix")}
 
 
 def test_reference_sets_are_saved_and_reused(tmp_path=None):
@@ -319,7 +371,7 @@ def _calibrate_to(styles):
 
 
 def test_calibrated_style_ranges_and_tone():
-    from mixcheck.style import calibration_path, options, style_flags, style_match, targets
+    from mixcheck.style import calibration_path, options, style_match, targets
     tone = {"lows": [-24, -20], "low_mids": [-26, -22], "mids": [-17, -13], "presence": [-13, -9], "highs": [-8, -4]}
     m = {"lufs": -7.0, "plr": 8.0, "lra": 4.0, "air_pct": 0.1,
          "tone": {"lows": -28.0, "low_mids": -24.0, "mids": -15.0, "presence": -11.0, "highs": -10.0}}
@@ -337,12 +389,13 @@ def test_calibrated_style_ranges_and_tone():
         assert sm["songs"] == 12 and [d["id"] for d in sm["dims"]] == ["plr", "lra", "tone"]
         lows = next(b for b in sm["tone"] if b["id"] == "lows")
         assert lows["status"] == "low" and lows["off_by"] == 4.0
-        tone_flags = [f for f in style_flags(m, "hiphop_rap", "master") if f["id"] == "tone_less_than_target"]
-        assert [f["band"] for f in tone_flags] == ["lows", "highs"]
-        assert "4.0 dB lighter below 100 Hz than typical for Hip-hop / rap" in tone_flags[0]["message"]
-        # Lo-fi's dull top end is the point, not a finding.
-        lofi = [f for f in style_flags(m, "lofi", "master") if f["id"] == "tone_less_than_target"]
-        assert [f["band"] for f in lofi] == ["lows"]
+        tone = [o for o in _observations(m, "hiphop_rap", "master") if o["dimension"] == "tone" and o["status"] == "low"]
+        assert [o["band"] for o in tone] == ["lows", "highs"]
+        assert "4.0 dB lighter below 100 Hz than typical for Hip-hop / rap" in tone[0]["summary"]
+        assert all(o["stage_no"] == 3 and o["playbook"] == "tone_less_than_target" for o in tone)
+        # Lo-fi's dull top end is the point, so it isn't pointed out.
+        lofi = [o for o in _observations(m, "lofi", "master") if o["dimension"] == "tone" and o["status"] == "low"]
+        assert [o["band"] for o in lofi] == ["lows"]
     finally:
         calibration_path().unlink()
     assert targets()["hiphop_rap"]["lufs"] == (-9.0, -6.0) and "tone" not in targets()["hiphop_rap"]
@@ -390,14 +443,14 @@ def test_old_style_id_keeps_working():
     import tempfile
     from scipy.io import wavfile
     from mixcheck.cli import style_arg
-    from mixcheck.style import canonical, style_flags, style_match
+    from mixcheck.style import canonical, style_match
     assert canonical("trap_hiphop") == canonical("hiphop_rap") == "hiphop_rap"
     assert canonical("hiphop_rap.drill") == "hiphop_rap.drill"
     assert canonical("nope") is None and canonical(None) is None and canonical("") is None and canonical(["x"]) is None
 
     loud = {"lufs": -7.0, "plr": 8.0, "lra": 4.0, "air_pct": 0.001}
     assert style_match(loud, "trap_hiphop", "master") == style_match(loud, "hiphop_rap", "master")
-    assert style_flags(loud, "trap_hiphop", "master") == style_flags(loud, "hiphop_rap", "master")
+    assert _observations(loud, "trap_hiphop", "master") == _observations(loud, "hiphop_rap", "master")
     assert style_match(loud, "nope", "master") is None
 
     # The command line takes the old id and the new ones, and says which ids exist when it's wrong.
@@ -446,7 +499,7 @@ def test_calibration_saved_under_the_old_id_still_applies():
 
 
 def test_subgenres_use_their_parents_ranges_until_calibrated():
-    from mixcheck.style import SUBGENRES, TARGETS, calibration_path, options, style_flags, style_ids, style_match, targets
+    from mixcheck.style import SUBGENRES, TARGETS, calibration_path, options, style_ids, style_match, targets
     # The table: 31 sub-genres, each under a real parent, keyed parent.sub, with a calibration priority.
     assert len(SUBGENRES) == 31 and len(style_ids()) == 39
     for sid, sub in SUBGENRES.items():
@@ -474,10 +527,10 @@ def test_subgenres_use_their_parents_ranges_until_calibrated():
     assert t["hiphop_rap"]["source"]["from"] is None and t["hiphop_rap"]["source"]["parent_label"] is None
     assert drill["name"] == "Drill" and drill["full_name"] == "Drill (Hip-hop / rap)"
 
-    # Flags come down too: lo-fi is dull on purpose, so its sub-genre isn't told it has no air.
+    # Flags come down too: lo-fi is dull on purpose, so its sub-genre isn't told it has no top end.
     quiet_top = {"air_pct": 0.001}
-    assert "no_air" not in {f["id"] for f in style_flags(quiet_top, "lofi.chillhop", "master")}
-    assert "no_air" in {f["id"] for f in style_flags(quiet_top, "pop.dance_pop", "master")}
+    assert "file.top_end" not in {o["id"] for o in _observations(quiet_top, "lofi.chillhop", "master")}
+    assert "file.top_end" in {o["id"] for o in _observations(quiet_top, "pop.dance_pop", "master")}
 
     tone = {"lows": [-24, -20], "low_mids": [-26, -22], "mids": [-17, -13], "presence": [-13, -9], "highs": [-8, -4]}
     try:
@@ -498,8 +551,9 @@ def test_subgenres_use_their_parents_ranges_until_calibrated():
         # What the user sees names the sub-genre and its parent, and where the numbers came from.
         sm = style_match({"lufs": -20.0, "plr": 6.0, "lra": 4.0}, "hiphop_rap.drill", "master")
         assert sm["name"] == "Drill (Hip-hop / rap)" and sm["source"]["kind"] == "rough"
-        quiet = next(f for f in style_flags({"lufs": -20.0}, "hiphop_rap.drill", "master") if f["id"] == "quieter_than_target")
-        assert "typical for Drill (Hip-hop / rap) is -12 to -7 LUFS" in quiet["message"]
+        quiet = next(o for o in _observations({"lufs": -20.0}, "hiphop_rap.drill", "master") if o["id"] == "style.loudness")
+        assert "the range for Drill (Hip-hop / rap) is -12 to -7 LUFS" in quiet["summary"]
+        assert quiet["playbook"] == "quieter_than_target" and quiet["trust"]["kind"] == "rough"
         # Under 8 songs is rough; 8 or more is calibrated.
         _calibrate_to({"pop": {"songs": 7, "lufs": [-9, -7]}, "rock": {"songs": 8, "lufs": [-9, -7]},
                        "edm": {"songs": 1, "lufs": [-9, -7]}})
@@ -1123,36 +1177,45 @@ def _beat(db, seconds=24):
 EVEN = [-18, -17, -18, -19, -17, -18]
 
 
-def _vocal_ids(vocal, beat_db=-20):
-    from mixcheck.vocal import measure_vocal, vocal_flags
-    return {f["id"]: f["severity"] for f in vocal_flags(measure_vocal(vocal, _beat(beat_db), VFS))}
+def _vocal_obs(vocal, beat_db=-20):
+    """{dimension: observation} for the vocal observations that sit outside their range."""
+    from mixcheck.observations import vocal_observations
+    from mixcheck.vocal import measure_vocal
+    return {o["dimension"]: o for o in vocal_observations(measure_vocal(vocal, _beat(beat_db), VFS)) if o["status"] != "in"}
+
+
+def _far(o):
+    return o is not None and o["beyond_second_limit"]
 
 
 def test_vocal_dynamics_tell_a_raw_vocal_from_a_compressed_one():
-    raw = _vocal_ids(_voice([-30, -14, -22, -10, -26, -12]))
-    assert raw.get("vocal_uncompressed") == "warning"
-    assert "vocal_uncompressed" not in _vocal_ids(_voice(EVEN))  # an even vocal isn't flagged
+    raw = _vocal_obs(_voice([-30, -14, -22, -10, -26, -12])).get("vocal_dynamics")
+    assert raw["status"] == "high" and _far(raw) and raw["playbook"] == "vocal_uncompressed" and raw["stage_no"] == 4
+    assert "vocal_dynamics" not in _vocal_obs(_voice(EVEN))  # an even vocal is within range
 
 
-def test_vocal_tone_findings():
-    assert _vocal_ids(_voice(EVEN, thin=True)).get("vocal_thin") == "warning"
-    assert _vocal_ids(_voice(EVEN, rumble=True)).get("vocal_rumble") == "warning"
-    assert _vocal_ids(_voice(EVEN, mud_db=14)).get("vocal_muddy") == "warning"
-    assert _vocal_ids(_voice(EVEN, sib_db=4)).get("vocal_sibilant") == "warning"
-    # A plain, evenly-leveled vocal trips none of them.
-    assert _vocal_ids(_voice(EVEN)) == {}
+def test_vocal_tone_observations():
+    for kwargs, dim, status, stage_no in ((dict(thin=True), "vocal_body", "low", 3), (dict(rumble=True), "vocal_rumble", "high", 2),
+                                          (dict(mud_db=14), "vocal_mud", "high", 3), (dict(sib_db=4), "vocal_sibilance", "high", 5)):
+        o = _vocal_obs(_voice(EVEN, **kwargs)).get(dim)
+        assert o and o["status"] == status and _far(o) and o["stage_no"] == stage_no and o["estimated"] and o["scope"] == "vocal", dim
+    # A plain, evenly-leveled vocal is within range everywhere.
+    assert _vocal_obs(_voice(EVEN)) == {}
 
 
 def test_vocal_level_against_the_beat():
-    assert _vocal_ids(_voice(EVEN), beat_db=-6).get("vocal_buried") == "warning"
-    assert _vocal_ids(_voice(EVEN), beat_db=-40).get("vocal_dominant") == "warning"
+    buried = _vocal_obs(_voice(EVEN), beat_db=-6).get("vocal_level")
+    assert buried["status"] == "low" and _far(buried) and buried["playbook"] == "vocal_buried" and buried["stage_no"] == 8
+    dominant = _vocal_obs(_voice(EVEN), beat_db=-40).get("vocal_level")
+    assert dominant["status"] == "high" and _far(dominant) and dominant["playbook"] == "vocal_dominant"
 
 
-def test_no_vocal_means_no_verdict_on_it():
-    from mixcheck.vocal import measure_vocal, vocal_flags
+def test_no_vocal_means_no_observations_on_it():
+    from mixcheck.observations import vocal_observations
+    from mixcheck.vocal import measure_vocal
     quiet = measure_vocal(np.zeros((VFS * 10, 2)), _beat(-20, 10), VFS)
     assert quiet["found"] is False and "instrumental" in quiet["reason"]
-    assert vocal_flags(quiet) == []
+    assert vocal_observations(quiet) == []
     assert measure_vocal(np.zeros((100, 2)), np.zeros((100, 2)), VFS)["found"] is False  # too short
 
 
@@ -1174,12 +1237,12 @@ def _clean_mix_file():
     return path
 
 
-def test_split_vocal_adds_estimated_findings_and_changes_the_verdict():
+def test_split_vocal_adds_estimated_observations_and_leaves_the_score_alone():
     path = _clean_mix_file()
     unchecked = analyze_file(path, stage="mix")
     assert unchecked["vocal"] is None and unchecked["score"]["vocal_checked"] is False
-    assert unchecked["score"]["label"] == "No technical errors found"  # nothing has judged the vocal
-    assert all(a["id"] != "vocal" for a in unchecked["score"]["areas"])
+    assert unchecked["score"]["label"] == "No technical errors found"
+    assert not any(o["source"] == "vocal" for o in unchecked["observations"])
 
     raw, beat = _voice([-30, -14, -22, -10, -26, -12]), _beat(-20)
     stages = []
@@ -1189,14 +1252,16 @@ def test_split_vocal_adds_estimated_findings_and_changes_the_verdict():
     v = checked["vocal"]
     assert v["found"] and v["source"] == {"method": "split", "model": "htdemucs", "estimated": True}
     assert "more accurate" in v["disclaimer"]
-    flag = next(f for f in checked["flags"] if f["id"] == "vocal_uncompressed")
-    assert flag["estimated"] and flag["fix"]["steps"]  # steps written for the user's tools
-    assert checked["score"]["vocal_checked"] and any(a["id"] == "vocal" and a["lost"] > 0 for a in checked["score"]["areas"])
-    assert checked["score"]["value"] < unchecked["score"]["value"]
+    obs = next(o for o in checked["observations"] if o["id"] == "vocal.vocal_dynamics")
+    assert obs["estimated"] and obs["status"] == "high" and obs["fix"]["steps"]  # steps written for the user's tools
+    assert not any(f["id"].startswith("vocal_") for f in checked["flags"])  # observations, not findings
+    # The vocal estimates never cost technical points: the score counts only the floors.
+    assert checked["score"]["vocal_checked"] and checked["score"]["value"] == unchecked["score"]["value"]
 
-    # A well-made vocal that was checked has no vocal findings. It still isn't called "ready": only a verdict can.
+    # A well-made vocal that was checked has nothing outside its range. It still isn't called "ready": only a verdict can.
     good = _with_fake_split(_voice(EVEN), beat, lambda: analyze_file(path, stage="mix", split_vocal=True))
-    assert good["score"]["label"] == "No technical errors found" and not any(f["id"].startswith("vocal_") for f in good["flags"])
+    assert good["score"]["label"] == "No technical errors found"
+    assert not [o for o in good["observations"] if o["source"] == "vocal" and o["status"] != "in"]
     assert good["score"]["verdict"] is None
 
 
@@ -1213,6 +1278,7 @@ def test_split_vocal_when_it_cannot_run_still_gives_the_report():
         separate.separate_vocals = real
     assert report["vocal"]["found"] is False and report["vocal"]["unavailable"] is True
     assert not any(f["id"].startswith("vocal_") for f in report["flags"])
+    assert not any(o["source"] == "vocal" for o in report["observations"])
     assert report["score"]["vocal_checked"] is False
 
 
@@ -1248,7 +1314,9 @@ def test_notes_see_the_vocal_numbers_only_when_they_exist():
                               lambda: analyze_file(path, stage="mix", split_vocal=True))
     m = notes_input(report)["measurements"]
     assert m["vocal_range_db"] == report["vocal"]["range_db"] and "vocal_to_beat_db" in m
-    assert any(f["kind"] == "vocal_uncompressed" for f in notes_input(report)["findings"])
+    items = notes_input(report)["observations"]
+    assert any(o["kind"] == "vocal_uncompressed" and o["estimated"] and o["trust"] for o in items)
+    assert not any(f["kind"].startswith("vocal_") for f in notes_input(report)["findings"])
 
 
 def test_web_split_vocal_option():
@@ -1273,18 +1341,24 @@ def test_web_split_vocal_option():
     events = _with_fake_split(_voice([-30, -14, -22, -10, -26, -12]), _beat(-20),
                               lambda: [json.loads(line) for line in post(split_vocal="1").text.splitlines()])
     assert "vocal" in [e.get("stage") for e in events] and events[-1]["report"]["vocal"]["found"]
-    # Fixes rebuilt for a new stage keep the vocal in the score.
+    # Fixes rebuilt for a new stage keep the vocal observations the page sends back.
     report = events[-1]["report"]
     fixed = client.post("/api/fixes", json={"flags": report["flags"], "stage": "mix", "measures": report["measures"],
-                                            "vocal": True}).json()
-    assert fixed["score"]["vocal_checked"] and any(f["id"] == "vocal_uncompressed" for f in fixed["flags"])
+                                            "vocal": True, "observations": report["observations"]}).json()
+    assert fixed["score"]["vocal_checked"] and any(o["id"] == "vocal.vocal_dynamics" for o in fixed["observations"])
+    assert not any(f["id"].startswith("vocal_") for f in fixed["flags"])
+    # A page from before the refactor may still send old findings; they are not findings any more and are dropped.
+    stale = client.post("/api/fixes", json={"flags": [{"id": "louder_than_target", "severity": "warning"},
+                                                      {"id": "clipping", "severity": "warning"}],
+                                            "stage": "master", "measures": report["measures"]}).json()
+    assert [f["id"] for f in stale["flags"]] == ["clipping"]
 
 
 def test_labels_say_what_was_found_and_never_claim_readiness():
     from mixcheck.score import LABELS, READY_LABELS, score_flags
     # No label of the technical score, at any level or stage, says a mix is ready.
     words = " ".join(name for _, name in LABELS).lower()
-    assert "ready" not in words and "release" not in words and "solid" not in words
+    assert "ready" not in words and "release" not in words and "solid" not in words and "wings" not in words
     for stage in ("mix", "master"):
         clean = score_flags([], stage)
         assert clean["value"] == 10.0 and clean["label"] == "No technical errors found" and clean["verdict"] is None
@@ -1296,7 +1370,8 @@ def test_labels_say_what_was_found_and_never_claim_readiness():
 def test_only_a_verdict_can_earn_the_ready_label_and_code_checks_it():
     from mixcheck.score import apply_verdict, score_flags
     warn = {"id": "true_peak_hot", "severity": "warning", "value": -0.4}
-    for stage, ready_label in (("mix", "Ready for mastering"), ("master", "Release-ready")):
+    for stage in ("mix", "master"):
+        ready_label = "Ready for Wings"
         clean = score_flags([], stage)
         # Not judged yet: nothing changes.
         assert apply_verdict(clean, [], stage, None)["label"] == "No technical errors found"

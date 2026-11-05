@@ -113,7 +113,13 @@ How the blocks meet:
 - 2026-11-05: the output of a match work-up is the change to the person's chain, tested by re-rendering.
 - 2026-11-05: "resolved" means no open diagnoses, or the person marks it; the score alone never decides.
 - 2026-11-05: "Vigil" names the prevention section of a diagnosis.
+- 2026-11-05 (step 2b, built): the old style, reference and vocal findings are gone, with no transition. The only
+  findings are the floors (`analyze.FLOOR_IDS`). Everything contextual is an observation (`mixcheck/observations.py`):
+  the measurement, the range it was compared with, the deviation, the trust in that range, the chain stage and a
+  playbook key for the fix steps, and no severity. The report is schema 2.0. The "ready" label is "Ready for Wings".
+  Vocal estimates are observations, so they never cost technical points. The page shows out-of-range observations as
+  neutral items; the diagnosis layout replaces that later.
 - 2026-11-05 (step 2a, built): the score's labels are in technical words only ("No technical errors found", "Minor
   technical issues", "Technical issues to fix", "Several technical problems", "Major technical problems"). The "ready"
-  labels can only come from `score.apply_verdict`, which checks that the reasoning step says ready, the technical score
+  labels ("Ready for Wings") can only come from `score.apply_verdict`, which checks that the reasoning step says ready, the technical score
   is at least 9.0, no diagnosis is open, and no floor finding is at warning level or worse.

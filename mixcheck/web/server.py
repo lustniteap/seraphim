@@ -26,13 +26,14 @@ from .. import feedback
 from .. import notes as ai_notes
 from .. import refsets
 from .. import separate
-from ..analyze import THRESHOLDS, analyze_file
+from ..analyze import FLOOR_IDS, THRESHOLDS, analyze_file
 from ..catalog import options as setup_options
 from ..scan import LAUNCHERS, PLATFORM, PLATFORM_NAMES, scan_this_computer
-from ..reference import MAX_REFERENCES, apply_reference, profile_file, sanitize_profile
+from ..observations import attach_observation_fixes, build_observations
+from ..reference import MAX_REFERENCES, compare, profile_file, sanitize_profile
 from ..remediation import STAGES, attach_fixes, describe_setup, normalize_setup
 from ..score import score_flags
-from ..style import LEGACY_IDS, apply_style, canonical, style_match
+from ..style import LEGACY_IDS, canonical, style_match
 from ..style import options as style_options
 from ..util import utf8_console
 
@@ -195,8 +196,9 @@ async def notes(report: dict = Body(..., embed=True)):
     result["notes_id"] = feedback.remember(result)  # so these notes can be rated
     inp = result.pop("input")
     # Let the page show steps and findings by id without re-deriving MixCheck's numbering.
-    result["steps"] = {s["id"]: s["text"] for f in inp["findings"] for s in f["steps"] + f["other_options"]}
-    result["findings"] = {f["id"]: f["kind"] for f in inp["findings"]}
+    items = inp["findings"] + inp["observations"]
+    result["steps"] = {s["id"]: s["text"] for f in items for s in f["steps"] + f["other_options"]}
+    result["findings"] = {f["id"]: f["kind"] for f in items}
     return result
 
 
@@ -245,23 +247,29 @@ def delete_reference_set(name: str):
 @app.post("/api/fixes")
 def fixes(flags: list = Body(...), setup: dict = Body({}), stage: str = Body("mix"),
           target: str = Body(""), measures: dict = Body({}), profile: Optional[dict] = Body(None),
-          references: list = Body([]), vocal: bool = Body(False)):
-    """Rebuild findings, fixes and scores for a new setup, stage, target or set of
-    references, without re-analyzing. vocal: the report includes the vocal checks."""
+          references: list = Body([]), vocal: bool = Body(False), observations: list = Body([])):
+    """Rebuild the floors, the observations and their fixes, and the score for a new setup, stage, target or
+    set of references, without re-analyzing. vocal: the report includes the vocal checks; the page sends back the
+    vocal observations it has, because they come from the audio and can't be rebuilt from numbers."""
     if stage not in STAGES:
         raise HTTPException(422, f"stage must be one of {', '.join(STAGES)}")
     for f in flags:
         if not isinstance(f, dict) or "id" not in f or "severity" not in f:
             raise HTTPException(422, "Each finding needs an id and a severity.")
+    flags = [f for f in flags if f["id"] in FLOOR_IDS]  # the only findings; anything else is from an older page
     user_setup = normalize_setup(setup)
     refs = parse_references(references)
     mine = parse_references([profile])[0] if profile else None
-    flags, comparison = apply_reference(apply_style(flags, measures, target, stage), mine, refs, stage)
     flags = attach_fixes(flags, user_setup, stage)
+    style, comparison = style_match(measures, target, stage), compare(mine, refs, stage)
+    keep = {"playbook", "status", "value", "context", "stage_no", "id"}
+    vocal_obs = [o for o in observations if isinstance(o, dict) and o.get("source") == "vocal" and keep <= o.keys()]
+    obs = build_observations(measures, stage, canonical(target), style, comparison, None) + vocal_obs
     return {
         "flags": flags,
+        "observations": attach_observation_fixes(obs, user_setup, stage),
         "score": score_flags(flags, stage, vocal=vocal),
-        "style": style_match(measures, target, stage),
+        "style": style,
         "reference": comparison,
         "target": canonical(target),
         "setup": {**user_setup, "label": describe_setup(user_setup)},

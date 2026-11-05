@@ -88,13 +88,6 @@ DIMS = {
     "tone": ("Tone", "dB", 4.0),
 }
 
-STYLE_IDS = {
-    "very_loud", "low_plr", "low_lra", "no_air",
-    "louder_than_target", "quieter_than_target", "more_limited_than_target",
-    "more_dynamic_than_target", "less_contrast_than_target", "more_contrast_than_target",
-    "tone_more_than_target", "tone_less_than_target",
-}
-
 CALIBRATION_FILE = "style_targets.json"
 _cache = {"key": None, "styles": {}}
 
@@ -267,73 +260,6 @@ def ranges(target_id, stage):
 def _tone_values(m):
     tone = m.get("tone")
     return {b: _num(v) for b, v in tone.items() if b in BANDS and _num(v) is not None} if isinstance(tone, dict) else {}
-
-
-def style_flags(m, target_id, stage):
-    flags = []
-
-    def flag(fid, severity, message, **data):
-        flags.append({"id": fid, "severity": severity, "message": message, **data})
-
-    lufs, plr, lra, air = (_num(m.get(k)) for k in ("lufs", "plr", "lra", "air_pct"))
-    target = get_target(target_id)
-
-    if air is not None and air < DEFAULT_LIMITS["lossy_air_pct"] and not (target or {}).get("dull_ok"):
-        flag("no_air", "info",
-             "Almost no content above 16 kHz; check whether an MP3/AAC or low-passed file was used as a source.", value=air)
-
-    if target is None:
-        d = DEFAULT_LIMITS
-        if lufs is not None and lufs > d["very_loud_lufs"]:
-            flag("very_loud", "info",
-                 f"Integrated loudness is {lufs:.1f} LUFS; Spotify would turn it down about {lufs + 14:.1f} dB.", value=lufs)
-        if plr is not None and plr < d["low_plr_db"]:
-            flag("low_plr", "info", f"Peak-to-loudness ratio is {plr:.1f} dB; the master is heavily limited.", value=plr)
-        if lra is not None and lra < d["low_lra_lu"]:
-            flag("low_lra", "info", f"Loudness range is {lra:.1f} LU; there is little contrast between sections.", value=lra)
-        return flags
-
-    name, rg = target["full_name"], ranges(target["id"], stage)
-    checks = [
-        ("lufs", lufs, "quieter_than_target", "louder_than_target", "LUFS"),
-        ("plr", plr, "more_limited_than_target", "more_dynamic_than_target", "dB PLR"),
-        ("lra", lra, "less_contrast_than_target", "more_contrast_than_target", "LU"),
-    ]
-    for dim, v, below_id, above_id, unit in checks:
-        if dim not in rg or v is None:
-            continue
-        lo, hi = rg[dim]
-        if lo <= v <= hi:
-            continue
-        miss = lo - v if v < lo else v - hi
-        fid = below_id if v < lo else above_id
-        flag(fid, "warning" if miss > 2.0 else "info",
-             f"{DIMS[dim][0]} is {v:.1f} {unit}; typical for {name} is {lo:g} to {hi:g} {unit}.",
-             value=v, target=[lo, hi], off_by=round(miss, 1))
-
-    # Tone, band by band, once the style has been calibrated from real releases.
-    mine = _tone_values(m)
-    for bid, (lo, hi) in rg.get("tone", {}).items():
-        v = mine.get(bid)
-        if v is None or lo <= v <= hi:
-            continue
-        # Lo-fi is dull on purpose: a dark top end is the point, not a problem.
-        if bid == "highs" and v < lo and target.get("dull_ok"):
-            continue
-        high = v > hi
-        miss = v - hi if high else lo - v
-        _, _, _, _, band_name, phrase, words, shape = BANDS[bid]
-        amount = min(6.0, max(1.0, round(miss * 2) / 2))
-        flag("tone_more_than_target" if high else "tone_less_than_target", "warning" if miss > 2.0 else "info",
-             f"{miss:.1f} dB {words[0 if high else 1]} {phrase} than typical for {name}, at matched volume.",
-             value=round(v, 1), target=[lo, hi], off_by=round(miss, 1), band=bid, band_name=band_name,
-             phrase=phrase, word=words[0 if high else 1], shape=shape, amount=f"{amount:g}", style=name)
-    return flags
-
-
-def apply_style(flags, m, target_id, stage):
-    """Replace any style findings with ones for this target and stage."""
-    return [f for f in flags if f["id"] not in STYLE_IDS] + style_flags(m, target_id, stage)
 
 
 def _row(v, lo, hi, tol):

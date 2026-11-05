@@ -75,6 +75,15 @@ def print_summary(r, show_fixes=True):
                 print(f"         -> {step['text']}")
             if fl["fix"]["more"]:
                 print(f"            ({len(fl['fix']['more'])} more option(s) in the JSON report or web page)")
+    shown = [o for o in r.get("observations") or [] if o["status"] != "in"]
+    if shown:
+        print("\n  Observations (a measurement against a range; not errors, and they carry no severity):")
+        for o in shown:
+            est = " [estimate]" if o.get("estimated") else ""
+            print(f"    [ - ] {o['stage']}: {o['summary']}{est}")
+            if show_fixes and o.get("fix"):
+                for step in o["fix"]["steps"][:1]:
+                    print(f"         -> {step['text']}")
     print()
     print("  Timestamps are measured from the start of the bounced file.\n")
 

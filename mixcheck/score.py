@@ -1,38 +1,29 @@
 """A 1.0–10.0 technical score, built from the findings.
 
-It counts only errors that are wrong in any genre: peaks and clipping, phase and
-mono problems, and file/edge problems. Loudness, punch, contrast and top end are
-style choices, rated separately against the user's target in style.py, and
-comparisons with reference tracks (reference.py) are rated there too.
+It counts only the floors, the hard technical facts that are wrong in any genre: peaks and
+clipping, phase and mono problems, and file/edge problems. Loudness, punch, contrast, tone and
+the vocal are not errors: they are observations (observations.py), judged by the reasoning step.
 
 Start at 10 and subtract points per finding, scaled by how bad the measurement is.
 Each area has a cap so one kind of problem can't sink the whole score. The stage
 matters: a peak just under 0 dB costs points on a master but not on a mix.
 
-The vocal checks (vocal.py) are counted only when they were run. Their numbers are estimates
-when the vocal was split from the mix, so they cost less than a measured error.
-
 The labels say only what was found: a clean score reads "No technical errors found", never "ready".
 Whether a mix is *ready* is a judgement about style, tone and dynamics as well, and that belongs to the
-reasoning step. Its verdict is applied by apply_verdict(), the only way to earn "Ready for mastering" or
-"Release-ready", and code checks the conditions before letting it through.
+reasoning step. Its verdict is applied by apply_verdict(), the only way to earn "Ready for Wings",
+and code checks the conditions before letting it through.
 """
-from .reference import REFERENCE_IDS
-from .style import STYLE_IDS
-from .vocal import VOCAL_IDS
-
 AREAS = {
     "peaks": {"name": "Peaks & clipping", "cap": 4.0},
     "stereo": {"name": "Stereo & phase", "cap": 3.5},
     "file": {"name": "File & edges", "cap": 1.5},
-    "vocal": {"name": "Vocal (estimated)", "cap": 3.0},
 }
 
 # What the score found, in technical words. None of these says a mix is ready.
 LABELS = [(9.0, "No technical errors found"), (7.0, "Minor technical issues"), (5.0, "Technical issues to fix"),
           (3.0, "Several technical problems"), (0.0, "Major technical problems")]
 # What only the reasoning step's verdict can earn (see apply_verdict).
-READY_LABELS = {"mix": "Ready for mastering", "master": "Release-ready"}
+READY_LABELS = {"mix": "Ready for Wings", "master": "Ready for Wings"}
 MIN_READY_VALUE = 9.0
 
 
@@ -41,8 +32,6 @@ def _points(flag, stage):
     fid, v = flag["id"], flag.get("value")
     v = v if isinstance(v, (int, float)) else 0.0
     master = stage == "master"
-    if fid in VOCAL_IDS:
-        return "vocal", 0.8 if flag["severity"] == "warning" else 0.3
     if fid == "true_peak_over":
         return "peaks", (1.5 if master else 1.0) + min(1.0, v * 0.25)
     if fid == "true_peak_hot":
@@ -74,7 +63,7 @@ def _total(lost):
 
 def score_flags(flags, stage, vocal=False):
     """{"value", "label", "areas": [...], "if_fixed"}; flags must already be rated for the stage.
-    vocal: the vocal checks were run, so their findings count.
+    vocal: the vocal checks were run (recorded only; the score counts floors, never the vocal estimates).
     "verdict" is None until apply_verdict() has applied the reasoning step's judgement."""
     if any(f["id"] == "silent" for f in flags):
         return {"value": 1.0, "label": "Major technical problems", "areas": [], "if_fixed": 1.0,
@@ -83,8 +72,6 @@ def score_flags(flags, stage, vocal=False):
     lost = {a: 0.0 for a in AREAS}
     kept = {a: 0.0 for a in AREAS}  # what's left after fixing everything but notes
     for f in flags:
-        if f["id"] in STYLE_IDS or f["id"] in REFERENCE_IDS:
-            continue  # style is rated against the target or the references, not here
         area, pts = _points(f, stage)
         pts = max(0.0, pts)
         lost[area] += pts
@@ -98,7 +85,7 @@ def score_flags(flags, stage, vocal=False):
         "label": label,
         "areas": [
             {"id": a, "name": AREAS[a]["name"], "lost": round(min(AREAS[a]["cap"], lost[a]), 1)}
-            for a in AREAS if a != "vocal" or vocal or lost[a]
+            for a in AREAS
         ],
         "vocal_checked": bool(vocal),
         "verdict": None,
@@ -125,9 +112,7 @@ def apply_verdict(score, flags, stage, verdict):
         blockers.append(f"the technical score is below {MIN_READY_VALUE:g}")
     if open_n:
         blockers.append(f"{open_n} {'diagnosis' if open_n == 1 else 'diagnoses'} still open")
-    floors = [f["id"] for f in flags
-              if f["id"] not in STYLE_IDS and f["id"] not in REFERENCE_IDS and f["id"] not in VOCAL_IDS
-              and f.get("severity") in ("critical", "warning")]
+    floors = [f["id"] for f in flags if f.get("severity") in ("critical", "warning")]
     if floors:
         blockers.append("floor findings at warning level or worse: " + ", ".join(floors))
     granted = ready and not blockers

@@ -6,10 +6,11 @@ switches mix/master, changes their setup or picks a style (see /api/fixes in web
 """
 import copy
 
-from mixcheck.reference import REFERENCE_IDS
+from mixcheck.analyze import FLOOR_IDS
+from mixcheck.observations import attach_observation_fixes, build_observations, reference_observations
 from mixcheck.remediation import attach_fixes, describe_setup, normalize_setup
 from mixcheck.score import score_flags
-from mixcheck.style import apply_style, style_match
+from mixcheck.style import canonical, style_match
 
 # id -> how to re-judge. None keeps what the report recorded.
 SCENARIOS = {
@@ -31,18 +32,23 @@ def rejudge(report, stage=None, setup=None, target=None):
     setup = normalize_setup(setup if setup is not None else r["setup"])
     target = (r.get("target") or "") if target is None else target
 
-    flags = r["flags"]
+    # Only the floors are findings. A report saved before the refactor still carries the old style, reference and
+    # vocal findings; they are dropped here, and the observations are rebuilt from the numbers.
+    flags = [f for f in r["flags"] if f["id"] in FLOOR_IDS]
     if stage != r["stage"]["value"]:
         # The reference comparison depends on the stage (a mix isn't compared on loudness), and the
         # reference profiles themselves aren't saved in the report, so it can't be redone here.
-        flags = [f for f in flags if f["id"] not in REFERENCE_IDS]
         r["reference"] = None
-    flags = attach_fixes(apply_style(flags, r["measures"], target, stage), setup, stage)
+    flags = attach_fixes(flags, setup, stage)
+    style = style_match(r["measures"], target, stage)
+    vocal_obs = [o for o in r.get("observations") or [] if o.get("source") == "vocal"]
+    obs = build_observations(r["measures"], stage, canonical(target), style, None, None)
+    obs += reference_observations(r.get("reference"), stage) + vocal_obs
     r.update(
         flags=flags,
-        # The vocal checks count (and can earn "Ready for mastering") only if the report ran them, as on the page.
-        score=score_flags(flags, stage, vocal=bool((r.get("vocal") or {}).get("found"))),
-        style=style_match(r["measures"], target, stage),
+        observations=attach_observation_fixes(obs, setup, stage),
+        score=score_flags(flags, stage, vocal=bool((r.get("vocal") or {}).get("found"))),  # recorded, as on the page
+        style=style,
         target=target or None,
         setup={**setup, "label": describe_setup(setup)},
         stage={**r["stage"], "value": stage},
