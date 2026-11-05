@@ -35,6 +35,13 @@ PACKAGES = {
     "izotope_insight": {"name": "iZotope Insight 2", "group": "iZotope"},
 }
 
+# Plugins a person can pick from the searchable list that Seraphim has no fix steps for yet. They are recorded in the
+# person's setup (so the reasoning step knows what they own) but add no tools: the steps stay generic until a plugin
+# is promoted into PACKAGES with TOOLS entries. Same shape as PACKAGES, plus a category (eq, compressor, limiter,
+# de-esser, reverb, delay, saturation, imager, meter, utility). Filled from the lists people confirm; each entry's
+# name and vendor come from the vendor's own materials or from the person's installed plugins, never from memory.
+LISTED = {}
+
 # Ids that older saved setups, scripts and eval cases use, each standing for several current ones.
 # "waves_essential" used to be one item covering these four Waves plugins.
 LEGACY_PACKAGES = {
@@ -363,7 +370,7 @@ def expand_packages(ids):
     out = []
     for p in ids or []:
         for q in LEGACY_PACKAGES.get(p, [p]):
-            if q in PACKAGES and q not in out:
+            if (q in PACKAGES or q in LISTED) and q not in out:
                 out.append(q)
     return out
 
@@ -372,7 +379,8 @@ def options():
     """What the setup screen offers."""
     return {
         "daws": [{"id": k, "name": v} for k, v in DAWS.items()],
-        "packages": [{"id": k, **v} for k, v in PACKAGES.items()],
+        "packages": [{"id": k, "has_steps": True, **v} for k, v in PACKAGES.items()]
+                    + [{"id": k, "has_steps": False, **v} for k, v in LISTED.items()],
         "waves_tiers": [{"id": k, **v} for k, v in WAVES_TIERS.items()],
         "legacy_packages": LEGACY_PACKAGES,
     }

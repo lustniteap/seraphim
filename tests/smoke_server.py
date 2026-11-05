@@ -3,7 +3,7 @@
     python tests/smoke_server.py
 
 Starts `python -m mixcheck.web.server` on a free port, waits for it to answer, then checks /api/info,
-/api/scan and an upload of a generated WAV through /api/analyze (which writes and then deletes a
+the plugin list and an upload of a generated WAV through /api/analyze (which writes and then deletes a
 temporary file, the part most likely to behave differently on Windows). Exits non-zero on any problem.
 """
 import http.client
@@ -74,10 +74,9 @@ def main():
         print("info:", info["platform"], "version", info["version"])
         assert info["platform"]["id"] in ("mac", "windows", "other")
 
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/scan", timeout=30) as res:
-            scan = json.load(res)
-        print("scan:", scan["platform"], "supported" if scan["supported"] else "unsupported",
-              [d["id"] for d in scan["daws"]], list(scan["packages"]), "waves" if scan["waves_installed"] else "")
+        packages = info["setup_options"]["packages"]
+        assert packages and all({"id", "name", "group", "has_steps"} <= set(p) for p in packages)
+        print("plugin list:", len(packages), "entries")
 
         status, report = post_file(port, "smoke test.wav", make_wav())
         assert status == 200, (status, report)

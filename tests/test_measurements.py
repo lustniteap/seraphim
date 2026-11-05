@@ -829,40 +829,91 @@ def _fake_bundle(folder, name, suffix, bundle_id, app=False):
         plistlib.dump({"CFBundleIdentifier": bundle_id, "CFBundleShortVersionString": "1.0"}, fh)
 
 
-def test_scan_maps_installed_plugins_and_daws():
+def _load_listing_tool():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "list_installed_plugins", os.path.join(os.path.dirname(__file__), "..", "tools", "list_installed_plugins.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_plugin_listing_tool_reads_mac_bundles_and_prints_no_paths():
+    import json
     import tempfile
     from pathlib import Path
-    from mixcheck import scan
-    tmp_path = Path(tempfile.mkdtemp())
-    plugins, apps = tmp_path / "plugins", tmp_path / "apps"
-    plugins.mkdir(); apps.mkdir()
-    _fake_bundle(plugins, "iZOzone8 Maximizer", ".vst3", "com.izotope.audioplugins")
-    _fake_bundle(plugins, "iZOzone8 Insight", ".aaxplugin", "com.izotope.audioplugins")
-    _fake_bundle(plugins, "Neutron 2 Compressor", ".vst3", "com.izotope.audioplugins")
-    _fake_bundle(plugins, "WaveShell1-AU 16.2", ".component", "com.WavesAudio.WaveShell1-AU")
-    _fake_bundle(plugins, "UAD API 2500", ".component", "com.uaudio.api2500")
-    _fake_bundle(apps, "Pro Tools", ".app", "com.avid.ProTools")
-    _fake_bundle(apps, "FL Studio 2026", ".app", "com.image-line.flstudio")
-    _fake_bundle(apps, "Notes", ".app", "com.apple.Notes")
-    old = (scan.PLUGIN_FOLDERS, scan.APP_FOLDERS, scan.PLATFORM)
-    scan.PLUGIN_FOLDERS, scan.APP_FOLDERS, scan.PLATFORM = [plugins], [apps], "mac"
+    tool = _load_listing_tool()
+    root = Path(tempfile.mkdtemp())
+    au, vst3, aax = root / "Components", root / "VST3", root / "Avid"
+    for d in (au, vst3, aax):
+        d.mkdir()
+    _fake_bundle(vst3, "FabFilter Pro-Q 3", ".vst3", "com.fabfilter.Pro-Q.3")
+    _fake_bundle(au, "FabFilter Pro-Q 3", ".component", "com.fabfilter.Pro-Q.3")  # the same plugin in another format
+    _fake_bundle(aax, "UAD 1176", ".aaxplugin", "com.uaudio.1176")
+    (au / "Broken.component" / "Contents").mkdir(parents=True)  # no plist: still listed, by its file name
+    (vst3 / "readme.txt").write_text("not a plugin")
+    result = tool.list_plugins("mac", [au, vst3, aax, root / "Missing"])
+    found = {(p["name"], p["format"]): p for p in result["plugins"]}
+    assert set(found) == {("FabFilter Pro-Q 3", "VST3"), ("FabFilter Pro-Q 3", "AU"), ("UAD 1176", "AAX"), ("Broken", "AU")}
+    assert found[("UAD 1176", "AAX")]["vendor"] == "uaudio" and found[("UAD 1176", "AAX")]["version"] == "1.0"
+    assert found[("Broken", "AU")]["vendor"] is None and result["count"] == 4
+    assert str(root) not in json.dumps(result)  # no full path anywhere in the output
+    assert len(result["folders_found"]) == 3 and all(len(f.split("/")) == 2 for f in result["folders_found"])  # last two parts only
+
+
+def test_plugin_listing_tool_reads_windows_files_by_vendor_folder():
+    import tempfile
+    from pathlib import Path
+    tool = _load_listing_tool()
+    root = Path(tempfile.mkdtemp())
+    vst3, vst2 = root / "VST3", root / "VSTPlugins"
+    (vst3 / "Waves").mkdir(parents=True)
+    vst2.mkdir()
+    (vst3 / "Waves" / "WaveShell1-VST3 14.0.vst3").write_text("x")
+    (vst3 / "FabFilter Pro-L 2.vst3").write_text("x")
+    (vst2 / "OldComp.dll").write_text("x")
+    (vst2 / "notes.txt").write_text("x")
+    got = {(p["name"], p["format"], p["vendor"]) for p in tool.list_plugins("windows", [vst3, vst2])["plugins"]}
+    assert got == {("WaveShell1-VST3 14.0", "VST3", "Waves"), ("FabFilter Pro-L 2", "VST3", None), ("OldComp", "VST2", None)}
+    other = tool.list_plugins("other")
+    assert other["count"] == 0 and other["plugins"] == []
+
+
+def test_plugin_picker_options_and_setups_accept_listed_plugins():
+    from mixcheck import catalog
+    from mixcheck.remediation import normalize_setup
+    opts = {p["id"]: p for p in catalog.options()["packages"]}
+    assert set(catalog.PACKAGES) <= set(opts) and all(opts[i]["has_steps"] for i in catalog.PACKAGES)
+    catalog.LISTED["uad_1176"] = {"name": "UAD 1176", "group": "Universal Audio", "category": "compressor"}
     try:
-        r = scan.scan_this_computer()
+        listed = {p["id"]: p for p in catalog.options()["packages"]}["uad_1176"]
+        assert listed["has_steps"] is False and listed["group"] == "Universal Audio"
+        setup = normalize_setup({"daw": "logic", "packages": ["uad_1176", "waves_l2", "made_up"]})
+        assert setup["packages"] == ["uad_1176", "waves_l2"]  # known ids are kept, unknown ones dropped
+        # A plugin with no steps adds no tools: the fixes are the same as without it.
+        plain = normalize_setup({"daw": "logic", "packages": ["waves_l2"]})
+        assert catalog.owned_tools(setup).keys() == catalog.owned_tools(plain).keys()
     finally:
-        scan.PLUGIN_FOLDERS, scan.APP_FOLDERS, scan.PLATFORM = old
-    assert set(r["packages"]) == {"izotope_ozone", "izotope_insight"}
-    assert r["packages"]["izotope_ozone"]["count"] == 1 and r["packages"]["izotope_insight"]["count"] == 1
-    assert r["waves_installed"] is True
-    assert [d["id"] for d in r["daws"]] == ["pro_tools", "fl_studio"]  # Pro Tools pre-selected
-    assert "com.uaudio" in r["other_vendors"] and "com.izotope" in r["other_vendors"]
+        catalog.LISTED.pop("uad_1176")
 
 
-def test_scan_never_reports_plugins_it_cannot_identify():
-    from mixcheck.scan import _package_for, _vendor
-    assert _package_for("Waves L2", "com.WavesAudio.WaveShell1-AAX") == "waves"  # shell only, never a fake Waves plugin
-    assert _package_for("Serum", "com.xfer.serum") is None
-    assert _vendor("jp.co.roland.TR-808") == "jp.co.roland"
-    assert _vendor("com.arturia.component.Pigments") == "com.arturia"
+def test_plugin_requests_are_noted_on_this_computer():
+    try:
+        from fastapi.testclient import TestClient
+    except (ImportError, RuntimeError):
+        return
+    import json
+    from mixcheck.util import mixcheck_home
+    from mixcheck.web import server
+    client = TestClient(server.app)
+    assert client.get("/api/scan").status_code in (404, 405)  # the scan is gone
+    ok = client.post("/api/plugins/request", json={"name": "  UAD   Pultec\x07 EQP-1A  "})
+    assert ok.status_code == 200 and ok.json() == {"noted": "UAD Pultec EQP-1A"}
+    assert client.post("/api/plugins/request", json={"name": "x"}).status_code == 422
+    long = client.post("/api/plugins/request", json={"name": "Z" * 300}).json()["noted"]
+    assert len(long) == 80
+    lines = [json.loads(line) for line in open(mixcheck_home() / "plugin_requests.jsonl", encoding="utf-8")]
+    assert lines[0]["name"] == "UAD Pultec EQP-1A" and set(lines[0]) == {"name", "day"}  # nothing else is kept
 
 
 def test_waves_tiers_and_the_old_waves_essential_id():
@@ -891,58 +942,6 @@ def test_waves_tiers_and_the_old_waves_essential_id():
 def _touch(path, text="x"):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
-
-
-def test_scan_finds_windows_daws_and_plugins():
-    import tempfile
-    from pathlib import Path
-    from mixcheck import scan
-    root = Path(tempfile.mkdtemp())
-    pf, common, data, local = root / "Program Files", root / "Common Files", root / "ProgramData", root / "Local"
-    _touch(pf / "Avid" / "Pro Tools" / "ProTools.exe")
-    _touch(pf / "Image-Line" / "FL Studio 2026" / "FL64.exe")
-    _touch(data / "Ableton" / "Live 12 Suite" / "Program" / "Ableton Live 12 Suite.exe")
-    _touch(pf / "Avid" / "Other App" / "other.exe")  # not a DAW
-    _touch(common / "VST3" / "iZotope" / "Ozone 9.vst3")                       # vendor sub-folder, single file
-    _touch(common / "VST3" / "iZotope" / "Insight 2.vst3")
-    _touch(common / "VST3" / "Waves 16.0" / "WaveShell1-VST3 16.0_x64.vst3")   # a folder name with a dot
-    _touch(common / "VST3" / "Solo Synth.vst3")                                 # no vendor folder: no vendor to report
-    _touch(common / "VST3" / "FabFilter" / "FabFilter Pro-L 2.vst3" / "Contents" / "x86_64-win" / "FabFilter Pro-L 2.vst3")
-    _touch(common / "Avid" / "Audio" / "Plug-Ins" / "WaveShell1-AAX 16.0.aaxplugin" / "Contents" / "x64" / "WaveShell1-AAX 16.0.aaxplugin")
-    _touch(pf / "VSTPlugins" / "Old Delay.dll")
-    _touch(pf / "VSTPlugins" / "Insight Other Company.dll")                     # "insight" without iZotope is not Insight
-    names = ["ProgramFiles", "ProgramW6432", "ProgramFiles(x86)", "CommonProgramFiles", "CommonProgramFiles(x86)",
-             "CommonProgramW6432", "ProgramData", "LOCALAPPDATA"]
-    saved = {n: os.environ.get(n) for n in names}
-    old_platform = scan.PLATFORM
-    try:
-        for n in names:
-            os.environ.pop(n, None)
-        os.environ.update({"ProgramFiles": str(pf), "CommonProgramFiles": str(common),
-                           "ProgramData": str(data), "LOCALAPPDATA": str(local)})
-        scan.PLATFORM = "windows"
-        r = scan.scan_this_computer()
-    finally:
-        scan.PLATFORM = old_platform
-        for n, v in saved.items():
-            os.environ.pop(n, None) if v is None else os.environ.__setitem__(n, v)
-    assert r["platform"] == "windows" and r["supported"] is True
-    assert [d["id"] for d in r["daws"]] == ["pro_tools", "ableton", "fl_studio"]  # Pro Tools pre-selected first
-    assert {d["id"]: d["app"] for d in r["daws"]}["ableton"] == "Ableton Live 12 Suite"
-    assert set(r["packages"]) == {"izotope_ozone", "izotope_insight"}
-    assert r["waves_installed"] is True
-    assert "fabfilter" in r["other_vendors"] and "vst3" not in r["other_vendors"]  # a vendor folder, not the plugin folder
-
-
-def test_scan_on_other_systems_says_it_is_unsupported():
-    from mixcheck import scan
-    old = scan.PLATFORM
-    scan.PLATFORM = "other"
-    try:
-        r = scan.scan_this_computer()
-    finally:
-        scan.PLATFORM = old
-    assert r["supported"] is False and r["daws"] == [] and r["packages"] == {} and r["waves_installed"] is False
 
 
 def test_console_output_survives_a_legacy_code_page():

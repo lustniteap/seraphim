@@ -98,15 +98,15 @@ seraphim my_mix.wav --print-json             # JSON to stdout (for piping)
 ## Windows and Mac
 
 Seraphim runs on Windows and macOS. The analysis, fixes, scores, references, styles and the page are the
-same on both; only the start file and the scan differ. Linux isn't supported yet: it starts, but there's no
-scan, so the user chooses their DAW and plugins by hand.
+same on both; only the start file differs. Linux isn't supported yet: it starts, but isn't tested there.
 
-- **Scan this PC** reads the standard places for DAWs (Pro Tools, Ableton Live, FL Studio) and for VST3,
-  VST2 and AAX plugins, going by file names and vendor folders, since Windows plugins carry no bundle
-  metadata. Logic Pro is Mac only, so the Windows setup screen doesn't offer it.
-- **Those Windows folder names haven't been checked on a real PC yet.** To check, on a Windows machine run
-  `python -m mixcheck.scan` in the project folder and send back what it prints: it lists the folders it
-  looked in and what it found.
+- **There is no plugin scan.** The user picks their DAW and plugins from a searchable list (see below), so
+  nothing is installed, scanned or allowed in system settings. Logic Pro is Mac only, so the Windows setup
+  screen doesn't offer it.
+- **Building the plugin list.** `python3 tools/list_installed_plugins.py > my-plugins.json` is a one-off tool for
+  whoever is building the list: it prints the names, vendors, formats and versions of the plugins installed on
+  that computer (no file paths, nothing sent anywhere). Its Windows folder names are from how these programs
+  normally install and haven't been checked on a real PC; the output says which folders it found.
 - Text files are always read and written as UTF-8 (a test fails if new code forgets), and command-line
   output is switched to UTF-8, because Windows otherwise defaults to a legacy code page that can't show the
   minus sign or angle quotes this app uses.
@@ -367,13 +367,15 @@ is one entry in `TOOLS`. Covered now: Pro Tools, Logic Pro, Ableton Live and FL 
 these Waves plugins (L2, F6, Renaissance EQ and Compressor, S1 Stereo Imager and Shuffler, PAZ Analyzer,
 WLM Plus), FabFilter, and iZotope Ozone/Insight.
 
-**Setup screen.** The user picks a DAW and the plugins they own. **Scan this Mac** (`mixcheck/scan.py`)
-reads which DAWs and plugins are installed and pre-ticks them, tagged "found on this Mac", and the user
-confirms; installed isn't licensed, since trials and expired licences show up too. Only bundle metadata is
-read (names and vendor IDs), nothing is loaded or sent anywhere, and it works on a Mac only so far. Waves
-loads every plugin through a shared shell, so the scan can only say Waves is installed; the user picks a
-Waves bundle, **Waves Essential** or **Waves Ultimate**, which ticks the plugins it includes (from Waves' own
-plugin list, `WAVES_TIERS` in `catalog.py`), then unticks what they don't have. S1 Shuffler isn't in either
+**Setup screen.** The user picks a DAW, then searches a list of plugins and chooses the ones they own; their
+choices appear as chips they can remove. There is no scan: a list the person picks from needs no system
+permissions, costs no computation, can't fail halfway, and is as reliable about what they own as a scan would be
+(installed isn't licensed). The list is `PACKAGES` (plugins Seraphim writes fix steps for) plus `LISTED` (plugins
+people can pick that have no steps yet, so the steps stay generic until they're added; marked "general steps
+only"). A plugin that isn't listed can be reported with "I don't see mine"; the name is kept in
+`~/.mixcheck/plugin_requests.jsonl` on that computer, as the backlog for what to add next. The person can add
+**Waves Essential** or **Waves Ultimate** in one step, which chooses the plugins it includes (from Waves' own
+plugin list, `WAVES_TIERS` in `catalog.py`), then removes what they don't have. S1 Shuffler isn't in either
 bundle, so it's chosen alone. The old `waves_essential` id still works and stands for L2, F6 and the two
 Renaissance plugins, so saved setups and scripts keep working.
 

@@ -28,12 +28,12 @@ from .. import refsets
 from .. import separate
 from ..analyze import FLOOR_IDS, THRESHOLDS, analyze_file
 from ..catalog import options as setup_options
-from ..scan import LAUNCHERS, PLATFORM, PLATFORM_NAMES, scan_this_computer
 from ..observations import attach_observation_fixes, build_observations
 from ..reference import MAX_REFERENCES, compare, profile_file, sanitize_profile
 from ..remediation import STAGES, attach_fixes, describe_setup, normalize_setup
 from ..score import score_flags
 from ..style import LEGACY_IDS, canonical, style_match
+from ..util import LAUNCHERS, PLATFORM, PLATFORM_NAMES, mixcheck_home
 from ..style import options as style_options
 from ..util import utf8_console
 
@@ -128,10 +128,17 @@ def with_real_name(report, name):
     return report
 
 
-@app.get("/api/scan")
-def scan():
-    """What's installed on this computer, to pre-fill the setup screen. Reads bundle metadata only."""
-    return scan_this_computer()
+@app.post("/api/plugins/request")
+def plugin_request(name: str = Body(..., embed=True)):
+    """Note a plugin the person couldn't find in the list, so it can be added. Stays on this computer."""
+    clean = " ".join("".join(ch for ch in str(name) if ch.isprintable()).split())[:80]
+    if len(clean) < 2:
+        raise HTTPException(422, "Type the plugin's name.")
+    path = mixcheck_home() / "plugin_requests.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps({"name": clean, "day": time.strftime("%Y-%m-%d")}, ensure_ascii=False) + "\n")
+    return {"noted": clean}
 
 
 @app.post("/api/analyze")

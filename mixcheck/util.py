@@ -6,6 +6,11 @@ import numpy as np
 
 TINY = 1e-20
 
+# Which system this is, for the start-up messages and for which DAWs make sense (Logic Pro is Mac only).
+PLATFORM = "mac" if sys.platform == "darwin" else "windows" if sys.platform == "win32" else "other"
+PLATFORM_NAMES = {"mac": "Mac", "windows": "PC", "other": "computer"}
+LAUNCHERS = {"mac": "Seraphim.command", "windows": "Seraphim.bat"}
+
 
 def utf8_console():
     """Print UTF-8 whatever the console or redirect defaults to.

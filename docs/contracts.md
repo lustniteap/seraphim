@@ -158,8 +158,7 @@ Points that follow from this:
 - 2026-11-05: "Vigil" names the prevention section of a diagnosis.
 - 2026-11-05: the page is a report card, then a stacked detailed report by chain stage, then Vigil, then the chat
   (section 6, draft). The chat is the same agent in a conversational mode, with its own model setting.
-- 2026-11-05 (direction, removal waiting for Tyler's go-ahead): replace the plugin scan with a searchable list of the
-  catalog's plugins, because a scan needs system permissions, costs computation and can fail, and a list the person
+- 2026-11-05 (built): the plugin scan is gone. Plugins are picked from a searchable list of the catalog's plugins, because a scan needs system permissions, costs computation and can fail, and a list the person
   picks from is faster, consented and as reliable about what they own.
 - 2026-11-05: the reasoning step's conclusion is the result; the "engineer's notes" panel is retired as a separate,
   optional note. Only the graphs, tables and notes that support the conclusion are shown (section 6).
