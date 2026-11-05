@@ -165,7 +165,7 @@ def write_notes(report, client=None, model_id=None):
             max_tokens=MAX_TOKENS,
             # The prompt never changes, so it's marked for caching. It's short, so it may fall under
             # the model's minimum cacheable size; check usage.cache_read_input_tokens before counting on it.
-            system=[{"type": "text", "text": PROMPT_FILE.read_text(), "cache_control": {"type": "ephemeral"}}],
+            system=[{"type": "text", "text": PROMPT_FILE.read_text(encoding="utf-8"), "cache_control": {"type": "ephemeral"}}],
             messages=[{"role": "user", "content": "MixCheck analysis:\n" + json.dumps(inp, indent=1, ensure_ascii=False)}],
             thinking={"type": "adaptive"},
             output_config={"effort": "medium"},

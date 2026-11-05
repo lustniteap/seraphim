@@ -44,11 +44,11 @@ def main():
     next_n = max((int(p.stem[4:]) for p in done), default=0) + 1
 
     MAPPING.parent.mkdir(parents=True, exist_ok=True)
-    with open(MAPPING, "a") as log:
+    with open(MAPPING, "a", encoding="utf-8") as log:
         for path in todo:
             new = f"song{next_n:02d}"
             next_n += 1
-            report = json.loads(path.read_text())
+            report = json.loads(path.read_text(encoding="utf-8"))
             titles = scrub(report, new)
             text = json.dumps(report, indent=2)
             # Belt and braces: the old title must not survive anywhere in the file.
@@ -56,7 +56,7 @@ def main():
             leftovers = [t for t in titles if t in text or (len(Path(t).stem.strip()) >= 6 and Path(t).stem.strip() in text)]
             if leftovers:
                 sys.exit(f"{path.name}: a title still appears inside the report ({leftovers[0]}); nothing changed.")
-            (folder / f"{new}.json").write_text(text)
+            (folder / f"{new}.json").write_text(text, encoding="utf-8")
             path.unlink()
             log.write(f"{new}\t{titles[0] if titles else path.name}\n")
             print(f"{path.name} -> {new}.json")

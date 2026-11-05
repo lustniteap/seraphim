@@ -28,7 +28,7 @@ def judge(client, inp, notes, model=DEFAULT_JUDGE):
     response = client.messages.parse(
         model=model,
         max_tokens=4000,
-        system=PROMPT.read_text(),
+        system=PROMPT.read_text(encoding="utf-8"),
         messages=[{"role": "user", "content":
                    "<report>\n" + json.dumps(inp, indent=1, ensure_ascii=False) + "\n</report>\n\n"
                    "<notes>\n" + json.dumps(notes, indent=1, ensure_ascii=False) + "\n</notes>"}],

@@ -37,7 +37,7 @@ from .loudness import measure_loudness
 from .peaks import true_peak
 from .reference import measure_profile
 from .style import TARGETS, calibration_path, targets
-from .util import db, mixcheck_home
+from .util import db, mixcheck_home, utf8_console
 
 AUDIO_SUFFIXES = {".wav", ".wave", ".aif", ".aiff", ".flac", ".mp3"}
 MIN_SONGS = 5
@@ -84,7 +84,7 @@ def cache_path():
 
 def _load_json(path, default):
     try:
-        with open(path) as fh:
+        with open(path, encoding="utf-8") as fh:
             data = json.load(fh)
         return data if isinstance(data, type(default)) else default
     except (OSError, ValueError):
@@ -94,7 +94,7 @@ def _load_json(path, default):
 def _write_json(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
-    with os.fdopen(fd, "w") as fh:
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=2)
     os.replace(tmp, path)
 
@@ -295,6 +295,7 @@ def calibrate(groups, min_songs=MIN_SONGS, jobs=None, dry_run=False, out=print):
 
 
 def main(argv=None):
+    utf8_console()
     parser = argparse.ArgumentParser(
         prog="seraphim-calibrate",
         description="Set each style's target ranges by measuring released songs in that style.",

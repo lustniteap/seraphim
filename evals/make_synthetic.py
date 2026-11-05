@@ -73,7 +73,7 @@ def main():
             path = Path(tmp) / f"{name}.wav"
             sf.write(path, audio, FS, subtype="PCM_24")
             report = analyze_file(path, setup=SETUP, stage=stage, references=refs)
-            (OUT / f"{name}.json").write_text(json.dumps(report, indent=2))
+            (OUT / f"{name}.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
             print(f"{name:20} {stage:6} " + ", ".join(f"{f['id']}({f['severity'][0]})" for f in report["flags"]))
 
 

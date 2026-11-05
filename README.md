@@ -42,15 +42,21 @@ their names, so existing installs, scripts and saved settings keep working; `ser
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+source .venv/bin/activate        # Windows: .venv\Scripts\activate (PowerShell: .venv\Scripts\Activate.ps1)
 pip install -e .
 ```
 
 ## Web interface
 
-On a Mac, double-click `Seraphim.command` in Finder. The first run sets up Python packages
-(about a minute); after that it opens straight to the page. Keep the Terminal window it opens
-while you use Seraphim, and close it to quit. Launching it again while it's running just reopens the page.
+On a Mac, double-click `Seraphim.command` in Finder. On a Windows PC, double-click `Seraphim.bat` in File
+Explorer. The first run sets up Python packages (about a minute); after that it opens straight to the page.
+Keep the window it opens while you use Seraphim, and close it to quit. Launching it again while it's running
+just reopens the page.
+
+**On Windows you need Python 3.9 or newer.** If `Seraphim.bat` doesn't find it, it opens the download page.
+Install it from python.org and, on the installer's first screen, tick **Add python.exe to PATH**. Then
+double-click `Seraphim.bat` again. Windows may show a SmartScreen or firewall prompt the first time; Seraphim
+only listens on this computer, so there's nothing to allow beyond that.
 
 Or from a terminal:
 
@@ -87,6 +93,26 @@ seraphim my_mix.wav                          # summary in the terminal
 seraphim my_mix.wav --json reports/mix.json  # also save the full report
 seraphim my_mix.wav --print-json             # JSON to stdout (for piping)
 ```
+
+## Windows and Mac
+
+Seraphim runs on Windows and macOS. The analysis, fixes, scores, references, styles and the page are the
+same on both; only the start file and the scan differ. Linux isn't supported yet: it starts, but there's no
+scan, so the user chooses their DAW and plugins by hand.
+
+- **Scan this PC** reads the standard places for DAWs (Pro Tools, Ableton Live, FL Studio) and for VST3,
+  VST2 and AAX plugins, going by file names and vendor folders, since Windows plugins carry no bundle
+  metadata. Logic Pro is Mac only, so the Windows setup screen doesn't offer it.
+- **Those Windows folder names haven't been checked on a real PC yet.** To check, on a Windows machine run
+  `python -m mixcheck.scan` in the project folder and send back what it prints: it lists the folders it
+  looked in and what it found.
+- Text files are always read and written as UTF-8 (a test fails if new code forgets), and command-line
+  output is switched to UTF-8, because Windows otherwise defaults to a legacy code page that can't show the
+  minus sign or angle quotes this app uses.
+- The tests run on Windows and macOS, on Python 3.9 and 3.13, on every push (`.github/workflows/tests.yml`).
+  On Windows that includes running `Seraphim.bat`'s setup, starting the real server and analyzing an upload
+  (`tests/smoke_server.py`). To run the tests yourself: `pip install -e ".[web,dev]"` then
+  `python tests/test_measurements.py`.
 
 ## Validation
 
