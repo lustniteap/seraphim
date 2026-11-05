@@ -168,6 +168,8 @@ All read-only, run locally, and return numbers or facts. The agent never gets au
 | `measure_section` | Measure one time range | new measurement code |
 | `analyze_stem` | Measure an uploaded stem | new measurement code |
 | `separate_vocal` | Split and check the vocal (optional, estimated) | exists, optional |
+| `measure_decay` | Measure how fast sound decays after phrase ends and section breaks, per band: the reverb measurement tool. Returns numbers with a confidence; "couldn't tell" is a normal answer on a dense mix. | new measurement code (match work-up, phase 2; see `match-workup-plan.md`) |
+| `get_workup`, `run_workup` | Read a match work-up, and run its closed loop with what is known | to build (match work-up, phase 1b) |
 | `ask_user` | A structured question with a cheap, specific answer | to build |
 
 The audio model is a pipeline step (section 2a), not a tool the agent chooses to call.
