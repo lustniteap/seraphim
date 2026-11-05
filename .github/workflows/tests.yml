@@ -1,6 +1,6 @@
 name: tests
 
-# Runs the tests on Windows and macOS, so a change that breaks either is caught before it ships.
+# Runs the tests on Windows, macOS and Linux, so a change that breaks any of them is caught before it ships.
 # Windows runs the real launcher's setup step and starts the real server too.
 on:
   push:
@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest]
+        os: [windows-latest, macos-latest, ubuntu-latest]
         python: ["3.9", "3.13"]
     steps:
       - uses: actions/checkout@v4
