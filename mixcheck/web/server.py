@@ -18,10 +18,11 @@ from typing import Optional
 
 from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from .. import __version__
+from .. import feedback
 from .. import notes as ai_notes
 from .. import refsets
 from ..analyze import THRESHOLDS, analyze_file
@@ -63,6 +64,7 @@ def info():
         "thresholds": THRESHOLDS,
         "max_references": MAX_REFERENCES,
         "ai_notes": dict(zip(("available", "reason"), ai_notes.available())),
+        "notes_feedback": {"reasons": feedback.options(), **feedback.stats()},
     }
 
 
@@ -184,11 +186,33 @@ async def notes(report: dict = Body(..., embed=True)):
         raise HTTPException(503, str(exc))
     except (KeyError, TypeError, ValueError):
         raise HTTPException(422, "That report couldn't be read; check the bounce again.")
+    result["notes_id"] = feedback.remember(result)  # so these notes can be rated
     inp = result.pop("input")
     # Let the page show steps and findings by id without re-deriving MixCheck's numbering.
     result["steps"] = {s["id"]: s["text"] for f in inp["findings"] for s in f["steps"] + f["other_options"]}
     result["findings"] = {f["id"]: f["kind"] for f in inp["findings"]}
     return result
+
+
+@app.post("/api/notes/feedback")
+def rate_notes(notes_id: str = Body(...), rating: Optional[str] = Body(None), reasons: list = Body([])):
+    """Thumbs up or down on a set of notes (rating null clears it). Kept on this computer only."""
+    try:
+        return feedback.rate(notes_id, rating, reasons)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    except feedback.Gone:
+        raise HTTPException(404, "Those notes are no longer in memory (Seraphim was restarted). Rewrite them to rate them.")
+
+
+@app.get("/api/notes/feedback/export")
+def export_feedback(name: str = ""):
+    """Download the ratings as one file: measurements, notes and ratings, with no audio and no file name."""
+    filename, text, count = feedback.export(name)
+    if not count:
+        raise HTTPException(404, "Nothing to export yet. Rate some notes first.")
+    return Response(text, media_type="application/x-ndjson",
+                    headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
 @app.put("/api/reference-sets")

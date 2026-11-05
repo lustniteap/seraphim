@@ -438,6 +438,22 @@
   .ai-stale { margin: 12px 0 0; font-size: 13px; color: var(--warning); font-weight: 600; }
   .ai-notes .progress { width: min(320px, 100%); }
 
+  /* Rating the notes: thumbs, optional reasons, kept on this computer */
+  .ai-feedback { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--rule); }
+  .ai-fb-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .ai-fb-row .q { font-weight: 600; margin-right: 4px; }
+  .thumb {
+    display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font: inherit; font-weight: 600;
+    background: #0A0D0F; color: var(--ink-soft); border: 1px solid var(--card-edge); border-radius: 8px; padding: 7px 13px;
+  }
+  .thumb svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .thumb:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .thumb[aria-pressed="true"] { border-color: var(--brand); color: var(--ink); background: rgba(240, 4, 24, 0.14); }
+  .ai-fb-reasons { margin-top: 12px; }
+  .ai-fb-reasons .note { margin: 0 0 8px; }
+  .ai-fb-foot { margin: 12px 0 0; font-size: 12px; color: var(--ink-soft); }
+  .ai-fb-foot .link-button { font-size: 12px; background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit; color: var(--brand); font-weight: 600; border-bottom: 1px solid currentColor; }
+
   /* Verdict */
   .verdict { border-left: 6px solid var(--ok); background: var(--ok-bg); padding: 20px 24px; border-radius: 0 6px 6px 0; }
   .verdict[data-state="critical"] { border-color: var(--critical); background: var(--critical-bg); }
@@ -883,6 +899,7 @@ let styleOptions = [];
 let platformInfo = { id: "other", noun: "computer", launcher: "the start script" };
 let aiInfo = { available: false, reason: "This copy of Seraphim is older than the notes feature. Restart it after updating." };
 let aiNotes = null, aiStale = false, aiBusy = false, aiError = "";
+let fbReasons = [], fbStats = { count: 0 }, fbRating = { rating: null, reasons: [] }, fbError = "";
 let setupOptions = null;
 
 function loadSetup() {
@@ -973,6 +990,8 @@ async function initSetup() {
       setupOptions = info.setup_options;
       aiInfo = info.ai_notes || aiInfo;
       platformInfo = info.platform || platformInfo;
+      fbReasons = info.notes_feedback?.reasons || [];
+      fbStats = info.notes_feedback || fbStats;
       styleOptions = info.style_options || [];
     }
   } catch {}
@@ -1274,6 +1293,7 @@ async function writeNotes() {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.detail || `The notes couldn't be written (error ${res.status}).`);
     aiNotes = data; aiStale = false;
+    fbRating = { rating: null, reasons: [] }; fbError = "";  // new notes, new rating
   } catch (err) {
     aiError = err instanceof TypeError
       ? "Seraphim has stopped running. Start it again, then try once more."
@@ -1311,6 +1331,7 @@ function renderNotes(r) {
       ${priorities ? `<h4>What to do first</h4><ol class="ai-priorities">${priorities}</ol>` : ""}
       ${list("Listen for", n.listen_for)}
       ${list("Already working", n.strengths)}
+      <div class="ai-feedback" id="ai-feedback"></div>
       <p class="ai-meta">Written by ${esc(aiNotes.model)} from the measurements above (prompt ${esc(aiNotes.prompt_version)},
         ${(u.input_tokens || 0) + (u.output_tokens || 0)} tokens)${aiNotes.issues.length ? `; ${aiNotes.issues.length} unsupported reference(s) removed` : ""}.</p>`;
   }
@@ -1323,8 +1344,97 @@ function renderNotes(r) {
       </div>
       ${button}
     </div>${body}`;
+  renderFeedback();
 }
 $("ai-notes").addEventListener("click", (e) => { if (e.target.closest("#ai-write")) writeNotes(); });
+
+/* Rate the notes: thumbs up or down, and on a thumbs down optionally what was wrong. Ratings stay on
+   this computer; "Export my ratings" saves them to a file the person can choose to share. */
+const THUMB = {
+  up: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11v9H4v-9h3zM7 11l4-8c1.5 0 2.5 1.2 2.2 2.7L12.7 9H19a2 2 0 0 1 2 2.3l-1.2 6.4A3 3 0 0 1 16.9 20H7"/></svg>`,
+  down: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 13V4h3v9h-3zM17 13l-4 8c-1.5 0-2.5-1.2-2.2-2.7l.5-3.3H5a2 2 0 0 1-2-2.3l1.2-6.4A3 3 0 0 1 7.1 4H17"/></svg>`,
+};
+function renderFeedback() {
+  const el = $("ai-feedback");
+  if (!el || !aiNotes) return;
+  const active = document.activeElement?.dataset?.fb;
+  const r = fbRating;
+  const chips = r.rating === "down" && fbReasons.length ? `
+    <div class="ai-fb-reasons">
+      <p class="note">What was wrong? Optional, and you can pick more than one.</p>
+      <div class="choices">${fbReasons.map((o) => `
+        <label class="choice"><input type="checkbox" data-fb="reason-${esc(o.id)}" value="${esc(o.id)}" ${r.reasons.includes(o.id) ? "checked" : ""}>
+          <span>${esc(o.label)}</span></label>`).join("")}</div>
+    </div>` : "";
+  el.innerHTML = `
+    <div class="ai-fb-row">
+      <span class="q">Were these notes useful?</span>
+      <button class="thumb" type="button" data-fb="up" data-rating="up" aria-pressed="${r.rating === "up"}">${THUMB.up} Yes</button>
+      <button class="thumb" type="button" data-fb="down" data-rating="down" aria-pressed="${r.rating === "down"}">${THUMB.down} No</button>
+    </div>
+    ${chips}
+    ${fbError ? `<p class="error" role="alert">${esc(fbError)}</p>` : ""}
+    <p class="ai-fb-foot">${r.rating ? "Saved on this computer. " : "Ratings stay on this computer. "}${fbStats.count
+      ? `<button class="link-button" type="button" data-fb="export">Export my ratings (${fbStats.count})</button> to share them with the team; the file has the measurements and notes, never audio or file names.`
+      : "Nothing leaves it unless you export them."}</p>`;
+  if (active) el.querySelector(`[data-fb="${CSS.escape(active)}"]`)?.focus();
+}
+
+async function sendRating(rating, reasons) {
+  fbError = "";
+  try {
+    const res = await fetch("/api/notes/feedback", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes_id: aiNotes.notes_id, rating, reasons }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || `The rating couldn't be saved (error ${res.status}).`);
+    fbRating = { rating: data.rating, reasons: data.reasons };
+    fbStats = { ...fbStats, ...data };
+  } catch (err) {
+    fbError = err instanceof TypeError ? "Seraphim has stopped running. Start it again, then try once more." : err.message;
+  }
+  renderFeedback();
+}
+
+async function exportRatings() {
+  let name = "";
+  try { name = localStorage.getItem("mixcheck.feedbackName") || ""; } catch {}
+  if (!name) {
+    name = (window.prompt("A short name for the file, like sam. It becomes feedback-sam.jsonl, so each person's file stays separate.", "") || "").trim();
+    if (!name) return;
+    try { localStorage.setItem("mixcheck.feedbackName", name); } catch {}
+  }
+  try {
+    const res = await fetch(`/api/notes/feedback/export?name=${encodeURIComponent(name)}`);
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || "The export didn't work.");
+    const blob = await res.blob();
+    const link = Object.assign(document.createElement("a"), {
+      href: URL.createObjectURL(blob),
+      download: (res.headers.get("Content-Disposition") || "").match(/filename="([^"]+)"/)?.[1] || "feedback.jsonl",
+    });
+    document.body.append(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  } catch (err) {
+    fbError = err.message; renderFeedback();
+  }
+}
+
+$("ai-notes").addEventListener("click", (e) => {
+  const thumb = e.target.closest("button.thumb");
+  if (thumb && aiNotes) {
+    // Pressing the same thumb again takes the rating back.
+    const same = fbRating.rating === thumb.dataset.rating;
+    sendRating(same ? null : thumb.dataset.rating, same || thumb.dataset.rating === "up" ? [] : fbRating.reasons);
+  } else if (e.target.closest('[data-fb="export"]')) {
+    exportRatings();
+  }
+});
+$("ai-notes").addEventListener("change", (e) => {
+  if (!e.target.matches('input[data-fb^="reason-"]') || !aiNotes) return;
+  const picked = [...document.querySelectorAll('#ai-feedback input[data-fb^="reason-"]:checked')].map((i) => i.value);
+  sendRating("down", picked);
+});
 
 /* Mix / master: rebuild fixes without re-uploading. */
 $("stage").addEventListener("click", (e) => {

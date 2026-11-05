@@ -282,6 +282,23 @@ Results land in `evals/runs/notes/<variant>/` (per-case rows, full traces, error
 each prompt change is a new `--variant` (v1, v2...), and `evals/FAILURE_LOG.md` records what failed, why,
 and what fixed it.
 
+**Ratings from the web page.** Under each set of engineer's notes, a thumbs up or down asks "Were these notes
+useful?". On a thumbs down, optional reasons say what was wrong, in plain words that map to the judge's
+criteria (made something up → `faithful`, wrong thing first → `priority_order`, too long → `concise`, and so on),
+so a rating with reasons doubles as a hand label. Pressing the same thumb again takes the rating back.
+
+- Ratings stay on this computer, in `~/.mixcheck/notes_feedback.jsonl`, next to the measurements the notes were
+  written from. Nothing is sent anywhere, and there's no free-text box, which is the one place a song title
+  could slip in.
+- **Export my ratings** (under the thumbs) downloads `feedback-<name>.jsonl`: the rating, the reasons, the notes
+  and the measurements they came from, the day (not the time), and never audio or a file name. Put the file in
+  `evals/feedback/`; one file per person, so nobody's files collide.
+- `python evals/notes_eval.py feedback` reads those files: how often notes were useful per prompt version (with
+  a 95% interval) and which mistakes people named. `--local` adds this computer's own ratings.
+
+These are opinions on real bounces, so they show what people find useful and which mistakes they notice. They
+don't replace the hand labels that check the judge.
+
 **Adding real bounces.** Save reports, then strip song titles before committing:
 
 ```bash
