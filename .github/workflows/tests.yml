@@ -17,7 +17,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        # Linux is pinned: ubuntu-latest moved to 26.04, which has no Python 3.9 build for setup-python.
+        os: [windows-latest, macos-latest, ubuntu-24.04]
         python: ["3.9", "3.13"]
     steps:
       - uses: actions/checkout@v4
