@@ -145,7 +145,10 @@ some real multitrack material in addition to synthetic signals (open datasets ex
 output is a table. A stage is not shown to users until its table exists and meets thresholds Tyler approves.
 **[pass thresholds to agree]**
 
-## 10. The reverb measurement tool (Phase 2)
+## 10. The reverb measurement tool
+
+**Built (step 1 of the build order): `mixcheck/decay.py`.** Standalone and tested; it is not yet wired into the
+analysis or the work-up, which comes in phase 2. Validation table: `python tests/validate_decay.py`.
 
 `measure_decay`, a read-only tool the reasoning model can call. Code finds places where sound ends (phrase ends,
 section breaks, hit tails) and measures how fast the level falls afterwards, per band.
@@ -154,8 +157,18 @@ section breaks, hit tails) and measures how fast the level falls afterwards, per
 - **Outputs:** decay slope in dB per second per band, tail length, an estimated decay time, the number of events used,
   and a confidence.
 - **Validated** by the harness: known reverb is applied to dry sources and the tool must recover it.
+- **What the first validation showed.** On sources that stop abruptly (a voice-like tone, a drum-like hit) the
+  reading was within about 15% of the true decay time across 0.3 to 2.5 s, and dry sources read as "no measurable
+  tail". With a dense steady bed 15 dB under the peaks it said "couldn't tell" every time, as designed. A full
+  4-minute file takes about 2 seconds.
+- **The result is an upper limit, not a reading of the room.** The room can't be slower than the fall observed, but a
+  source that rings by itself (a plucked or held note) can make the fall look slower. A ringing note with no room read
+  1.2 s with high confidence. Nothing in the decay alone tells the two apart, so the confidence says how well the fall
+  was measured, not whose it is. The audio model's description of what is playing is what tells the reasoning layer
+  which case this is.
 - **Honest limits:** in a dense full mix a vocal reverb is largely masked, so "couldn't tell" will be common. Pre-delay
-  and wet-to-dry balance are only reported with a vocal stem or a typed reading.
+  and wet-to-dry balance are only reported with a vocal stem or a typed reading. These results are on synthetic
+  sources; real material, ideally a vocal stem with reverb settings you know, is the next check.
 - **The reasoning model's role:** rank hypotheses from the weak signals and the audio model's description, choose what
   to ask or measure, and explain the result. It never supplies the numbers.
 

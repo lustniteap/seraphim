@@ -1279,6 +1279,61 @@ def test_web_split_vocal_option():
     assert fixed["score"]["vocal_checked"] and any(f["id"] == "vocal_uncompressed" for f in fixed["flags"])
 
 
+def _decay_input(kind, rt60, bed_db=None, seconds=20):
+    from decay_synth import sounds, with_bed, with_reverb
+    x = with_reverb(sounds(kind, seconds=seconds), rt60)
+    if bed_db is not None:
+        x = with_bed(x, bed_db)
+    return np.column_stack([x, x])
+
+
+def test_decay_reads_known_reverb():
+    from mixcheck.decay import measure_decay
+    for kind in ("word", "hit"):
+        for rt in (0.6, 1.6):
+            overall = measure_decay(_decay_input(kind, rt), FS)["overall"]
+            assert overall["status"] == "estimated", (kind, rt, overall)
+            assert abs(overall["t60_s"] - rt) / rt < 0.20, (kind, rt, overall)  # within 20% of the true decay time
+            assert overall["confidence"] > 0.4
+
+
+def test_decay_sees_no_tail_in_dry_sound_and_declines_a_masked_mix():
+    from mixcheck.decay import measure_decay
+    for kind in ("word", "hit"):
+        dry = measure_decay(_decay_input(kind, None), FS)["overall"]
+        assert dry["status"] == "estimated" and dry["no_measurable_tail"] and dry["t60_s"] is None, (kind, dry)
+    # A steady bed only 15 dB under the peaks covers every ending: the honest answer is "couldn't tell".
+    masked = measure_decay(_decay_input("word", 1.0, bed_db=-15.0), FS)["overall"]
+    assert masked["status"] == "couldnt_tell" and masked["confidence"] == 0.0 and "reason" in masked
+
+
+def test_decay_is_an_upper_limit_not_a_room_reading():
+    from mixcheck.decay import measure_decay
+    # A note that rings by itself reads as a tail even with no room: the method cannot tell the room from the source,
+    # so the result is an upper limit, and says so.
+    dry_note = measure_decay(_decay_input("note", None), FS)
+    assert dry_note["overall"]["status"] == "estimated" and 0.9 < dry_note["overall"]["t60_s"] < 1.5
+    assert "upper limit" in dry_note["meaning"]
+    # With a real, shorter room added the reading never drops below the room (the limit holds).
+    roomy = measure_decay(_decay_input("note", 0.3), FS)["overall"]
+    assert roomy["t60_s"] >= 0.3 * 0.85
+
+
+def test_decay_can_be_limited_to_time_ranges():
+    from mixcheck.decay import measure_decay
+    x = _decay_input("hit", 1.0)
+    everything = measure_decay(x, FS)["overall"]
+    assert everything["status"] == "estimated"
+    assert measure_decay(x, FS, ranges=[(0.0, 20.0)])["overall"]["t60_s"] == everything["t60_s"]
+    assert measure_decay(x, FS, ranges=[(0.0, 1.0)])["overall"]["status"] == "couldnt_tell"  # fewer than 3 endings
+
+
+def test_decay_handles_silence_and_very_short_input():
+    from mixcheck.decay import measure_decay
+    assert measure_decay(np.zeros((FS * 5, 2)), FS)["overall"]["status"] == "couldnt_tell"
+    assert measure_decay(np.random.default_rng(0).standard_normal((FS // 5, 2)) * 0.1, FS)["overall"]["status"] == "couldnt_tell"
+    assert measure_decay(np.zeros(FS), FS)["overall"]["status"] == "couldnt_tell"  # 1-D input
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in globals().items() if n.startswith("test_")]
     for name, fn in tests:
