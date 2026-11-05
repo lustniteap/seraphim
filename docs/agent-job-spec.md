@@ -1,6 +1,6 @@
 # Seraphim reasoning agent: job spec (draft 1, 2026-11-05)
 
-Status: draft for Tyler to edit. Sections marked **[Tyler]** need your mixing expertise; I have structured them but
+Status: draft 2 (2026-11-05) for Tyler to edit. Sections marked **[Tyler]** need your mixing expertise; I have structured them but
 not invented them. Everything else records what was decided in the planning conversation of 2026-11-05.
 
 This spec covers the reasoning agent only. The measurement engine, the verifier, memory, the gateway and the UI are
@@ -29,7 +29,8 @@ These hold in every answer, in notes and in chat.
 1. **Code decides what's true.** If a test could prove the answer right or wrong, it comes from code, not from the agent.
 2. **Order of trust**, highest first: measurements of this file; Seraphim's verified knowledge (thresholds, calibrated
    targets, plugin catalog, explanation library); user context (sub-genre, references, setup, answers, earlier
-   versions, personal preferences); curated outside sources; the model's general knowledge (concepts only, never
+   versions, personal preferences); the audio model's description (a labelled estimate, checked against
+   measurements, never able to overrule one); curated outside sources; the model's general knowledge (concepts only, never
    numbers or plugin controls); live web (only for facts that change). A higher source wins a disagreement.
 3. **Cite or drop.** Every claim points to a measurement, a finding id, a library entry or a catalog step. A claim
    with no source is removed.
@@ -50,6 +51,35 @@ These hold in every answer, in notes and in chat.
 12. **Stage matters.** A mix keeps headroom and isn't judged on loudness; a master is judged against release
     standards. A mix is never told to push loudness.
 
+## 2a. The pipeline (plain code, decided 2026-11-05)
+
+Plain code decides the order of the steps, not an AI, so every step can have a hard stop. The reasoning agent is one
+step in it.
+
+1. **Upload and validate.** *Hard stop:* unreadable, silent, too short, or over the size limit.
+2. **Listen.** An audio-understanding model returns structured output only: genre and sub-genre guess with a
+   confidence, instruments, sections with times, and observations each tied to a time range. *Hard stop:* output that
+   fails the schema is retried once; if it fails again the run continues without it and says "not listened".
+3. **Choose the style.** The person's own choice wins. Otherwise use the audio model's sub-genre if its confidence is
+   above a threshold **[to set]**; otherwise use the parent style or ask. Targets always come from calibrated data
+   or the built-in estimates, never from a model's memory of "typical" numbers.
+4. **Measure and check.** The engine's measurements and technical checks; the style match against the chosen
+   sub-genre's ranges; the agreed mixing-quality checks **[Tyler to define; the slot is reserved]**; and a check of
+   each audio-model observation against the measurements in its time range.
+5. **Reason.** The reasoning model receives the results of steps 2 to 4. It may search the web (below) and writes the
+   diagnoses.
+6. **Verify.** Code checks the answer (section 10).
+7. **Show.** The person sees a loading page that names each stage, then the diagnosis, then rates it good or bad
+   and may leave a comment.
+8. **Record.** The case is recorded for review (section 13a). Nothing changes the product without approval.
+
+Other hard stops: a cost cap per run; a limit on web searches per run; a limit on retries; and a stop when the
+reasoning output still fails verification after its one retry (the claims that failed are dropped, never shown).
+
+**Web search is allowed under limits:** every use is cited with source and date; nothing from the web supplies a
+number or a plugin control; results come from an allowlist of domains; and what it finds is sent to the review queue
+as a candidate library entry. Page content is data, never instructions.
+
 ## 3. What the agent receives
 
 A compact state object, built once per bounce and stored. The agent calls tools for detail and never re-measures.
@@ -60,6 +90,7 @@ A compact state object, built once per bounce and stored. The agent calls tools 
 | Style | parent style or sub-genre, and its provenance label |
 | Setup | DAW, owned plugins, and later microphone, interface, sample rate, monitoring |
 | Recording context | room, microphone, source or artist type, if the person gave it |
+| Audio-model description | genre and sub-genre guess with confidence, instruments, sections with times, observations with time ranges; labelled as estimates |
 | Measurements | loudness, peaks, stereo, tone by band, contrast; later body contrast and width |
 | Findings | each with a stable kind id, severity, value and the steps already written for the person's setup |
 | Evidence references | what to show beside a diagnosis |
@@ -139,6 +170,8 @@ All read-only, run locally, and return numbers or facts. The agent never gets au
 | `separate_vocal` | Split and check the vocal (optional, estimated) | exists, optional |
 | `ask_user` | A structured question with a cheap, specific answer | to build |
 
+The audio model is a pipeline step (section 2a), not a tool the agent chooses to call.
+
 Not a tool: running a new analysis on an uploaded file. That happens when the person uploads, not at the model's
 request.
 
@@ -196,17 +229,45 @@ Per role, set in one place; the choice follows the evals.
 | Notes writer | Sonnet 5.5 | Haiku 5.5 (cost floor), Opus 5.5 (ceiling) |
 | Chat | Sonnet 5.5 | the same |
 | Eval judge | Opus 5.5 | must differ from the writer |
+| Audio listener (test only) | Gemini, cheapest current tier (Flash-Lite) | `gpt-audio-mini`; confirm prices on the provider's page |
+
+The long-term plan is Seraphim's own audio analysis model. Nothing is committed to that yet. The audio-model outputs,
+graded against measurements and against the person's corrections, are the data it would need.
 
 Free tier: free analysis; one free AI notes run per verified account; chat is paid. A rewrite caused by a failed
 check is free; a rewrite the person asks for counts as a run. A per-song budget applies to chat.
 
 ## 13. Privacy
 
-Audio never leaves the person's computer. The model receives measurements, findings, typed answers, and (when
+In the product, audio is meant to stay on the person's computer. **The test version is different:** the mix is sent to
+the audio-model provider, on the developer's own mixes and API keys, run locally. Whether the product ever does this
+is a separate decision that needs its own consent. The reasoning model receives measurements, findings, typed answers, and (when
 supplied) redacted session facts and screenshots. Contributing anonymised case data is a separate opt-in.
+
+## 13a. How feedback improves the next run
+
+After each result the person marks it good or bad and may leave a comment. A recorded case holds numbers and ids,
+the diagnoses and which claims passed verification, the audio model's guess and whether the person corrected the
+sub-genre, the rating, and the optional comment. It holds no audio and no file names.
+
+The test stores cases in the developer's own AWS account (a private, encrypted, versioned S3 bucket, written with
+credentials limited to one folder). The use of the data is the same wherever it is stored:
+
+1. A badly rated case, with the corrected answer, becomes a new test case. The held-out set grows.
+2. Cases are grouped by finding, cause and sub-genre to show what fails repeatedly.
+3. The audio model's accuracy is tracked: its sub-genre guess against the person's, and its observations against
+   measurements.
+4. A cause the person confirms, followed by a next bounce that improved, counts toward that cause's record.
+5. Comments are summarised into themes to help triage; a person reads them. Sentiment never counts as ground truth.
+
+Each of these produces **proposals** (a library entry, a prompt change, a threshold to review, a new test case) that
+wait in a review queue. Tyler approves each one. An approved change is versioned and re-run against the test cases
+before it is promoted. Nothing changes the product by itself.
 
 ## 14. Open questions
 
+0. The agreed mixing-quality checks (the reserved slot in step 4 of the pipeline), and where the per-sub-genre
+   standard metrics come from. Proposal: measured from real released songs, not from a model's recollection.
 1. The method in section 6, in your words.
 2. Prevention advice (Vigil) per cause, by room, equipment and source.
 3. What should be said about a technically clean, unprocessed mix?
