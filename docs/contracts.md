@@ -106,6 +106,30 @@ shown, and everything else exists only as evidence for it.
   code-only view: the floors, the measurement graphs and tables, and the observations, labelled as not analysed, with
   no diagnosis. Free analysis is exactly this view.
 
+### The layout (draft, from Tyler, 2026-11-05)
+
+A report card that reads like an analytics dashboard in the Seraphim theme, then a detailed report, then Vigil, then a
+chat.
+
+1. **Report card.** The conclusion (headline, verdict, the diagnoses), the technical score with a graph of how it was
+   calculated, a scorecard with one row per stage of the chain, and the key graphs.
+2. **Detailed report.** Scroll down to go through each stage of the mix, right or wrong. The stages are stacked, with
+   an expand option. Each holds its assessment, its evidence (graph or table), and the steps for the person's setup.
+3. **Vigil.** Below the detailed report: what to do differently next time, for upstream causes.
+4. **Chat.** Ends the page: an open-ended chat for follow-up questions. It already holds the person's setup, the song
+   and version, and the diagnoses.
+
+Points that follow from this:
+
+- **"Right or wrong" per stage is the reasoning step's assessment, with evidence.** Observations carry no verdict, so a
+  stage's status (fine, worth a look, needs work) comes from the reasoning output and must cite the floors and
+  observations behind it. A stage with no measurement is shown as "not assessed" by code; the model can't claim it.
+- **The score on the card is the technical score**, built from the floors, with its breakdown shown. Any other number
+  must be computed by code from the stage statuses, never produced by the model. **[Tyler to decide whether to add one]**
+- **The chat is the same agent in a conversational mode,** not a second agent: the same rules, the same tools and the
+  same stored context. Its model is a separate setting, so it can be cheaper than the diagnosis writer.
+- **Plugins are picked from a searchable list** of the ones in the catalog, not scanned for (see the decisions log).
+
 ## 7. Order of the work
 
 0. This document.
@@ -132,6 +156,11 @@ shown, and everything else exists only as evidence for it.
 - 2026-11-05: the output of a match work-up is the change to the person's chain, tested by re-rendering.
 - 2026-11-05: "resolved" means no open diagnoses, or the person marks it; the score alone never decides.
 - 2026-11-05: "Vigil" names the prevention section of a diagnosis.
+- 2026-11-05: the page is a report card, then a stacked detailed report by chain stage, then Vigil, then the chat
+  (section 6, draft). The chat is the same agent in a conversational mode, with its own model setting.
+- 2026-11-05 (direction, removal waiting for Tyler's go-ahead): replace the plugin scan with a searchable list of the
+  catalog's plugins, because a scan needs system permissions, costs computation and can fail, and a list the person
+  picks from is faster, consented and as reliable about what they own.
 - 2026-11-05: the reasoning step's conclusion is the result; the "engineer's notes" panel is retired as a separate,
   optional note. Only the graphs, tables and notes that support the conclusion are shown (section 6).
 - 2026-11-05 (step 2b, built): the old style, reference and vocal findings are gone, with no transition. The only
