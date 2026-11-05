@@ -163,6 +163,20 @@ FIXES = {
         say("Check the session for MP3 or AAC files, such as samples or imported references."),
         do("find_lowpass"),
     ],
+    # The vocal on its own (vocal.py). Estimated when the vocal was split from the mix.
+    "vocal_uncompressed": [
+        do("compress_vocal"),
+        say("Then ride the words that still jump out, so the vocal holds one level against the beat.", more=True),
+    ],
+    "vocal_muddy": [do("cut_vocal_mud"), do("highpass_vocal", more=True)],
+    "vocal_thin": [
+        do("add_vocal_warmth"),
+        say("If it sounds thin on every vocal, check the mic distance and the room before reaching for EQ.", more=True),
+    ],
+    "vocal_rumble": [do("highpass_vocal")],
+    "vocal_sibilant": [do("deess_vocal")],
+    "vocal_buried": [do("raise_vocal"), do("compress_vocal", more=True)],
+    "vocal_dominant": [do("lower_vocal")],
 }
 
 # How a finding should be rated when the file is a mix rather than a master.

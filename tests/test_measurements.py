@@ -102,7 +102,9 @@ def _finding_ids():
     from mixcheck import analyze
     from mixcheck.reference import REFERENCE_IDS
     from mixcheck.style import STYLE_IDS
-    return set(re.findall(r'flag\("(\w+)"', inspect.getsource(analyze.build_flags))) | STYLE_IDS | REFERENCE_IDS
+    from mixcheck.vocal import VOCAL_IDS
+    return (set(re.findall(r'flag\("(\w+)"', inspect.getsource(analyze.build_flags)))
+            | STYLE_IDS | REFERENCE_IDS | VOCAL_IDS)
 
 
 def test_every_finding_has_a_fix():
@@ -198,6 +200,8 @@ def test_every_finding_is_scored():
                "no_air": 0.001, "phase_section": None}
     from mixcheck.reference import REFERENCE_IDS
     from mixcheck.style import STYLE_IDS
+    from mixcheck.vocal import VOCAL_IDS
+    typical.update({fid: 1.0 for fid in VOCAL_IDS})  # estimated vocal findings cost points in their own area
     for fid in _finding_ids() - {"silent"} - STYLE_IDS - REFERENCE_IDS:
         flag = {"id": fid, "severity": "warning", "value": typical[fid]}
         assert max(_points(flag, st)[1] for st in ("mix", "master")) > 0, f"{fid} is never scored"
@@ -570,6 +574,11 @@ def test_eval_scenarios_rejudge_like_the_page():
     assert "Utility" in tp["fix"]["steps"][0]["text"]
     ids = [c[0] for c in cases_for("song01", report)]
     assert ids == ["song01__as_recorded", "song01__other_stage", "song01__trap_target"]
+    # A report whose vocal was checked keeps the label the page showed; one that wasn't can't earn it.
+    report["flags"] = [f for f in report["flags"] if f["id"] not in ("true_peak_over", "true_peak_hot", "clipping")]
+    checked = rejudge({**report, "vocal": {"found": True}}, stage="mix")
+    unchecked = rejudge({**report, "vocal": None}, stage="mix")
+    assert checked["score"]["vocal_checked"] and not unchecked["score"]["vocal_checked"]
 
 
 def test_eval_number_check_is_fair_to_rounding_but_not_to_invention():
@@ -887,20 +896,220 @@ def test_feedback_summary_reads_exports():
     from pathlib import Path
     from types import SimpleNamespace as NS
     from evals import notes_eval
-    from mixcheck import feedback
+    from mixcheck import feedback, notes
     with _TempHome():
         result, _ = _written_notes()
         for rating, why in (("up", []), ("down", ["too_long"]), ("down", ["too_long", "generic"])):
             feedback.rate(feedback.remember(result), rating, why)
         _, text, _ = feedback.export("sam")
         path = Path(os.environ["MIXCHECK_HOME"]) / "feedback-sam.jsonl"
-        path.write_text(text)
+        path.write_text(text, encoding="utf-8")
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
             notes_eval.cmd_feedback(NS(files=[str(path)], local=False))
         summary = out.getvalue()
-        assert "3 rating(s)" in summary and "notes-v2" in summary and "33%" in summary
+        assert "3 rating(s)" in summary and notes.PROMPT_VERSION in summary and "33%" in summary
         assert "too_long 2" in summary and "generic 1" in summary
+
+
+# ---------------------------------------------------------------- vocal checks (vocal.py, separate.py)
+
+VFS = 44100  # the rate the separation model works at
+
+
+def _voice(levels_db, rumble=False, mud_db=None, sib_db=None, thin=False, seconds=24, seed=1):
+    """A stand-in vocal: half-second 'words' with a harmonic tone, one level per word (cycled)."""
+    from scipy.signal import butter, sosfilt
+    from scipy.signal.windows import tukey
+    rng = np.random.default_rng(seed)
+    n = int(seconds * VFS)
+    t = np.arange(n) / VFS
+    base = sum(np.sin(2 * np.pi * k * 160 * t + rng.uniform(0, 6.28)) / k ** 0.75 for k in range(1, 30))
+    if thin:
+        base = sosfilt(butter(4, 300, "high", fs=VFS, output="sos"), base)
+    mud = sum(np.sin(2 * np.pi * f * t) for f in (250, 320, 400)) / 3
+    hiss = sosfilt(butter(4, [5000, 9000], "band", fs=VFS, output="sos"), rng.standard_normal(n))
+    out, pos, i = np.zeros(n), 0.0, 0
+    while pos + 0.5 < seconds:
+        a, b = int(pos * VFS), int((pos + 0.5) * VFS)
+        seg = base[a:b] / (np.sqrt(np.mean(base[a:b] ** 2)) + 1e-9)
+        if mud_db is not None:
+            seg = seg + mud[a:b] * 10 ** (mud_db / 20)
+        if rumble:
+            seg = seg + 0.5 * np.sin(2 * np.pi * 45 * t[a:b])
+        if sib_db is not None:
+            seg = seg + hiss[a:b] / np.sqrt(np.mean(hiss[a:b] ** 2)) * 10 ** (sib_db / 20)
+        seg = seg * tukey(b - a, 0.3)  # flat-topped, like a sustained word
+        out[a:b] += seg / (np.sqrt(np.mean(seg ** 2)) + 1e-9) * 10 ** (levels_db[i % len(levels_db)] / 20)
+        pos, i = pos + 0.8, i + 1
+    return np.column_stack([out, out])
+
+
+def _beat(db, seconds=24):
+    rng = np.random.default_rng(2)
+    n = int(seconds * VFS)
+    t = np.arange(n) / VFS
+    b = 0.5 * np.sin(2 * np.pi * 55 * t) + 0.2 * np.sin(2 * np.pi * 110 * t) + 0.05 * rng.standard_normal(n)
+    return stereo(b / np.sqrt(np.mean(b ** 2)) * 10 ** (db / 20))
+
+
+EVEN = [-18, -17, -18, -19, -17, -18]
+
+
+def _vocal_ids(vocal, beat_db=-20):
+    from mixcheck.vocal import measure_vocal, vocal_flags
+    return {f["id"]: f["severity"] for f in vocal_flags(measure_vocal(vocal, _beat(beat_db), VFS))}
+
+
+def test_vocal_dynamics_tell_a_raw_vocal_from_a_compressed_one():
+    raw = _vocal_ids(_voice([-30, -14, -22, -10, -26, -12]))
+    assert raw.get("vocal_uncompressed") == "warning"
+    assert "vocal_uncompressed" not in _vocal_ids(_voice(EVEN))  # an even vocal isn't flagged
+
+
+def test_vocal_tone_findings():
+    assert _vocal_ids(_voice(EVEN, thin=True)).get("vocal_thin") == "warning"
+    assert _vocal_ids(_voice(EVEN, rumble=True)).get("vocal_rumble") == "warning"
+    assert _vocal_ids(_voice(EVEN, mud_db=14)).get("vocal_muddy") == "warning"
+    assert _vocal_ids(_voice(EVEN, sib_db=4)).get("vocal_sibilant") == "warning"
+    # A plain, evenly-leveled vocal trips none of them.
+    assert _vocal_ids(_voice(EVEN)) == {}
+
+
+def test_vocal_level_against_the_beat():
+    assert _vocal_ids(_voice(EVEN), beat_db=-6).get("vocal_buried") == "warning"
+    assert _vocal_ids(_voice(EVEN), beat_db=-40).get("vocal_dominant") == "warning"
+
+
+def test_no_vocal_means_no_verdict_on_it():
+    from mixcheck.vocal import measure_vocal, vocal_flags
+    quiet = measure_vocal(np.zeros((VFS * 10, 2)), _beat(-20, 10), VFS)
+    assert quiet["found"] is False and "instrumental" in quiet["reason"]
+    assert vocal_flags(quiet) == []
+    assert measure_vocal(np.zeros((100, 2)), np.zeros((100, 2)), VFS)["found"] is False  # too short
+
+
+def _with_fake_split(vocal, instrumental, work):
+    from mixcheck import separate
+    real = separate.separate_vocals
+    separate.separate_vocals = lambda x, fs: (vocal, instrumental, VFS)
+    try:
+        return work()
+    finally:
+        separate.separate_vocals = real
+
+
+def _clean_mix_file():
+    import tempfile
+    from scipy.io import wavfile
+    path = os.path.join(tempfile.mkdtemp(), "mix.wav")
+    wavfile.write(path, FS, (stereo(sine(220, -18)) * 32767).astype(np.int16))
+    return path
+
+
+def test_split_vocal_adds_estimated_findings_and_changes_the_verdict():
+    path = _clean_mix_file()
+    unchecked = analyze_file(path, stage="mix")
+    assert unchecked["vocal"] is None and unchecked["score"]["vocal_checked"] is False
+    assert unchecked["score"]["label"] == "No technical errors found"  # nothing has judged the vocal
+    assert all(a["id"] != "vocal" for a in unchecked["score"]["areas"])
+
+    raw, beat = _voice([-30, -14, -22, -10, -26, -12]), _beat(-20)
+    stages = []
+    checked = _with_fake_split(raw, beat, lambda: analyze_file(path, stage="mix", split_vocal=True, progress=stages.append))
+    from mixcheck.analyze import PROGRESS_STAGES
+    assert stages == [*PROGRESS_STAGES[:5], "vocal", *PROGRESS_STAGES[5:]]
+    v = checked["vocal"]
+    assert v["found"] and v["source"] == {"method": "split", "model": "htdemucs", "estimated": True}
+    assert "more accurate" in v["disclaimer"]
+    flag = next(f for f in checked["flags"] if f["id"] == "vocal_uncompressed")
+    assert flag["estimated"] and flag["fix"]["steps"]  # steps written for the user's tools
+    assert checked["score"]["vocal_checked"] and any(a["id"] == "vocal" and a["lost"] > 0 for a in checked["score"]["areas"])
+    assert checked["score"]["value"] < unchecked["score"]["value"]
+
+    # A well-made vocal that was checked earns the label.
+    good = _with_fake_split(_voice(EVEN), beat, lambda: analyze_file(path, stage="mix", split_vocal=True))
+    assert good["score"]["label"] == "Ready for mastering" and not any(f["id"].startswith("vocal_") for f in good["flags"])
+
+
+def test_split_vocal_when_it_cannot_run_still_gives_the_report():
+    from mixcheck import separate
+    real = separate.separate_vocals
+
+    def fail(x, fs):
+        raise separate.SeparationUnavailable("Vocal splitting needs the optional packages.")
+    separate.separate_vocals = fail
+    try:
+        report = analyze_file(_clean_mix_file(), stage="mix", split_vocal=True)
+    finally:
+        separate.separate_vocals = real
+    assert report["vocal"]["found"] is False and report["vocal"]["unavailable"] is True
+    assert not any(f["id"].startswith("vocal_") for f in report["flags"])
+    assert report["score"]["vocal_checked"] is False
+
+
+def test_separation_availability_is_honest():
+    import importlib.util
+    from mixcheck import separate
+    real_find, real_env = importlib.util.find_spec, os.environ.get("MIXCHECK_SEPARATION")
+    try:
+        importlib.util.find_spec = lambda name, *a, **k: None if name in ("torch", "demucs") else real_find(name, *a, **k)
+        ok, why = separate.available()
+        assert not ok and "optional packages" in why
+        try:
+            separate.separate_vocals(stereo(sine(220, -18, seconds=1)), FS)
+            assert False, "should refuse without the packages"
+        except separate.SeparationUnavailable:
+            pass
+        importlib.util.find_spec = real_find
+        os.environ["MIXCHECK_SEPARATION"] = "off"
+        assert not separate.available()[0]
+    finally:
+        importlib.util.find_spec = real_find
+        if real_env is None:
+            os.environ.pop("MIXCHECK_SEPARATION", None)
+        else:
+            os.environ["MIXCHECK_SEPARATION"] = real_env
+
+
+def test_notes_see_the_vocal_numbers_only_when_they_exist():
+    from mixcheck.notes import notes_input
+    path = _clean_mix_file()
+    assert not any(k.startswith("vocal_") for k in notes_input(analyze_file(path, stage="mix"))["measurements"])
+    report = _with_fake_split(_voice([-30, -14, -22, -10, -26, -12]), _beat(-20),
+                              lambda: analyze_file(path, stage="mix", split_vocal=True))
+    m = notes_input(report)["measurements"]
+    assert m["vocal_range_db"] == report["vocal"]["range_db"] and "vocal_to_beat_db" in m
+    assert any(f["kind"] == "vocal_uncompressed" for f in notes_input(report)["findings"])
+
+
+def test_web_split_vocal_option():
+    try:
+        from fastapi.testclient import TestClient
+    except ImportError:  # the web extra isn't installed
+        return
+    import io
+    import json
+    from scipy.io import wavfile
+    from mixcheck.web import server
+    client = TestClient(server.app)
+    sep = client.get("/api/info").json()["separation"]
+    assert set(sep) == {"available", "reason"}
+    buf = io.BytesIO()
+    wavfile.write(buf, FS, (stereo(sine(220, -18, seconds=4)) * 32767).astype(np.int16))
+    post = lambda **data: client.post("/api/analyze", data={"progress": "1", **data},
+                                      files={"file": ("a.wav", buf.getvalue(), "audio/wav")})
+    # Without the option, nothing changes: no vocal stage, no vocal block.
+    plain = [json.loads(line) for line in post().text.splitlines()]
+    assert "vocal" not in [e.get("stage") for e in plain] and plain[-1]["report"]["vocal"] is None
+    events = _with_fake_split(_voice([-30, -14, -22, -10, -26, -12]), _beat(-20),
+                              lambda: [json.loads(line) for line in post(split_vocal="1").text.splitlines()])
+    assert "vocal" in [e.get("stage") for e in events] and events[-1]["report"]["vocal"]["found"]
+    # Fixes rebuilt for a new stage keep the vocal in the score.
+    report = events[-1]["report"]
+    fixed = client.post("/api/fixes", json={"flags": report["flags"], "stage": "mix", "measures": report["measures"],
+                                            "vocal": True}).json()
+    assert fixed["score"]["vocal_checked"] and any(f["id"] == "vocal_uncompressed" for f in fixed["flags"])
 
 
 if __name__ == "__main__":

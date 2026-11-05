@@ -37,6 +37,7 @@ their names, so existing installs, scripts and saved settings keep working; `ser
 | Tonal balance | Share of energy in sub / low / low-mid / high-mid / high bands, content above 16 kHz |
 | Edges | Head and tail silence, abrupt endings, quietest passage |
 | Streaming | Gain each platform's loudness normalization would apply |
+| Vocal (optional, estimated) | Compression (loud words vs the typical word, peak-to-average), mud, body, rumble, harsh 's' sounds, and vocal level against the beat, measured on the vocal split from the mix |
 
 ## Setup
 
@@ -137,6 +138,31 @@ reference songs ──► profiles (reference.py)                 └──► A
 
 The JSON report is the contract between layers. When the engine is ported to C++ for a plugin,
 the report layer stays the same.
+
+## Checking the vocal (optional, estimated)
+
+A mix with a raw vocal can pass every technical check: no clipping, no phase problems, clean edges. The
+vocal's compression, mud and level are hidden under the beat in a stereo bounce. Turn on **Check the vocal
+too** (web page) or pass `--split-vocal` (command line) and Seraphim splits the vocal from the beat with
+the Demucs source-separation model, then measures the vocal on its own.
+
+```bash
+# One-time install (large download: PyTorch plus the model, a few GB; the model's weights, about 80 MB,
+# download on first use). On a Mac, double-click "Install Vocal Splitting.command" instead.
+pip install -e ".[web,separate]"
+
+seraphim my_mix.wav --split-vocal
+```
+
+It runs on this computer, and the audio never leaves it. A few minutes per song on a laptop CPU.
+
+**These are estimates.** The split leaves some of the beat in the vocal and takes some of the vocal's low
+end and reverb, so results are more accurate with the acapella and the beat uploaded separately (planned).
+Every vocal finding is marked "Estimate" and the numbers are shown on the page. The limits in
+`mixcheck/vocal.py` are starting points, not yet calibrated against real releases; tune them against your own
+bounces. When the vocal check runs, its findings cost points in their own "Vocal (estimated)" area of the
+technical score. When it hasn't run, a clean mix reads "No technical errors found" rather than "Ready for
+mastering", because nothing has judged the vocal.
 
 ## Technical score and style match
 

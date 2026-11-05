@@ -6,3 +6,6 @@ soundfile>=0.12   # optional but recommended: reads AIFF and FLAC as well as WAV
 fastapi>=0.110
 uvicorn>=0.27
 python-multipart>=0.0.9
+
+# Optional: split the vocal out of a mix (large download; see README)
+# demucs>=4.0.1

@@ -14,6 +14,7 @@ web = ["fastapi>=0.110", "uvicorn>=0.27", "python-multipart>=0.0.9"]
 ai = ["anthropic>=1.8"]
 # For running the tests: the web checks use Starlette's test client, which needs httpx.
 dev = ["httpx>=0.24"]
+separate = ["demucs>=4.0.1"]  # pulls in PyTorch; used to split the vocal out of a mix
 
 [project.scripts]
 seraphim = "mixcheck.cli:main"
