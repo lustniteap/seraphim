@@ -10,9 +10,12 @@ Each area has a cap so one kind of problem can't sink the whole score. The stage
 matters: a peak just under 0 dB costs points on a master but not on a mix.
 
 The vocal checks (vocal.py) are counted only when they were run. Their numbers are estimates
-when the vocal was split from the mix, so they cost less than a measured error. A mix that
-hasn't had them can still be technically clean, but isn't called "Ready for mastering": nothing
-has judged the vocal.
+when the vocal was split from the mix, so they cost less than a measured error.
+
+The labels say only what was found: a clean score reads "No technical errors found", never "ready".
+Whether a mix is *ready* is a judgement about style, tone and dynamics as well, and that belongs to the
+reasoning step. Its verdict is applied by apply_verdict(), the only way to earn "Ready for mastering" or
+"Release-ready", and code checks the conditions before letting it through.
 """
 from .reference import REFERENCE_IDS
 from .style import STYLE_IDS
@@ -25,7 +28,12 @@ AREAS = {
     "vocal": {"name": "Vocal (estimated)", "cap": 3.0},
 }
 
-LABELS = [(9.0, "Release-ready"), (7.0, "Solid"), (5.0, "Needs work"), (3.0, "Rough"), (0.0, "Major problems")]
+# What the score found, in technical words. None of these says a mix is ready.
+LABELS = [(9.0, "No technical errors found"), (7.0, "Minor technical issues"), (5.0, "Technical issues to fix"),
+          (3.0, "Several technical problems"), (0.0, "Major technical problems")]
+# What only the reasoning step's verdict can earn (see apply_verdict).
+READY_LABELS = {"mix": "Ready for mastering", "master": "Release-ready"}
+MIN_READY_VALUE = 9.0
 
 
 def _points(flag, stage):
@@ -66,9 +74,11 @@ def _total(lost):
 
 def score_flags(flags, stage, vocal=False):
     """{"value", "label", "areas": [...], "if_fixed"}; flags must already be rated for the stage.
-    vocal: the vocal checks were run, so they count and can earn "Ready for mastering"."""
+    vocal: the vocal checks were run, so their findings count.
+    "verdict" is None until apply_verdict() has applied the reasoning step's judgement."""
     if any(f["id"] == "silent" for f in flags):
-        return {"value": 1.0, "label": "Major problems", "areas": [], "if_fixed": 1.0}  # nothing was bounced
+        return {"value": 1.0, "label": "Major technical problems", "areas": [], "if_fixed": 1.0,
+                "vocal_checked": bool(vocal), "verdict": None}  # nothing was bounced
 
     lost = {a: 0.0 for a in AREAS}
     kept = {a: 0.0 for a in AREAS}  # what's left after fixing everything but notes
@@ -83,8 +93,6 @@ def score_flags(flags, stage, vocal=False):
 
     value = _clamp(10.0 - _total(lost))
     label = next(name for floor, name in LABELS if value >= floor)
-    if stage == "mix" and label == "Release-ready":
-        label = "Ready for mastering" if vocal else "No technical errors found"
     return {
         "value": value,
         "label": label,
@@ -93,8 +101,40 @@ def score_flags(flags, stage, vocal=False):
             for a in AREAS if a != "vocal" or vocal or lost[a]
         ],
         "vocal_checked": bool(vocal),
+        "verdict": None,
         "if_fixed": _clamp(10.0 - _total(kept)),
     }
+
+
+def apply_verdict(score, flags, stage, verdict):
+    """The score with the reasoning step's verdict applied, as a new dict.
+
+    verdict: None (not judged yet), or {"ready": bool, "open_diagnoses": int}. The "ready" label is granted only when
+    the reasoning step says ready AND code agrees: the technical score is at least MIN_READY_VALUE, no diagnosis is
+    still open, and no floor finding (peaks, clipping, phase and the like) is at warning level or worse. A verdict
+    that doesn't meet the conditions is recorded with its blockers and leaves the label as it was."""
+    out = {**score, "verdict": None}
+    if verdict is None:
+        return out
+    if (not isinstance(verdict, dict) or not isinstance(verdict.get("ready"), bool)
+            or not isinstance(verdict.get("open_diagnoses", 0), int) or isinstance(verdict.get("open_diagnoses"), bool)):
+        raise ValueError('A verdict is {"ready": true or false, "open_diagnoses": a whole number}.')
+    ready, open_n = verdict["ready"], verdict.get("open_diagnoses", 0)
+    blockers = []
+    if score["value"] < MIN_READY_VALUE:
+        blockers.append(f"the technical score is below {MIN_READY_VALUE:g}")
+    if open_n:
+        blockers.append(f"{open_n} {'diagnosis' if open_n == 1 else 'diagnoses'} still open")
+    floors = [f["id"] for f in flags
+              if f["id"] not in STYLE_IDS and f["id"] not in REFERENCE_IDS and f["id"] not in VOCAL_IDS
+              and f.get("severity") in ("critical", "warning")]
+    if floors:
+        blockers.append("floor findings at warning level or worse: " + ", ".join(floors))
+    granted = ready and not blockers
+    out["verdict"] = {"ready": ready, "granted": granted, "blockers": blockers if ready else []}
+    if granted:
+        out["label"] = READY_LABELS[stage]
+    return out
 
 
 def _clamp(x):

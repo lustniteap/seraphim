@@ -161,8 +161,7 @@ end and reverb, so results are more accurate with the acapella and the beat uplo
 Every vocal finding is marked "Estimate" and the numbers are shown on the page. The limits in
 `mixcheck/vocal.py` are starting points, not yet calibrated against real releases; tune them against your own
 bounces. When the vocal check runs, its findings cost points in their own "Vocal (estimated)" area of the
-technical score. When it hasn't run, a clean mix reads "No technical errors found" rather than "Ready for
-mastering", because nothing has judged the vocal.
+technical score.
 
 ## Technical score and style match
 
@@ -172,6 +171,10 @@ Seraphim keeps two kinds of "good" apart.
 peaks and clipping, phase and mono problems, and file/edge problems. It starts at 10 and loses points
 per finding, scaled by how bad the measurement is, in capped areas so one kind of problem can't sink
 the whole score. It also shows the score after fixing everything but notes. Rules: `mixcheck/score.py`.
+Its labels say only what was found ("No technical errors found", "Minor technical issues", and so on). A clean
+score is not a verdict on the mix: a mix with no plugins on it can score 10. "Ready for mastering" and
+"Release-ready" can only come from the reasoning step's verdict, and code checks the conditions first: a score of
+9.0 or more, no open diagnoses, and no floor finding at warning level or worse.
 
 **Style match (%)** compares loudness, punch (PLR) and contrast (LRA) with what the user is going for:
 Hip-hop / rap, EDM, Pop, Rock / metal, R&B / soul, Acoustic / jazz, Lo-fi, or Film / classical.

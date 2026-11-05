@@ -1859,7 +1859,7 @@ function renderScore(r) {
     </div>
     <div>
       <p class="score-label">${esc(sc.label)}</p>
-      <p class="score-kind">Technical score for a ${r.stage.value}: errors that are wrong in any genre (peaks, phase, edges${sc.vocal_checked ? ", and the estimated vocal checks" : ""}).</p>
+      <p class="score-kind">Technical score for a ${r.stage.value}: errors that are wrong in any genre (peaks, phase, edges${sc.vocal_checked ? ", and the estimated vocal checks" : ""}).${sc.verdict ? "" : " It is not a verdict on the mix."}</p>
       <div class="score-scale" role="img" aria-label="${sc.value.toFixed(1)} out of 10">
         ${sc.if_fixed > sc.value ? `<span class="ghost" style="left:${scorePos(sc.if_fixed)}" title="After fixes: ${sc.if_fixed.toFixed(1)}"></span>` : ""}
         <span class="marker" style="left:${scorePos(shownScore ?? 1)}"></span>

@@ -113,3 +113,7 @@ How the blocks meet:
 - 2026-11-05: the output of a match work-up is the change to the person's chain, tested by re-rendering.
 - 2026-11-05: "resolved" means no open diagnoses, or the person marks it; the score alone never decides.
 - 2026-11-05: "Vigil" names the prevention section of a diagnosis.
+- 2026-11-05 (step 2a, built): the score's labels are in technical words only ("No technical errors found", "Minor
+  technical issues", "Technical issues to fix", "Several technical problems", "Major technical problems"). The "ready"
+  labels can only come from `score.apply_verdict`, which checks that the reasoning step says ready, the technical score
+  is at least 9.0, no diagnosis is open, and no floor finding is at warning level or worse.

@@ -1194,9 +1194,10 @@ def test_split_vocal_adds_estimated_findings_and_changes_the_verdict():
     assert checked["score"]["vocal_checked"] and any(a["id"] == "vocal" and a["lost"] > 0 for a in checked["score"]["areas"])
     assert checked["score"]["value"] < unchecked["score"]["value"]
 
-    # A well-made vocal that was checked earns the label.
+    # A well-made vocal that was checked has no vocal findings. It still isn't called "ready": only a verdict can.
     good = _with_fake_split(_voice(EVEN), beat, lambda: analyze_file(path, stage="mix", split_vocal=True))
-    assert good["score"]["label"] == "Ready for mastering" and not any(f["id"].startswith("vocal_") for f in good["flags"])
+    assert good["score"]["label"] == "No technical errors found" and not any(f["id"].startswith("vocal_") for f in good["flags"])
+    assert good["score"]["verdict"] is None
 
 
 def test_split_vocal_when_it_cannot_run_still_gives_the_report():
@@ -1278,6 +1279,53 @@ def test_web_split_vocal_option():
                                             "vocal": True}).json()
     assert fixed["score"]["vocal_checked"] and any(f["id"] == "vocal_uncompressed" for f in fixed["flags"])
 
+
+def test_labels_say_what_was_found_and_never_claim_readiness():
+    from mixcheck.score import LABELS, READY_LABELS, score_flags
+    # No label of the technical score, at any level or stage, says a mix is ready.
+    words = " ".join(name for _, name in LABELS).lower()
+    assert "ready" not in words and "release" not in words and "solid" not in words
+    for stage in ("mix", "master"):
+        clean = score_flags([], stage)
+        assert clean["value"] == 10.0 and clean["label"] == "No technical errors found" and clean["verdict"] is None
+        assert score_flags([], stage, vocal=True)["label"] == "No technical errors found"
+    assert score_flags([{"id": "silent", "severity": "critical"}], "mix")["label"] == "Major technical problems"
+    assert set(READY_LABELS) == {"mix", "master"}
+
+
+def test_only_a_verdict_can_earn_the_ready_label_and_code_checks_it():
+    from mixcheck.score import apply_verdict, score_flags
+    warn = {"id": "true_peak_hot", "severity": "warning", "value": -0.4}
+    for stage, ready_label in (("mix", "Ready for mastering"), ("master", "Release-ready")):
+        clean = score_flags([], stage)
+        # Not judged yet: nothing changes.
+        assert apply_verdict(clean, [], stage, None)["label"] == "No technical errors found"
+        assert apply_verdict(clean, [], stage, None)["verdict"] is None
+        # Judged ready, with nothing open and nothing wrong: granted.
+        ok = apply_verdict(clean, [], stage, {"ready": True, "open_diagnoses": 0})
+        assert ok["label"] == ready_label and ok["verdict"] == {"ready": True, "granted": True, "blockers": []}
+        # Judged ready but a diagnosis is still open: not granted, and it says why.
+        held = apply_verdict(clean, [], stage, {"ready": True, "open_diagnoses": 2})
+        assert held["label"] == "No technical errors found" and not held["verdict"]["granted"]
+        assert "2 diagnoses still open" in held["verdict"]["blockers"][0]
+        # Judged not ready: label unchanged.
+        no = apply_verdict(clean, [], stage, {"ready": False, "open_diagnoses": 0})
+        assert no["label"] == "No technical errors found" and no["verdict"] == {"ready": False, "granted": False, "blockers": []}
+    # The score itself is not enough, and neither is the verdict: a floor finding at warning level blocks it.
+    flagged = score_flags([warn], "master")
+    blocked = apply_verdict(flagged, [warn], "master", {"ready": True, "open_diagnoses": 0})
+    assert not blocked["verdict"]["granted"] and "true_peak_hot" in " ".join(blocked["verdict"]["blockers"])
+    # So does a technical score under 9.
+    low = score_flags([{"id": "clipping", "severity": "warning", "value": 20}, {"id": "negative_correlation", "severity": "critical"}], "master")
+    assert low["value"] < 9.0
+    assert not apply_verdict(low, [], "master", {"ready": True, "open_diagnoses": 0})["verdict"]["granted"]
+    # A verdict that isn't well formed is refused.
+    for bad in ({}, {"ready": "yes"}, {"ready": True, "open_diagnoses": True}, "ready"):
+        try:
+            apply_verdict(score_flags([], "mix"), [], "mix", bad)
+            assert False, bad
+        except ValueError:
+            pass
 
 def _decay_input(kind, rt60, bed_db=None, seconds=20):
     from decay_synth import sounds, with_bed, with_reverb
