@@ -166,6 +166,13 @@ section breaks, hit tails) and measures how fast the level falls afterwards, per
   1.2 s with high confidence. Nothing in the decay alone tells the two apart, so the confidence says how well the fall
   was measured, not whose it is. The audio model's description of what is playing is what tells the reasoning layer
   which case this is.
+- **A second clue, the roughness of the fall.** A ringing source fades smoothly, while a diffuse reverb tail
+  fluctuates. Each reading therefore carries an `attribution`: `source_ringing` (a loose upper limit), `reverb_like`
+  (close to the room), `unclear`, or `none`. On synthetic sources it separated them well and its errors were all on
+  the conservative side (a noise bed makes some cases `unclear`; a ringing note was never called reverb-like, nor
+  reverb a ringing source). It has not been checked on real music, where instruments with beating partials can also
+  fluctuate, so it is a clue, not a verdict. The plan to separate stems stays for paid subscribers, or for the
+  testing route if this proves too inaccurate without them.
 - **Honest limits:** in a dense full mix a vocal reverb is largely masked, so "couldn't tell" will be common. Pre-delay
   and wet-to-dry balance are only reported with a vocal stem or a typed reading. These results are on synthetic
   sources; real material, ideally a vocal stem with reverb settings you know, is the next check.

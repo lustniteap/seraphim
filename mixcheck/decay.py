@@ -19,6 +19,13 @@ tells the two apart: the measured confidence says how well the fall was measured
 tight when the sources stop abruptly (a voice, a drum hit) and loose when they ring. The audio model's description
 of what is playing is what tells the reasoning layer which case this is.
 
+A second, independent clue is the *roughness* of the fall. A source that rings by itself fades smoothly; a diffuse
+reverb tail fluctuates, because each frequency fades up and down at random. So each reading carries an
+`attribution`: "source_ringing" (the reading is a loose upper limit), "reverb_like" (the reading is close to the
+room), "unclear", or "none" (no measurable tail). On synthetic sources the two separate well; it has not yet been
+checked on real music, where instruments whose partials beat against each other can also fluctuate. Until it has,
+treat it as a clue, not a verdict.
+
 It says "couldn't tell" when there are too few clean decays. In a dense mix nearly every ending is covered by
 something else, so that answer is normal there. Pre-delay and the wet-to-dry balance can't be recovered from a
 finished mix by this method, and it doesn't claim to.
@@ -47,6 +54,9 @@ MIN_R2 = 0.90           # how straight the fall must be, in dB against time
 MIN_EVENTS = 3          # fewer clean decays than this and it says it couldn't tell
 FLOOR_T60_S = 0.15      # below this the smoothing can't resolve a tail: reported as "no measurable tail"
 FAST_T60_S = 0.10       # stand-in value for an ending too quick to measure (it is under FLOOR_T60_S)
+NARROW_HZ = 12.0        # half-width of the narrow band used to judge how smooth a fall is
+RINGING_BELOW_DB = 1.0  # a fall smoother than this (median) points to a source ringing by itself
+REVERB_ABOVE_DB = 2.5   # a fall rougher than this points to a diffuse reverb tail; in between, unclear
 TOP_PERCENTILE = 20     # which of the decays to trust: the fast end, as the room can't be faster than the sound
 
 
@@ -66,7 +76,36 @@ def _envelope_db(y, fs):
     return 10.0 * np.log10(mean[::hop] + 1e-12)
 
 
-def _events(env_db):
+def _roughness(y, fs, off, i0, i1, lo, hi):
+    """How rough the fall is, in dB, in one narrow band around the loudest partial just before the sound stopped.
+
+    A source that rings by itself fades smoothly. A diffuse reverb tail fluctuates, because each frequency fades up
+    and down at random, so the same narrow band wobbles about its trend. i0..i1 are the envelope steps of the fall,
+    counted from the end of the sound. None when there is no clear partial to follow."""
+    a = max(0, off - int(0.25 * fs))
+    if off - a < int(0.05 * fs):
+        return None
+    src = y[a:off]
+    freqs = np.fft.rfftfreq(len(src), 1.0 / fs)
+    spec = np.abs(np.fft.rfft(src * np.hanning(len(src))))
+    sel = (freqs >= lo) & (freqs <= hi)
+    if not sel.any():
+        return None
+    f0 = float(freqs[sel][np.argmax(spec[sel])])
+    if f0 - NARROW_HZ < 20.0 or f0 + NARROW_HZ > 0.45 * fs:
+        return None
+    n_tail = int((i1 + 2) * HOP_S * fs)
+    sos = butter(2, [f0 - NARROW_HZ, f0 + NARROW_HZ], "bandpass", fs=fs, output="sos")
+    seg = sosfilt(sos, y[a:off + n_tail])[off - a:]
+    env = _envelope_db(seg, fs)
+    if len(env) <= i1 or i1 - i0 < 5 or env[i0:i1 + 1].min() < -100.0:
+        return None
+    t = np.arange(i0, i1 + 1) * HOP_S
+    fit = np.polyval(np.polyfit(t, env[i0:i1 + 1], 1), t)
+    return float(np.std(env[i0:i1 + 1] - fit))
+
+
+def _events(env_db, y=None, fs=None, lo=None, hi=None):
     """Every ending found in the envelope: [{"start_s", "t60_s", "r2"}] for the clean ones, plus the number found."""
     peaks, _ = find_peaks(env_db, prominence=PROMINENCE_DB)
     n, clean = len(env_db), []
@@ -91,7 +130,7 @@ def _events(env_db):
         t = np.arange(len(seg)) * HOP_S
         keep = (seg <= top - FIT_FROM_DB) & (seg >= top - FIT_TO_DB - 2.0)
         if keep.sum() < 5:  # fell 25 dB within a few hops: too quick to measure, so there is no tail to speak of
-            clean.append({"start_s": (j * HOP_S) + ENV_WINDOW_S / 2, "t60_s": FAST_T60_S, "r2": MIN_R2})
+            clean.append({"start_s": (j * HOP_S) + ENV_WINDOW_S / 2, "t60_s": FAST_T60_S, "r2": MIN_R2, "rough_db": None})
             continue
         slope, icpt = np.polyfit(t[keep], seg[keep], 1)
         if slope >= 0:
@@ -102,8 +141,24 @@ def _events(env_db):
         r2 = 1.0 - ss_res / ss_tot
         if r2 < MIN_R2:
             continue
-        clean.append({"start_s": (j * HOP_S) + ENV_WINDOW_S / 2, "t60_s": -60.0 / slope, "r2": r2})
+        rough = None
+        if y is not None:
+            idx = np.flatnonzero(keep)
+            off = int((j * HOP_S + ENV_WINDOW_S / 2) * fs)
+            rough = _roughness(y, fs, off, int(idx[0]), int(idx[-1]), lo, hi)
+        clean.append({"start_s": (j * HOP_S) + ENV_WINDOW_S / 2, "t60_s": -60.0 / slope, "r2": r2, "rough_db": rough})
     return clean, len(peaks)
+
+
+def _attribution(rough_db, no_tail):
+    """Whose fall it is, from how rough it is. See the module docstring for what this does and doesn't show."""
+    if no_tail:
+        return "none"
+    if rough_db is None:
+        return "unclear"
+    if rough_db < RINGING_BELOW_DB:
+        return "source_ringing"
+    return "reverb_like" if rough_db > REVERB_ABOVE_DB else "unclear"
 
 
 def _in_ranges(t, ranges):
@@ -122,7 +177,11 @@ def _band_result(clean, found):
     quality = float(np.mean([e["r2"] for e in clean]))
     confidence = (1 - math.exp(-len(clean) / 4)) * (1 - min(1.0, spread)) * quality
     no_tail = est < FLOOR_T60_S
+    rough = [e["rough_db"] for e in clean if e.get("rough_db") is not None and e["t60_s"] >= FLOOR_T60_S]
+    median_rough = float(np.median(rough)) if len(rough) >= MIN_EVENTS else None
     return {"status": "estimated", "t60_s": None if no_tail else round(est, 2),
+            "attribution": _attribution(median_rough, no_tail),
+            "roughness_db": None if median_rough is None else round(median_rough, 2),
             "range_s": None if no_tail else [round(float(t60.min()), 2), round(float(t60.max()), 2)],
             "no_measurable_tail": no_tail, "below_s": FLOOR_T60_S if no_tail else None,
             "events": len(clean), "events_found": found,
@@ -141,7 +200,7 @@ def measure_decay(x, fs, ranges=None):
         y = _band_filter(mono, fs, lo, hi)
         if y is None:
             continue
-        clean, found = _events(_envelope_db(y, fs))
+        clean, found = _events(_envelope_db(y, fs), y, fs, lo, hi)
         clean = [e for e in clean if _in_ranges(e["start_s"], ranges)]
         bands[name] = _band_result(clean, found)
         if bands[name]["status"] == "estimated":
@@ -151,7 +210,11 @@ def measure_decay(x, fs, ranges=None):
                    "reason": "too few clean decays in any band: the endings are covered by other sounds, or there are none"}
     else:
         t60 = [b["t60_s"] for b in estimated if b["t60_s"] is not None]
-        overall = {"status": "estimated", "t60_s": round(float(np.median(t60)), 2) if t60 else None,
+        marks = [b["attribution"] for b in estimated if b["t60_s"] is not None]
+        attribution = ("none" if not t60 else "source_ringing" if "source_ringing" in marks
+                       else "reverb_like" if marks and all(m == "reverb_like" for m in marks) else "unclear")
+        overall = {"status": "estimated", "attribution": attribution,
+                   "t60_s": round(float(np.median(t60)), 2) if t60 else None,
                    "range_s": [round(min(t60), 2), round(max(t60), 2)] if t60 else None,
                    "no_measurable_tail": not t60, "below_s": None if t60 else FLOOR_T60_S,
                    "confidence": round(float(np.mean([b["confidence"] for b in estimated])), 2)}

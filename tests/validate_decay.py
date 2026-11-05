@@ -40,12 +40,13 @@ def run(rt60s=RT60S, kinds=KINDS, beds=BEDS, seeds=(0,)):
                     o = r["overall"]
                     rows.append({"kind": kind, "bed": bed_name, "truth": rt, "status": o["status"],
                                  "est": o.get("t60_s"), "conf": o["confidence"], "tail": o.get("no_measurable_tail"),
+                                 "whose": o.get("attribution", "-"),
                                  "events": max((b["events"] for b in r["bands"].values()), default=0)})
     return rows
 
 
 def table(rows):
-    lines = [f"{'source':<6} {'bed':<13} {'true T60':>8}  {'measured':>9} {'error':>7} {'conf':>5} {'events':>6}  result"]
+    lines = [f"{'source':<6} {'bed':<13} {'true T60':>8}  {'measured':>9} {'error':>7} {'conf':>5} {'events':>6}  {'whose fall':<15} result"]
     for r in rows:
         truth = "dry" if r["truth"] is None else f"{r['truth']:.1f} s"
         if r["status"] != "estimated":
@@ -59,7 +60,7 @@ def table(rows):
             else:
                 e = (r["est"] - r["truth"]) / r["truth"] * 100
                 err, res = f"{e:+.0f}%", "" if r["kind"] != "note" else "upper limit holds" if r["est"] >= 0.85 * r["truth"] else "BELOW TRUE"
-        lines.append(f"{r['kind']:<6} {r['bed']:<13} {truth:>8}  {meas:>9} {err:>7} {r['conf']:>5.2f} {r['events']:>6}  {res}")
+        lines.append(f"{r['kind']:<6} {r['bed']:<13} {truth:>8}  {meas:>9} {err:>7} {r['conf']:>5.2f} {r['events']:>6}  {r['whose']:<15} {res}")
     return "\n".join(lines)
 
 

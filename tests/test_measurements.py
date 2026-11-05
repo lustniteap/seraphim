@@ -1319,6 +1319,17 @@ def test_decay_is_an_upper_limit_not_a_room_reading():
     assert roomy["t60_s"] >= 0.3 * 0.85
 
 
+def test_decay_tells_a_ringing_note_from_reverb():
+    from mixcheck.decay import measure_decay
+    # A note ringing by itself falls smoothly, so its long reading is flagged as a loose limit, with or without a short room.
+    for rt in (None, 0.3):
+        assert measure_decay(_decay_input("note", rt), FS)["overall"]["attribution"] == "source_ringing", rt
+    # A diffuse reverb tail fluctuates as it falls: abrupt sources in a real room read as reverb.
+    for kind in ("word", "hit"):
+        assert measure_decay(_decay_input(kind, 1.6), FS)["overall"]["attribution"] == "reverb_like", kind
+    # No tail, no attribution.
+    assert measure_decay(_decay_input("word", None), FS)["overall"]["attribution"] == "none"
+
 def test_decay_can_be_limited_to_time_ranges():
     from mixcheck.decay import measure_decay
     x = _decay_input("hit", 1.0)

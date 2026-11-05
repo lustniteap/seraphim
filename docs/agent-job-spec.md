@@ -168,7 +168,7 @@ All read-only, run locally, and return numbers or facts. The agent never gets au
 | `measure_section` | Measure one time range | new measurement code |
 | `analyze_stem` | Measure an uploaded stem | new measurement code |
 | `separate_vocal` | Split and check the vocal (optional, estimated) | exists, optional |
-| `measure_decay` | Measure how fast sound decays after phrase ends and section breaks, per band: the reverb measurement tool. Returns numbers with a confidence; "couldn't tell" is a normal answer on a dense mix. The result is an **upper limit** on the room: a source that rings by itself can look like reverb, so the agent uses the audio model's description of what is playing. | built as `mixcheck/decay.py`; not yet wired in (see `match-workup-plan.md`) |
+| `measure_decay` | Measure how fast sound decays after phrase ends and section breaks, per band: the reverb measurement tool. Returns numbers with a confidence; "couldn't tell" is a normal answer on a dense mix. The result is an **upper limit** on the room: a source that rings by itself can look like reverb, so the agent uses the audio model's description of what is playing, and the tool's own `attribution` clue (`source_ringing`, `reverb_like`, `unclear`, `none`), which is validated on synthetic sources only. | built as `mixcheck/decay.py`; not yet wired in (see `match-workup-plan.md`) |
 | `get_workup`, `run_workup` | Read a match work-up, and run its closed loop with what is known | to build (match work-up, phase 1b) |
 | `ask_user` | A structured question with a cheap, specific answer | to build |
 
