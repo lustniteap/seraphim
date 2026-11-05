@@ -150,6 +150,14 @@
   .choice span:hover { border-color: var(--ink-soft); color: var(--ink); }
   .choice input:checked + span { border-color: var(--brand); color: var(--ink); background: rgba(240, 4, 24, 0.14); }
   .choice input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .choice .found { display: inline-block; margin-left: 6px; font-size: 11px; color: var(--ink-soft); border: 1px solid var(--card-edge); border-radius: 999px; padding: 0 7px; vertical-align: 1px; }
+  .tier-row { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin: 0 0 8px; }
+  .tier-row .note { margin: 0; font-size: 13px; color: var(--ink-soft); }
+  .tier-note { margin: 8px 0 0; font-size: 13px; color: var(--ink-soft); }
+  .scan-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 16px; }
+  .scan-row .link-button { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: var(--brand); font-weight: 600; border-bottom: 1px solid currentColor; }
+  .scan-row .link-button:disabled { opacity: 0.5; cursor: default; }
+  .scan-note { margin: 0; font-size: 13px; color: var(--ink-soft); }
   .setup .actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
   .setup .actions p { margin: 0; font-size: 13px; color: var(--ink-soft); max-width: 36ch; }
 
@@ -601,6 +609,10 @@
     <form method="dialog" id="setup-form">
       <h2 id="setup-title">What do you work with?</h2>
       <p class="lede">Seraphim writes every fix for your DAW and the plugins you own, so the steps use controls you actually have.</p>
+      <div class="scan-row">
+        <button class="link-button" type="button" id="scan-btn">Scan this Mac</button>
+        <p class="scan-note" id="scan-note" aria-live="polite">Finds your DAW and plugins and pre-ticks them. You confirm before saving.</p>
+      </div>
       <fieldset>
         <legend>Your DAW</legend>
         <div class="choices" id="daw-choices"></div>
@@ -884,6 +896,71 @@ const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStar
 const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 /* Setup: the user's DAW and plugins, so every fix uses tools they own. */
+/* Scan this computer: pre-tick what's installed. Installed isn't licensed, so the user still confirms. */
+let scanFound = null;
+async function scanMac() {
+  const btn = $("scan-btn"), note = $("scan-note");
+  btn.disabled = true; btn.textContent = "Scanning...";
+  try {
+    const res = await fetch("/api/scan");
+    if (!res.ok) throw new Error();
+    scanFound = await res.json();
+  } catch {
+    note.textContent = "Couldn't scan this computer. Choose your DAW and plugins below.";
+    btn.disabled = false; btn.textContent = "Scan this Mac";
+    return;
+  }
+  btn.disabled = false; btn.textContent = "Scan again";
+
+  const dawNames = scanFound.daws.map((d) => setupOptions.daws.find((o) => o.id === d.id)?.name).filter(Boolean);
+  const pickedDaw = scanFound.daws[0]?.id;
+  if (pickedDaw) {
+    const radio = document.querySelector(`input[name="daw"][value="${pickedDaw}"]`);
+    if (radio) radio.checked = true;
+  }
+  const pkgFound = Object.keys(scanFound.packages);
+  for (const id of pkgFound) {
+    const box = document.querySelector(`input[name="pkg"][value="${id}"]`);
+    if (box) box.checked = true;
+  }
+  // Mark what was found on this computer, so the user can see why it's ticked.
+  document.querySelectorAll(".found").forEach((el) => el.remove());
+  for (const d of scanFound.daws) {
+    const radio = document.querySelector(`input[name="daw"][value="${d.id}"]`);
+    radio?.closest("label")?.querySelector("span").insertAdjacentHTML("afterend", `<span class="found">found on this Mac</span>`);
+  }
+  for (const id of pkgFound) {
+    const box = document.querySelector(`input[name="pkg"][value="${id}"]`);
+    box?.closest("label")?.querySelector("span").insertAdjacentHTML("afterend", `<span class="found">found on this Mac</span>`);
+  }
+
+  const parts = [];
+  if (dawNames.length) parts.push(dawNames.join(" and ") + (dawNames.length > 1 ? " are installed; pre-selected the first" : " found"));
+  if (pkgFound.length) parts.push(`${plural(pkgFound.length, "plugin set")} found`);
+  if (scanFound.waves_installed) parts.push("Waves is installed; pick your Waves bundle below");
+  note.textContent = parts.length
+    ? parts.join(". ") + ". Confirm, then save."
+    : "Nothing from our list was found. Choose your DAW and plugins below.";
+}
+$("scan-btn").addEventListener("click", scanMac);
+
+/* Waves bundle: picking one ticks the plugins it includes (that Seraphim writes fix steps for). */
+$("package-choices").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-tier]");
+  if (!btn || !setupOptions) return;
+  const tier = setupOptions.waves_tiers.find((t) => t.id === btn.dataset.tier);
+  if (!tier) return;
+  document.querySelectorAll("button[data-tier]").forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+  for (const id of tier.plugins) {
+    const box = document.querySelector(`input[name="pkg"][value="${id}"]`);
+    if (box) box.checked = true;
+  }
+  const outside = setupOptions.packages.filter((p) => p.group === "Waves" && !tier.plugins.includes(p.id)).map((p) => p.name);
+  const them = outside.length > 1 ? "them" : "it";
+  $("tier-note").textContent = `${tier.name} includes these. Untick any you don't have.` +
+    (outside.length ? ` ${outside.join(" and ")} ${outside.length > 1 ? "aren't" : "isn't"} in ${tier.name}, so tick ${them} yourself if you own ${them}.` : "");
+});
+
 async function initSetup() {
   try {
     const res = await fetch("/api/info");
@@ -898,16 +975,31 @@ async function initSetup() {
     styleOptions.map((o) => `<option value="${esc(o.id)}">${esc(o.name)}</option>`).join("");
   $("target-select").value = styleOptions.some((o) => o.id === target) ? target : "";
   if (!setupOptions) return;
+  if (setup) {  // older saved setups name packages that have since been split up
+    const legacy = setupOptions.legacy_packages || {};
+    const packages = [...new Set(setup.packages.flatMap((id) => legacy[id] || [id]))];
+    if (packages.length !== setup.packages.length || packages.some((id, i) => id !== setup.packages[i])) {
+      setup.packages = packages; saveSetup();
+    }
+  }
   const cur = setup || { daw: "", packages: [] };
   $("daw-choices").innerHTML = setupOptions.daws.map((d) => `
     <label class="choice"><input type="radio" name="daw" value="${esc(d.id)}" ${cur.daw === d.id ? "checked" : ""} required>
       <span>${esc(d.name)}</span></label>`).join("");
   const groups = [...new Set(setupOptions.packages.map((p) => p.group))];
+  const tierPicker = () => `
+    <div class="tier-row">
+      <span class="note">Pick your Waves bundle to tick what it includes, then untick anything you don't have.</span>
+      <span class="segmented" role="group" aria-label="Waves bundle">${(setupOptions.waves_tiers || []).map((t) => `
+        <button type="button" data-tier="${esc(t.id)}" aria-pressed="false">${esc(t.name)}</button>`).join("")}</span>
+    </div>`;
   $("package-choices").innerHTML = groups.map((g) => `
     <p class="group-name">${esc(g)}</p>
+    ${g === "Waves" && setupOptions.waves_tiers?.length ? tierPicker() : ""}
     <div class="choices">${setupOptions.packages.filter((p) => p.group === g).map((p) => `
       <label class="choice"><input type="checkbox" name="pkg" value="${esc(p.id)}" ${cur.packages.includes(p.id) ? "checked" : ""}>
-        <span>${esc(p.name)}</span></label>`).join("")}</div>`).join("");
+        <span>${esc(p.name)}</span></label>`).join("")}</div>
+    ${g === "Waves" ? `<p class="tier-note" id="tier-note" aria-live="polite"></p>` : ""}`).join("");
   showSetupLabel();
   if (!setup) intro.done.then(() => setTimeout(() => { if (!setup) $("setup-dialog").showModal(); }, 700));
 }
@@ -915,7 +1007,8 @@ async function initSetup() {
 function setupLabel(s) {
   if (!s || !setupOptions) return "your setup";
   const daw = setupOptions.daws.find((d) => d.id === s.daw)?.name || "Other DAW";
-  const n = s.packages.length;
+  const groupOf = Object.fromEntries(setupOptions.packages.map((p) => [p.id, p.group]));
+  const n = new Set(s.packages.map((id) => groupOf[id] || id)).size;  // Waves' eight plugins count as one set
   return n ? `${daw} + ${plural(n, "plugin set")}` : `${daw} stock tools`;
 }
 function showSetupLabel() {
