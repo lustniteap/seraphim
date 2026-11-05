@@ -1,0 +1,179 @@
+{
+ "input": {
+  "stage": "mix",
+  "setup": "Logic Pro + FabFilter (Pro-L 2, Pro-Q, Pro-C 2)",
+  "duration": "0:40",
+  "channels": "stereo",
+  "score": {
+   "value": 6.7,
+   "of": 10,
+   "label": "Needs work",
+   "if_fixed": 10.0
+  },
+  "measurements": {
+   "integrated_loudness_lufs": -3.56,
+   "loudness_range_lu": 5.04,
+   "true_peak_dbtp": 3.19,
+   "peak_to_loudness_db": 6.8,
+   "lr_correlation": 0.778,
+   "low_end_correlation": 0.783,
+   "mono_loss_db": 0.52,
+   "left_right_balance_db": 0.01
+  },
+  "style": null,
+  "reference": null,
+  "findings": [
+   {
+    "id": "F1",
+    "kind": "true_peak_over",
+    "severity": "critical",
+    "measured": "True peak is +3.2 dBTP, above full scale; expect distortion on playback and after lossy encoding.",
+    "steps": [
+     {
+      "id": "F1.1",
+      "text": "Put Utility › Gain first on the Stereo Out and lower Gain until peaks sit around −6 to −3 dBFS.",
+      "tool": "Gain"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F1.2",
+      "text": "Bypass any limiter or maximizer on the mix bus before you bounce for mastering. Check for: Adaptive Limiter, FabFilter Pro-L 2.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F2",
+    "kind": "clipping",
+    "severity": "warning",
+    "measured": "11368 run(s) of clipped samples, first at 0:01, 0:02, 0:03, 0:04, 0:05.",
+    "when": "0:01, 0:02, 0:03, 0:04, 0:05",
+    "steps": [
+     {
+      "id": "F2.1",
+      "text": "Go to 0:01, 0:02, 0:03 and 4 more and watch the clip indicators to find which track or bus clips.",
+      "tool": null
+     },
+     {
+      "id": "F2.2",
+      "text": "Select the region at 0:01, 0:02, 0:03 and 4 more and lower Gain in the Region inspector until it stops clipping.",
+      "tool": "Region inspector"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F2.3",
+      "text": "Put Utility › Gain first on the Stereo Out and lower Gain until peaks sit around −6 to −3 dBFS.",
+      "tool": "Gain"
+     }
+    ]
+   },
+   {
+    "id": "F3",
+    "kind": "very_loud",
+    "severity": "warning",
+    "measured": "Integrated loudness is -3.6 LUFS; Spotify would turn it down about 10.4 dB.",
+    "steps": [
+     {
+      "id": "F3.1",
+      "text": "Bypass any limiter or maximizer on the mix bus before you bounce for mastering. Check for: Adaptive Limiter, FabFilter Pro-L 2.",
+      "tool": null
+     },
+     {
+      "id": "F3.2",
+      "text": "Put Utility › Gain first on the Stereo Out and lower Gain until peaks sit around −6 to −3 dBFS.",
+      "tool": "Gain"
+     }
+    ],
+    "other_options": []
+   },
+   {
+    "id": "F4",
+    "kind": "low_plr",
+    "severity": "warning",
+    "measured": "Peak-to-loudness ratio is 6.8 dB; the master is heavily limited.",
+    "steps": [
+     {
+      "id": "F4.1",
+      "text": "Bypass any limiter or maximizer on the mix bus before you bounce for mastering. Check for: Adaptive Limiter, FabFilter Pro-L 2.",
+      "tool": null
+     },
+     {
+      "id": "F4.2",
+      "text": "In Pro-C 2 on the mix bus, raise Threshold or lengthen Attack until transients come through.",
+      "tool": "FabFilter Pro-C 2"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F4.3",
+      "text": "On the drum bus, use Pro-C 2 in Punch style with a slower attack (10–30 ms).",
+      "tool": "FabFilter Pro-C 2"
+     }
+    ]
+   }
+  ]
+ },
+ "notes": {
+  "headline": "This mix is bounced roughly 10 dB too hot and already clipping — pull the mix bus down and hand mastering headroom instead of a limited file.",
+  "summary": "Everything flagged here comes from one thing: the mix bus is driven far too hard. Integrated loudness is -3.6 LUFS with a true peak of +3.2 dBTP, so the file is over full scale and there are 11368 run(s) of clipped samples starting at 0:01. Peak-to-loudness of 6.8 dB says the limiting is doing a lot of work, which leaves your mastering engineer nothing to shape. Bypass the mix bus limiting, fix the one or two regions that clip on their own, and re-bounce with peaks around −6 to −3 dBFS — the score goes to 10.0 once that's handled.",
+  "priorities": [
+   {
+    "finding_ids": [
+     "F1",
+     "F3",
+     "F4"
+    ],
+    "title": "Take the limiter off and bounce with headroom",
+    "why": "At +3.2 dBTP the file is distorting on playback and will distort again after lossy encoding, and at -3.6 LUFS Spotify would turn it down about 10.4 dB anyway — so the loudness buys you nothing and costs you transients (6.8 dB peak-to-loudness). A mix going to mastering should be judged on headroom, not level.",
+    "step_ids": [
+     "F1.2",
+     "F1.1",
+     "F4.2"
+    ]
+   },
+   {
+    "finding_ids": [
+     "F2"
+    ],
+    "title": "Find the source of the clipping",
+    "why": "11368 run(s) of clipped samples, first at 0:01, 0:02, 0:03, 0:04, 0:05 — some of this may be baked in below the mix bus, so lowering the output alone may not clear it. That distortion is permanent in the bounce.",
+    "step_ids": [
+     "F2.1",
+     "F2.2"
+    ]
+   }
+  ],
+  "listen_for": [
+   "The first five seconds (0:01–0:05) at low level on headphones — listen for crackle or grit on transients once you've pulled the gain down.",
+   "Drum hits with the mix bus limiter bypassed: snare and kick should have visible and audible attack again.",
+   "The loudest section against a reference at matched level, to confirm nothing sounds thin or small now that it's quieter.",
+   "Overall balance on a small speaker after re-bouncing — make sure the mix still reads without the limiter glueing it together."
+  ],
+  "strengths": [
+   "Left/right balance is dead centre at 0.01 dB.",
+   "Mono compatibility is solid — only 0.52 dB mono loss, with low-end correlation at 0.783.",
+   "Loudness range of 5.04 LU shows the arrangement's dynamics are still intact at the section level."
+  ]
+ },
+ "issues": [],
+ "checks": {
+  "ids_valid": "all ids exist",
+  "covers_critical": "all covered",
+  "covers_warnings": "all covered",
+  "numbers_grounded": "20 quoted, all found",
+  "tools_owned": "only owned tools",
+  "stage_appropriate": "no loudness push",
+  "no_invented_problems": "the report has findings"
+ },
+ "judge": {
+  "priority_order": "The critical true-peak finding (F1) is grouped into the first priority alongside related warnings, correctly outranking the clipping warning (F2) placed second.",
+  "explains_impact": "Priority 1 explains distortion on playback/lossy encoding and lost transients; priority 2 explains the clipping is 'permanent in the bounce.'",
+  "groups_causes": "F1, F3, F4 (true peak, loudness, low PLR) are correctly grouped as stemming from over-limiting, while F2 (region-level clipping) is kept separate as a distinct cause.",
+  "specific": "Notes cite exact LUFS, dBTP, PLR, clip count, and timestamps from the report rather than generic advice.",
+  "stage_appropriate": "Notes correctly frame the fix around leaving headroom for mastering rather than judging loudness against release standards.",
+  "faithful": "All measurements and claims (LUFS, dBTP, PLR, clip runs, correlation values) match the report; no contradicted or invented data.",
+  "concise": "The notes are organized and avoid repetition or filler, staying focused on the two priority issues and relevant strengths."
+ }
+}

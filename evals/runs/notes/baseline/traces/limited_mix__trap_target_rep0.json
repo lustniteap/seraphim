@@ -1,0 +1,119 @@
+{
+ "input": {
+  "stage": "mix",
+  "setup": "Ableton Live",
+  "duration": "0:40",
+  "channels": "stereo",
+  "score": {
+   "value": 8.3,
+   "of": 10,
+   "label": "Solid",
+   "if_fixed": 10.0
+  },
+  "measurements": {
+   "integrated_loudness_lufs": -1.19,
+   "loudness_range_lu": 2.67,
+   "true_peak_dbtp": 2.99,
+   "peak_to_loudness_db": 4.2,
+   "lr_correlation": 0.744,
+   "low_end_correlation": 0.768,
+   "mono_loss_db": 0.63,
+   "left_right_balance_db": -0.01
+  },
+  "style": {
+   "going_for": "Trap / hip-hop",
+   "match_percent": 52,
+   "ranges_from": "built-in starting points"
+  },
+  "reference": null,
+  "findings": [
+   {
+    "id": "F1",
+    "kind": "true_peak_over",
+    "severity": "critical",
+    "measured": "True peak is +3.0 dBTP, above full scale; expect distortion on playback and after lossy encoding.",
+    "steps": [
+     {
+      "id": "F1.1",
+      "text": "Put Utility first on the Main track and lower Gain until peaks sit around −6 to −3 dBFS.",
+      "tool": "Utility"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F1.2",
+      "text": "Bypass any limiter or maximizer on the mix bus before you bounce for mastering. Check for: Limiter.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F2",
+    "kind": "more_limited_than_target",
+    "severity": "warning",
+    "measured": "Punch is 4.2 dB PLR; typical for Trap / hip-hop is 8 to 15.5 dB PLR.",
+    "steps": [
+     {
+      "id": "F2.1",
+      "text": "Bypass any limiter or maximizer on the mix bus before you bounce for mastering. Check for: Limiter.",
+      "tool": null
+     },
+     {
+      "id": "F2.2",
+      "text": "Ease the mix-bus compressor: raise the threshold or slow the attack so transients get through.",
+      "tool": null
+     }
+    ],
+    "other_options": []
+   }
+  ]
+ },
+ "notes": {
+  "headline": "This bounce is clipping at +3.0 dBTP and squashed to 4.2 dB PLR — pull the mix bus processing off and rebounce with real headroom before it goes to mastering.",
+  "summary": "The mix itself is balanced and well-centered, but you've bounced it hot: true peak reads +3.0 dBTP, which is above full scale, and peak-to-loudness is down to 4.2 dB. For a mix headed to mastering, that's the one thing to fix — a mastering engineer needs room to work and unclipped transients to work with. Both issues almost certainly come from the same place: limiting or heavy compression on the mix bus. Style match against Trap / hip-hop starting points is 52%, mostly because the punch is so far below the usual 8 to 15.5 dB PLR for the genre.",
+  "priorities": [
+   {
+    "finding_ids": [
+     "F1",
+     "F2"
+    ],
+    "title": "Clipped and over-limited mix bus",
+    "why": "Peaks above full scale will distort on playback and get worse after lossy encoding, and at 4.2 dB PLR the transients that give trap drums their snap are already gone — mastering can't put them back. Both point at the same mix-bus chain.",
+    "step_ids": [
+     "F1.2",
+     "F1.1",
+     "F2.2"
+    ]
+   }
+  ],
+  "listen_for": [
+   "After bypassing the limiter, check the loudest section on headphones for the crackle or edge that clipping leaves on kick and 808 hits.",
+   "Listen to the drum hits with the limiter off — snare and hat transients should feel sharper and more separated than in this bounce.",
+   "Confirm your meters never touch full scale across the whole 0:40, with peaks landing around −6 to −3 dBFS."
+  ],
+  "strengths": [
+   "Left/right balance is essentially dead center at −0.01 dB.",
+   "Mono compatibility is strong — only 0.63 dB mono loss, with low-end correlation at 0.768.",
+   "Stereo correlation of 0.744 is a healthy, wide-but-solid image."
+  ]
+ },
+ "issues": [],
+ "checks": {
+  "ids_valid": "all ids exist",
+  "covers_critical": "all covered",
+  "covers_warnings": "all covered",
+  "numbers_grounded": "11 quoted, all found",
+  "tools_owned": "only owned tools",
+  "stage_appropriate": "no loudness push",
+  "no_invented_problems": "the report has findings"
+ },
+ "judge": {
+  "priority_order": "Only one priority is listed (F1+F2 merged), so ordering among priorities cannot be judged.",
+  "explains_impact": "The single priority explains real consequences—'peaks above full scale will distort on playback and get worse after lossy encoding' and 'transients that give trap drums their snap are already gone'—not just numbers.",
+  "groups_causes": "F1 (true peak) and F2 (low PLR) are correctly merged into one priority since both stem from the mix-bus limiter/compressor, as the report's shared step (bypass limiter) implies.",
+  "specific": "Notes cite the actual +3.0 dBTP, 4.2 dB PLR, 52% match, 8–15.5 dB PLR target, and 0:40 duration, tying advice to this exact bounce.",
+  "stage_appropriate": "Notes correctly frame the fix around headroom for mastering ('mastering engineer needs room to work') and don't judge loudness/LUFS, matching the mix stage in the report.",
+  "faithful": "All claims (clipping risk, PLR loss, shared limiter cause, strengths in balance/mono/correlation) are directly supported by the report's measurements and findings without contradiction.",
+  "concise": "The notes are compact and free of hype or apology, though the three 'listen_for' items slightly repeat the same idea about transients/clipping."
+ }
+}

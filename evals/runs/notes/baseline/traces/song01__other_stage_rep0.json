@@ -1,0 +1,123 @@
+{
+ "input": {
+  "stage": "master",
+  "setup": "Logic Pro + FabFilter (Pro-L 2, Pro-Q, Pro-C 2)",
+  "duration": "2:13",
+  "channels": "stereo",
+  "score": {
+   "value": 10.0,
+   "of": 10,
+   "label": "Release-ready",
+   "if_fixed": 10.0
+  },
+  "measurements": {
+   "integrated_loudness_lufs": -17.11,
+   "loudness_range_lu": 1.68,
+   "true_peak_dbtp": -4.14,
+   "peak_to_loudness_db": 13.0,
+   "lr_correlation": 0.649,
+   "low_end_correlation": 0.969,
+   "mono_loss_db": 0.91,
+   "left_right_balance_db": -0.39
+  },
+  "style": null,
+  "reference": null,
+  "findings": [
+   {
+    "id": "F1",
+    "kind": "no_air",
+    "severity": "info",
+    "measured": "Almost no content above 16 kHz; check whether an MP3/AAC or low-passed file was used as a source.",
+    "steps": [
+     {
+      "id": "F1.1",
+      "text": "Check the session for MP3 or AAC files, such as samples or imported references.",
+      "tool": null
+     },
+     {
+      "id": "F1.2",
+      "text": "Look for a low-pass filter on the master or a bus cutting everything above 16 kHz.",
+      "tool": null
+     }
+    ],
+    "other_options": []
+   },
+   {
+    "id": "F2",
+    "kind": "low_lra",
+    "severity": "info",
+    "measured": "Loudness range is 1.7 LU; there is little contrast between sections.",
+    "steps": [
+     {
+      "id": "F2.1",
+      "text": "Press A to show automation and draw volume so verses sit 2–3 dB below choruses.",
+      "tool": "Volume automation"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F2.2",
+      "text": "In Pro-C 2 on the mix bus, raise Threshold or lengthen Attack until transients come through.",
+      "tool": "FabFilter Pro-C 2"
+     }
+    ]
+   }
+  ]
+ },
+ "notes": {
+  "headline": "Technically clean master with nothing to fix — but it's quiet at -17.11 LUFS with almost no content above 16 kHz, both worth a look before release.",
+  "summary": "This master scores 10/10: no technical errors, phase and balance are solid, and nothing here will misbehave on playback. Two things are flagged as informational rather than wrong. There's almost nothing above 16 kHz, which often means an MP3/AAC source or a stray low-pass somewhere in the chain — worth confirming it's intentional. And the loudness range is 1.7 LU, so verses and choruses sit at nearly the same level throughout the 2:13.",
+  "priorities": [
+   {
+    "finding_ids": [
+     "F1"
+    ],
+    "title": "Confirm the missing top end is a choice",
+    "why": "Almost no content above 16 kHz is the signature of a lossy source file or a forgotten low-pass filter. If a sample or an imported reference came in as MP3/AAC, that limit carries through to the release version and can't be undone later. If it's deliberate, ignore it.",
+    "step_ids": [
+     "F1.1",
+     "F1.2"
+    ]
+   },
+   {
+    "finding_ids": [
+     "F2"
+    ],
+    "title": "Section-to-section contrast",
+    "why": "A loudness range of 1.7 LU means the song plays at essentially one level start to finish. Nothing is broken, but choruses won't feel like they lift. Whether that matters depends on the arrangement.",
+    "step_ids": [
+     "F2.1"
+    ]
+   }
+  ],
+  "listen_for": [
+   "Play the master against a commercial track you know well and listen for cymbals and air — if the top sounds closed off by comparison, chase down the 16 kHz limit.",
+   "Listen through the verse-to-chorus transition and ask whether the chorus arrives with any lift, or just continues.",
+   "Check the whole thing on headphones at low volume, where the 1.7 LU flatness will be most obvious."
+  ],
+  "strengths": [
+   "Stereo image is well behaved — L/R correlation at 0.649 with only 0.91 dB of mono loss, so it folds down cleanly.",
+   "Low end is nearly mono-coherent at 0.969 correlation, which means bass will translate on club and phone systems alike.",
+   "Left/right balance is within 0.39 dB — the image sits centred with no drift."
+  ]
+ },
+ "issues": [],
+ "checks": {
+  "ids_valid": "all ids exist",
+  "covers_critical": "no critical findings",
+  "covers_warnings": "no warning findings",
+  "numbers_grounded": "11 quoted, all found",
+  "tools_owned": "only owned tools",
+  "stage_appropriate": "not a mix",
+  "no_invented_problems": "the report has findings"
+ },
+ "judge": {
+  "priority_order": "F1 (missing air, potential unrecoverable source issue) is placed before F2 (low LRA), both info severity but F1 has arguably higher stakes, consistent with report order.",
+  "explains_impact": "F1 explains it may signal an unrecoverable lossy source, and F2 explains verses/choruses feel at one level with no lift, both tied to listening experience.",
+  "groups_causes": "F1 and F2 have unrelated causes (source/filtering vs dynamics) and are correctly kept as separate priorities.",
+  "specific": "Notes reference the actual measurements (16kHz cutoff, 1.7 LU, correlation values, mono loss) rather than generic advice.",
+  "stage_appropriate": "For a master stage, the report explicitly scored the loudness/measurements as 10/10 release-ready with no loudness finding, yet the notes headline calls -17.11 LUFS 'quiet' and 'worth a look before release', introducing an unsupported loudness critique.",
+  "faithful": "The claim that the track is 'quiet at -17.11 LUFS...worth a look before release' is not supported by any finding in the report, which lists only F1 and F2 as informational issues and gives a 10/10 release-ready score.",
+  "concise": "Given the report is a clean 10/10 with only two info-level findings, the notes add extensive extra material (headline critique, three listen_for items, three strengths) beyond what's needed."
+ }
+}

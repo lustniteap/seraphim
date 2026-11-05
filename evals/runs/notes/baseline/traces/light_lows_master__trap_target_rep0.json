@@ -1,0 +1,179 @@
+{
+ "input": {
+  "stage": "master",
+  "setup": "Ableton Live",
+  "duration": "0:40",
+  "channels": "stereo",
+  "score": {
+   "value": 7.8,
+   "of": 10,
+   "label": "Solid",
+   "if_fixed": 10.0
+  },
+  "measurements": {
+   "integrated_loudness_lufs": -2.68,
+   "loudness_range_lu": 3.49,
+   "true_peak_dbtp": 2.82,
+   "peak_to_loudness_db": 5.5,
+   "lr_correlation": 0.766,
+   "low_end_correlation": 0.785,
+   "mono_loss_db": 0.56,
+   "left_right_balance_db": 0.0
+  },
+  "style": {
+   "going_for": "Trap / hip-hop",
+   "match_percent": 68,
+   "ranges_from": "built-in starting points"
+  },
+  "reference": {
+   "songs": 1,
+   "match_percent": 97,
+   "compared": [
+    "loudness",
+    "punch",
+    "contrast",
+    "tone",
+    "width"
+   ],
+   "not_compared": []
+  },
+  "findings": [
+   {
+    "id": "F1",
+    "kind": "true_peak_over",
+    "severity": "critical",
+    "measured": "True peak is +2.8 dBTP, above full scale; expect distortion on playback and after lossy encoding.",
+    "steps": [
+     {
+      "id": "F1.1",
+      "text": "Put Limiter last on the Main track with Ceiling at −1.0 dB and True Peak on (Live 12; on older versions use −1.5 dB).",
+      "tool": "Limiter"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F1.2",
+      "text": "Before bouncing, play the whole song through a loudness meter and check integrated LUFS and true peak.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F2",
+    "kind": "ref_tone_less",
+    "severity": "warning",
+    "measured": "4.4 dB lighter below 100 Hz than your reference, at matched volume.",
+    "steps": [
+     {
+      "id": "F2.1",
+      "text": "Put EQ Eight on the Main track and use a low shelf over the lows (below 100 Hz), boosting about 4.5 dB.",
+      "tool": "EQ Eight"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F2.2",
+      "text": "Loop the loudest section and switch between your master and the reference, at matched volume, while you set the boost.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F3",
+    "kind": "louder_than_target",
+    "severity": "warning",
+    "measured": "Loudness is -2.7 LUFS; typical for Trap / hip-hop is -9 to -6 LUFS.",
+    "steps": [
+     {
+      "id": "F3.1",
+      "text": "Lower Limiter's Gain by 2–4 dB and compare at matched volume.",
+      "tool": "Limiter"
+     }
+    ],
+    "other_options": []
+   },
+   {
+    "id": "F4",
+    "kind": "more_limited_than_target",
+    "severity": "info",
+    "measured": "Punch is 5.5 dB PLR; typical for Trap / hip-hop is 6 to 9.5 dB PLR.",
+    "steps": [
+     {
+      "id": "F4.1",
+      "text": "Lower Limiter's Gain by 2–4 dB and compare at matched volume.",
+      "tool": "Limiter"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F4.2",
+      "text": "On the drum bus, use a compressor with a slower attack (10–30 ms) or a transient shaper to bring back punch.",
+      "tool": null
+     }
+    ]
+   }
+  ]
+ },
+ "notes": {
+  "headline": "This master is clipping hard — +2.8 dBTP true peak and -2.68 LUFS — so pulling the limiter back is the first and biggest fix.",
+  "summary": "Your balance and stereo picture are in good shape, and you're at 97% match to your reference, but the level is the problem: true peak reads +2.8 dBTP, above full scale, which will distort on playback and after lossy encoding. Integrated loudness is -2.68 LUFS where Trap / hip-hop typically sits at -9 to -6 LUFS, and that push is also why punch measures 5.5 dB PLR against a typical 6 to 9.5 dB. Backing the limiter off fixes all three at once. After that, the one tone note is that you're 4.4 dB lighter below 100 Hz than your reference at matched volume.",
+  "priorities": [
+   {
+    "finding_ids": [
+     "F1",
+     "F3",
+     "F4"
+    ],
+    "title": "Pull the limiter back and catch the true peaks",
+    "why": "At +2.8 dBTP the file is over full scale — converters and MP3/AAC encoders will distort on it. It's also driving loudness to -2.68 LUFS, far past the -9 to -6 LUFS range for this style, and squeezing punch down to 5.5 dB PLR when the genre sits at 6 to 9.5 dB. Dropping the drive addresses the distortion, the loudness and the flatness together.",
+    "step_ids": [
+     "F3.1",
+     "F1.1",
+     "F1.2",
+     "F4.2"
+    ]
+   },
+   {
+    "finding_ids": [
+     "F2"
+    ],
+    "title": "Low end is lighter than your reference",
+    "why": "You're 4.4 dB down below 100 Hz compared to the track you're chasing, at matched volume. For trap that's the weight of the 808s and sub — it'll sound thin next to your reference on systems with real low-end extension.",
+    "step_ids": [
+     "F2.1",
+     "F2.2"
+    ]
+   }
+  ],
+  "listen_for": [
+   "Hair or crackle on the loudest hits and on the transitions — check the file after an MP3/AAC encode, not just the WAV, since the true peak overs show up worst there.",
+   "Whether the kick and snare breathe once the limiter gain is down 2–4 dB; A/B at matched volume so the quieter version isn't judged as weaker.",
+   "808 and sub weight against your reference on headphones and on a small speaker, looping the loudest section while you set the low shelf.",
+   "That the added low shelf doesn't push the limiter back into heavy gain reduction — re-check true peak after the EQ move."
+  ],
+  "strengths": [
+   "Stereo image holds together: 0.766 L/R correlation with only 0.56 dB mono loss, so it survives a mono fold-down.",
+   "Low end is solid in the middle — 0.785 low-end correlation means the sub isn't fighting itself.",
+   "Left/right balance is dead centre at 0.0 dB, and you're at 97% match to your reference across loudness, punch, contrast, tone and width."
+  ]
+ },
+ "issues": [],
+ "checks": {
+  "ids_valid": "all ids exist",
+  "covers_critical": "all covered",
+  "covers_warnings": "all covered",
+  "numbers_grounded": "21 quoted, all found",
+  "tools_owned": "only owned tools",
+  "stage_appropriate": "not a mix",
+  "no_invented_problems": "the report has findings"
+ },
+ "judge": {
+  "priority_order": "Critical F1 grouped with F3/F4 leads, correctly placed before the warning-only F2 tone issue.",
+  "explains_impact": "Priority 1 explains distortion on playback/encoders and squeezed punch; priority 2 explains thinness vs reference on systems with sub extension.",
+  "groups_causes": "F1, F3, F4 are correctly merged as one limiter-drive cause, while F2 (tone) is kept separate as an unrelated issue.",
+  "specific": "Notes cite exact figures (+2.8 dBTP, -2.68 LUFS, 5.5 dB PLR, 4.4 dB below 100 Hz, 97% match) tied to this bounce and genre.",
+  "stage_appropriate": "The report stage is 'master', so loudness should be judged against release standards, but the notes call the file 'clipping hard' and treat loudness as 'the problem' in headline/summary as if it's simply wrong rather than a stage-appropriate release consideration; also true peak over full scale is real but framing conflates limiter drive as strictly bad without noting it's a release-ready master needing peak-safety, not headroom for mastering elsewhere.",
+  "faithful": "The notes claim the true peak overs 'show up worst' after MP3/AAC encoding as an established fact beyond what the report states (report only says 'expect distortion... after lossy encoding' generically, not a comparative claim), and the headline/summary overstate 'clipping hard' which isn't a term used or clearly supported by the report.",
+  "concise": "There is redundant repetition of the same three numbers (dBTP, LUFS, PLR) across headline, summary, and priority 'why', padding length without adding new information."
+ }
+}

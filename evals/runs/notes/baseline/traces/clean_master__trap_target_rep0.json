@@ -1,0 +1,98 @@
+{
+ "input": {
+  "stage": "master",
+  "setup": "Ableton Live",
+  "duration": "0:40",
+  "channels": "stereo",
+  "score": {
+   "value": 10.0,
+   "of": 10,
+   "label": "Release-ready",
+   "if_fixed": 10.0
+  },
+  "measurements": {
+   "integrated_loudness_lufs": -10.72,
+   "loudness_range_lu": 5.15,
+   "true_peak_dbtp": -2.16,
+   "peak_to_loudness_db": 8.6,
+   "lr_correlation": 0.78,
+   "low_end_correlation": 0.78,
+   "mono_loss_db": 0.51,
+   "left_right_balance_db": -0.04
+  },
+  "style": {
+   "going_for": "Trap / hip-hop",
+   "match_percent": 86,
+   "ranges_from": "built-in starting points"
+  },
+  "reference": null,
+  "findings": [
+   {
+    "id": "F1",
+    "kind": "quieter_than_target",
+    "severity": "info",
+    "measured": "Loudness is -10.7 LUFS; typical for Trap / hip-hop is -9 to -6 LUFS.",
+    "steps": [
+     {
+      "id": "F1.1",
+      "text": "Raise Limiter's Gain in 1 dB steps until you reach the target; keep Ceiling at −1.0 dB.",
+      "tool": "Limiter"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F1.2",
+      "text": "Before bouncing, play the whole song through a loudness meter and check integrated LUFS and true peak.",
+      "tool": null
+     }
+    ]
+   }
+  ]
+ },
+ "notes": {
+  "headline": "This master is technically clean at 10/10 — the only open question is loudness, sitting at -10.7 LUFS where trap and hip-hop usually land between -9 and -6 LUFS.",
+  "summary": "Nothing here is broken: true peak is -2.16 dBTP, left/right balance is within -0.04 dB, and the stereo picture holds together in mono with only 0.51 dB of loss. The one thing to weigh is level — at -10.72 LUFS integrated you're a couple of dB under where trap and hip-hop masters typically sit, so this may feel soft next to other tracks in a playlist. That's a judgement call, not an error, and you have 8.6 dB of peak-to-loudness and 2.16 dB of true-peak room to work with if you decide to push.",
+  "priorities": [
+   {
+    "finding_ids": [
+     "F1"
+    ],
+    "title": "Decide on final loudness",
+    "why": "At -10.7 LUFS the track will read quieter than most trap and hip-hop releases played back-to-back with it. You have the headroom to close the gap if that's the goal, but only do it if the low end and transients hold up.",
+    "step_ids": [
+     "F1.1",
+     "F1.2"
+    ]
+   }
+  ],
+  "listen_for": [
+   "After each 1 dB step on the Limiter, check whether the 808s and kick stay punchy or start to flatten and pump — that's your stopping point, not the meter.",
+   "Compare the louder version against the current bounce at matched level on headphones; if the louder one doesn't sound better matched, keep the quieter one.",
+   "Play the whole 40 seconds through a loudness meter before the final bounce and confirm integrated LUFS and true peak with the Ceiling still at -1.0 dB."
+  ],
+  "strengths": [
+   "True peak at -2.16 dBTP leaves safe room for lossy encoding.",
+   "Left/right balance is essentially centred at -0.04 dB.",
+   "Mono compatibility is solid — only 0.51 dB of level loss in mono, with low-end correlation at 0.78."
+  ]
+ },
+ "issues": [],
+ "checks": {
+  "ids_valid": "all ids exist",
+  "covers_critical": "no critical findings",
+  "covers_warnings": "no warning findings",
+  "numbers_grounded": "15 quoted, all found",
+  "tools_owned": "only owned tools",
+  "stage_appropriate": "not a mix",
+  "no_invented_problems": "the report has findings"
+ },
+ "judge": {
+  "priority_order": "Only one finding/priority exists, so ordering can't be judged.",
+  "explains_impact": "The priority explains that the track 'will read quieter than most trap and hip-hop releases played back-to-back,' which is a listening/playback consequence, not just a number.",
+  "groups_causes": "Only one finding (F1) exists in the report, so grouping cannot be evaluated.",
+  "specific": "Notes reference exact measurements (-10.72 LUFS, -2.16 dBTP, 0.51 dB mono loss, 8.6 dB peak-to-loudness) and the trap/hip-hop style target range from the report.",
+  "stage_appropriate": "Notes correctly treat this as a master and judge loudness against release/style standards ('trap and hip-hop masters typically sit'), consistent with the master stage.",
+  "faithful": "All figures and claims (true peak, balance, mono loss, LUFS, style target) match the report; the loudness gap is framed as a choice, matching the report's info-severity framing.",
+  "concise": "The headline, summary, single priority, and three listen-for bullets repeat the same loudness point multiple times, adding length without new information for a report with only one info-level finding."
+ }
+}

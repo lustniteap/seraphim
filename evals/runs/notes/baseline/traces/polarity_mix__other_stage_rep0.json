@@ -1,0 +1,186 @@
+{
+ "input": {
+  "stage": "master",
+  "setup": "Logic Pro + FabFilter (Pro-L 2, Pro-Q, Pro-C 2)",
+  "duration": "0:40",
+  "channels": "stereo",
+  "score": {
+   "value": 6.5,
+   "of": 10,
+   "label": "Needs work",
+   "if_fixed": 10.0
+  },
+  "measurements": {
+   "integrated_loudness_lufs": -14.17,
+   "loudness_range_lu": 5.61,
+   "true_peak_dbtp": -1.41,
+   "peak_to_loudness_db": 12.8,
+   "lr_correlation": -0.78,
+   "low_end_correlation": -0.777,
+   "mono_loss_db": 9.61,
+   "left_right_balance_db": -0.01
+  },
+  "style": null,
+  "reference": null,
+  "findings": [
+   {
+    "id": "F1",
+    "kind": "negative_correlation",
+    "severity": "critical",
+    "measured": "Overall L/R correlation is -0.78; likely a polarity problem.",
+    "steps": [
+     {
+      "id": "F1.1",
+      "text": "The whole mix is out of polarity between left and right. Check the master and bus inserts, and the output routing, for a flip on one side.",
+      "tool": null
+     },
+     {
+      "id": "F1.2",
+      "text": "Insert Utility › Gain on the track and turn on Phase Invert for Left or Right only.",
+      "tool": "Gain"
+     }
+    ],
+    "other_options": []
+   },
+   {
+    "id": "F2",
+    "kind": "wide_low_end",
+    "severity": "critical",
+    "measured": "Below 150 Hz the correlation is -0.78; bass and kick may thin out in mono.",
+    "steps": [
+     {
+      "id": "F2.1",
+      "text": "In Pro-Q, add a low cut at 150 Hz and set that band's stereo placement to Side.",
+      "tool": "FabFilter Pro-Q"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F2.2",
+      "text": "Add a Channel EQ, set Processing to Side, and turn on Low Cut at 150 Hz so the lows are mono.",
+      "tool": "Channel EQ"
+     },
+     {
+      "id": "F2.3",
+      "text": "Check the kick and bass tracks for chorus, wideners or stereo patches.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F3",
+    "kind": "mono_loss",
+    "severity": "warning",
+    "measured": "The mix loses 9.6 dB when summed to mono.",
+    "steps": [
+     {
+      "id": "F3.1",
+      "text": "Insert Utility › Gain on the Stereo Out and set Mono to hear the mix summed.",
+      "tool": "Gain"
+     },
+     {
+      "id": "F3.2",
+      "text": "Insert Imaging › Direction Mixer on the tracks that vanish in mono and lower Spread below 1.0.",
+      "tool": "Direction Mixer"
+     }
+    ],
+    "other_options": []
+   },
+   {
+    "id": "F4",
+    "kind": "phase_section",
+    "severity": "warning",
+    "measured": "Negative correlation from 0:00 to 0:40 (min -0.8).",
+    "when": "0:00–0:40",
+    "steps": [
+     {
+      "id": "F4.1",
+      "text": "Solo tracks between 0:00 and 0:40 to find the source. Usual suspects: stereo wideners, a very short delay on one side, a stereo bass patch, or double-miked sources.",
+      "tool": null
+     },
+     {
+      "id": "F4.2",
+      "text": "Insert Utility › Gain on the track and turn on Phase Invert for Left or Right only.",
+      "tool": "Gain"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F4.3",
+      "text": "Insert Metering › MultiMeter on the Stereo Out and watch Correlation while you loop 0:00–0:40.",
+      "tool": "Loudness Meter / MultiMeter"
+     },
+     {
+      "id": "F4.4",
+      "text": "Insert Utility › Gain on the track and turn on Phase Invert for both sides.",
+      "tool": "Gain"
+     }
+    ]
+   }
+  ]
+ },
+ "notes": {
+  "headline": "Your left and right channels are out of polarity with each other — the whole 40 seconds reads -0.78 correlation, and it costs you 9.6 dB in mono.",
+  "summary": "This master is technically clean on loudness and peaks, but something has flipped polarity on one side. L/R correlation sits at -0.78 for the entire 0:00–0:40, below 150 Hz it's -0.777, and the mix loses 9.6 dB when summed to mono. That's one problem showing up in four ways, and on any mono playback — phones, club sums, small speakers — the low end and centre content will largely disappear. Fix the polarity first and the rest should follow; the score goes from 6.5 to 10.0 with that sorted.",
+  "priorities": [
+   {
+    "finding_ids": [
+     "F1",
+     "F4",
+     "F3",
+     "F2"
+    ],
+    "title": "Polarity flip between left and right",
+    "why": "An inverted side cancels anything shared between the channels when summed. At -0.78 overall and -0.777 below 150 Hz, kick and bass thin out badly in mono, and the 9.6 dB mono loss means most listeners on a single speaker hear a different, hollowed-out record. The negative reading covers the whole 0:00–0:40, so it's global, not a section problem.",
+    "step_ids": [
+     "F1.1",
+     "F1.2",
+     "F4.1"
+    ]
+   },
+   {
+    "finding_ids": [
+     "F3",
+     "F2"
+    ],
+    "title": "Confirm the mono sum and tighten what's left",
+    "why": "Once polarity is corrected, check whether anything still cancels. If the low end is still wide, mono-ing it below 150 Hz keeps kick and bass solid on every system; any remaining mono loss points at wideners on individual tracks.",
+    "step_ids": [
+     "F3.1",
+     "F2.1",
+     "F3.2"
+    ]
+   }
+  ],
+  "listen_for": [
+   "Flip to mono with Gain on the Stereo Out (F3.1) and check that the level and low end hold up instead of dropping away.",
+   "Kick and bass weight in mono versus stereo — they should stay roughly as solid, not thin out.",
+   "Loop 0:00–0:40 with MultiMeter on the Stereo Out (F4.3) and watch correlation sit positive for the whole pass rather than near -0.8.",
+   "Centre image of vocal and any mono-ish elements on a single small speaker after the fix."
+  ],
+  "strengths": [
+   "True peak is -1.41 dBTP, safely under release ceilings.",
+   "Integrated loudness of -14.17 LUFS sits in a sensible range for streaming delivery.",
+   "Left/right balance is -0.01 dB — essentially dead centre."
+  ]
+ },
+ "issues": [],
+ "checks": {
+  "ids_valid": "all ids exist",
+  "covers_critical": "all covered",
+  "covers_warnings": "all covered",
+  "numbers_grounded": "16 quoted, all found",
+  "tools_owned": "only owned tools",
+  "stage_appropriate": "not a mix",
+  "no_invented_problems": "the report has findings"
+ },
+ "judge": {
+  "priority_order": "The two criticals (F1 polarity, F4 phase section) are grouped and listed first, followed by the warnings (F3 mono loss, F2 wide low end), matching severity order in the report.",
+  "explains_impact": "Priority 1 states 'kick and bass thin out badly in mono' and '9.6 dB mono loss means most listeners on a single speaker hear a different, hollowed-out record,' and priority 2 says fixing keeps 'kick and bass solid on every system' — both go beyond just citing numbers.",
+  "groups_causes": "The notes claim F1, F4, F3, and F2 are 'one problem showing up in four ways' and that fixing polarity means 'the rest should follow,' but the report treats F2 (wide low end from stereo widening on bass/kick) as a separate finding with its own distinct fix (mono-ing via Side EQ), not a guaranteed consequence of the polarity flip.",
+  "specific": "Notes cite the bounce's actual figures (-0.78, -0.777, 9.6 dB, -14.17 LUFS, -1.41 dBTP) and the exact 0:00–0:40 span, tying advice directly to this report.",
+  "stage_appropriate": "For a master stage, the notes correctly treat true peak and LUFS as strengths rather than flagging headroom concerns, consistent with release-standard judgment.",
+  "faithful": "The claim that 'the low end and centre content will largely disappear' and that fixing polarity means 'the rest should follow' for F2 overstate what the report supports, since F2 is a distinct finding needing its own fix, not an automatic side-effect of the polarity correction.",
+  "concise": "Despite covering four findings and two priorities, the notes stay focused on the single core issue and its consequences without hype or repetition beyond what's needed to explain the grouping."
+ }
+}

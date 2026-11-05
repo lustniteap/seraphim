@@ -1,0 +1,125 @@
+{
+ "input": {
+  "stage": "mix",
+  "setup": "Pro Tools + Waves Essential",
+  "duration": "0:40",
+  "channels": "stereo",
+  "score": {
+   "value": 8.8,
+   "of": 10,
+   "label": "Solid",
+   "if_fixed": 10.0
+  },
+  "measurements": {
+   "integrated_loudness_lufs": -13.66,
+   "loudness_range_lu": 4.86,
+   "true_peak_dbtp": -1.06,
+   "peak_to_loudness_db": 12.6,
+   "lr_correlation": 0.574,
+   "low_end_correlation": 0.346,
+   "mono_loss_db": 0.7,
+   "left_right_balance_db": 0.06
+  },
+  "style": null,
+  "reference": null,
+  "findings": [
+   {
+    "id": "F1",
+    "kind": "wide_low_end",
+    "severity": "warning",
+    "measured": "Below 150 Hz the correlation is 0.35; bass and kick may thin out in mono.",
+    "steps": [
+     {
+      "id": "F1.1",
+      "text": "Insert F6 in M/S mode and cut the Side below 150 Hz with a high-pass band.",
+      "tool": "Waves F6"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F1.2",
+      "text": "Check the kick and bass tracks for chorus, wideners or stereo patches.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F2",
+    "kind": "abrupt_end",
+    "severity": "warning",
+    "measured": "The audio is still loud at the last sample; the ending may be cut off.",
+    "steps": [
+     {
+      "id": "F2.1",
+      "text": "Extend the timeline selection past the last reverb and delay tails, then File › Bounce Mix again.",
+      "tool": "Bounce Mix"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F2.2",
+      "text": "Select the end of the last clip, press Command-F to add a fade-out, and bounce again.",
+      "tool": "Bounce Mix"
+     }
+    ]
+   }
+  ]
+ },
+ "notes": {
+  "headline": "Two things to fix before this goes to mastering: the bass is wide enough to thin out in mono, and the bounce cuts off at full level.",
+  "summary": "This is a solid mix — your levels, headroom and stereo balance are all in good shape for handing off. The main issue is below 150 Hz, where the correlation is 0.35, meaning the low end is spread across the stereo field and the kick and bass can lose weight when a club system or phone sums to mono. The other is the bounce itself: the audio is still loud at the last sample, so the ending is likely clipped off mid-tail. Both are quick fixes and would take this to a clean 10.0.",
+  "priorities": [
+   {
+    "finding_ids": [
+     "F1"
+    ],
+    "title": "Tighten the low end toward mono",
+    "why": "Below 150 Hz the correlation is 0.35, so the bass and kick may thin out in mono. Mastering will push the low end harder, and anything phasey down there gets worse, not better — better to hand it over solid.",
+    "step_ids": [
+     "F1.1",
+     "F1.2"
+    ]
+   },
+   {
+    "finding_ids": [
+     "F2"
+    ],
+    "title": "Rebounce with the tails intact",
+    "why": "The audio is still loud at the last sample, which means reverb and delay tails are being chopped. A mastering engineer can't restore what wasn't bounced.",
+    "step_ids": [
+     "F2.1",
+     "F2.2"
+    ]
+   }
+  ],
+  "listen_for": [
+   "Flip to mono after the F6 side cut and check that the kick and bass keep their weight — compare against the stereo version at the same level.",
+   "On headphones or a system with real sub extension, confirm the low end still feels wide enough musically after the side cut below 150 Hz.",
+   "Play the new bounce to the very last sample and listen for the reverb and delay tails decaying naturally instead of stopping."
+  ],
+  "strengths": [
+   "True peak sits at -1.06 dBTP with 12.6 dB of peak-to-loudness — plenty of headroom and dynamics for mastering to work with.",
+   "Left/right balance is 0.06 dB, essentially dead center.",
+   "Mono loss is only 0.7 dB overall, so outside the low end the stereo image holds up when summed."
+  ]
+ },
+ "issues": [],
+ "checks": {
+  "ids_valid": "all ids exist",
+  "covers_critical": "no critical findings",
+  "covers_warnings": "all covered",
+  "numbers_grounded": "7 quoted, all found",
+  "tools_owned": "only owned tools",
+  "stage_appropriate": "no loudness push",
+  "no_invented_problems": "the report has findings"
+ },
+ "judge": {
+  "priority_order": "Both findings are 'warning' severity, and the notes place F1 (wide low end, affects playback quality broadly) before F2 (abrupt end, affects only the tail), which is a reasonable ordering by audible consequence.",
+  "explains_impact": "F1's why explains bass/kick thinning in mono, and F2's why explains tails being chopped and unrecoverable at mastering.",
+  "groups_causes": "The two findings have unrelated causes (stereo width vs. bounce truncation) and are correctly kept separate.",
+  "specific": "Notes reference actual measurements (0.35 correlation, -1.06 dBTP, 12.6 dB peak-to-loudness, 0.06 dB balance, 0.7 dB mono loss) specific to this bounce.",
+  "stage_appropriate": "Notes correctly frame headroom/dynamics as good for mastering handoff rather than judging final loudness, consistent with the mix stage.",
+  "faithful": "The claim 'Mastering will push the low end harder, and anything phasey down there gets worse, not better' is an added assumption not supported by the report, which says nothing about mastering intensifying phase issues.",
+  "concise": "Notes are compact and directly tied to the two findings without excessive filler, though the extra mastering claim adds slight bloat."
+ }
+}

@@ -1,0 +1,7 @@
+{
+  "model": "claude-opus-5",
+  "prompt_version": "notes-v1",
+  "judge_model": "claude-sonnet-5",
+  "reps": 1,
+  "started": "2026-09-26 01:46"
+}

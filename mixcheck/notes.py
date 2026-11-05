@@ -18,7 +18,7 @@ from typing import List
 from .util import fmt_time
 
 PROMPT_FILE = Path(__file__).parent / "prompts" / "notes.md"
-PROMPT_VERSION = "notes-v1"  # bump whenever prompts/notes.md or notes_input() changes
+PROMPT_VERSION = "notes-v2"  # bump whenever prompts/notes.md or notes_input() changes
 DEFAULT_MODEL = "claude-opus-5"
 MAX_TOKENS = 16000
 # If the model declines, the API retries the same request on a fallback model it picks.

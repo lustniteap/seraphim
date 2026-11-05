@@ -1,0 +1,179 @@
+{
+ "input": {
+  "stage": "mix",
+  "setup": "Pro Tools + Waves Essential",
+  "duration": "0:40",
+  "channels": "stereo",
+  "score": {
+   "value": 6.5,
+   "of": 10,
+   "label": "Needs work",
+   "if_fixed": 10.0
+  },
+  "measurements": {
+   "integrated_loudness_lufs": -14.17,
+   "loudness_range_lu": 5.61,
+   "true_peak_dbtp": -1.41,
+   "peak_to_loudness_db": 12.8,
+   "lr_correlation": -0.78,
+   "low_end_correlation": -0.777,
+   "mono_loss_db": 9.61,
+   "left_right_balance_db": -0.01
+  },
+  "style": null,
+  "reference": null,
+  "findings": [
+   {
+    "id": "F1",
+    "kind": "negative_correlation",
+    "severity": "critical",
+    "measured": "Overall L/R correlation is -0.78; likely a polarity problem.",
+    "steps": [
+     {
+      "id": "F1.1",
+      "text": "The whole mix is out of polarity between left and right. Check the master and bus inserts, and the output routing, for a flip on one side.",
+      "tool": null
+     },
+     {
+      "id": "F1.2",
+      "text": "Insert Trim as multi-mono on the stereo track and click Ø on one side only.",
+      "tool": "Trim"
+     }
+    ],
+    "other_options": []
+   },
+   {
+    "id": "F2",
+    "kind": "wide_low_end",
+    "severity": "critical",
+    "measured": "Below 150 Hz the correlation is -0.78; bass and kick may thin out in mono.",
+    "steps": [
+     {
+      "id": "F2.1",
+      "text": "Insert F6 in M/S mode and cut the Side below 150 Hz with a high-pass band.",
+      "tool": "Waves F6"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F2.2",
+      "text": "Check the kick and bass tracks for chorus, wideners or stereo patches.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F3",
+    "kind": "mono_loss",
+    "severity": "warning",
+    "measured": "The mix loses 9.6 dB when summed to mono.",
+    "steps": [
+     {
+      "id": "F3.1",
+      "text": "Sum the master to mono and listen for parts that disappear.",
+      "tool": null
+     },
+     {
+      "id": "F3.2",
+      "text": "Reduce stereo widening (chorus, doublers, wideners, very short stereo delays) on the tracks that vanish in mono.",
+      "tool": null
+     }
+    ],
+    "other_options": []
+   },
+   {
+    "id": "F4",
+    "kind": "phase_section",
+    "severity": "warning",
+    "measured": "Negative correlation from 0:00 to 0:40 (min -0.8).",
+    "when": "0:00–0:40",
+    "steps": [
+     {
+      "id": "F4.1",
+      "text": "Solo tracks between 0:00 and 0:40 to find the source. Usual suspects: stereo wideners, a very short delay on one side, a stereo bass patch, or double-miked sources.",
+      "tool": null
+     },
+     {
+      "id": "F4.2",
+      "text": "Insert Trim as multi-mono on the stereo track and click Ø on one side only.",
+      "tool": "Trim"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F4.3",
+      "text": "Watch a correlation meter while you loop 0:00–0:40; it should stay above 0.",
+      "tool": null
+     },
+     {
+      "id": "F4.4",
+      "text": "Select the whole clip and run AudioSuite › Other › Invert.",
+      "tool": "Invert AudioSuite"
+     }
+    ]
+   }
+  ]
+ },
+ "notes": {
+  "headline": "One side of this mix is polarity-flipped — L/R correlation is -0.78 for the full 0:40, and everything else in the report follows from that.",
+  "summary": "Your levels and headroom are fine for a mix going to mastering, but the stereo image is inverted: correlation sits at -0.78 across the whole file, -0.777 below 150 Hz, and the mix loses 9.6 dB when summed to mono. That's a polarity flip on one channel, not a width choice — on any mono playback the mix will largely cancel. Find and undo the flip first, then re-check the low end and mono sum; the score goes from 6.5 to 10.0 once that's handled.",
+  "priorities": [
+   {
+    "finding_ids": [
+     "F1",
+     "F4",
+     "F3"
+    ],
+    "title": "Fix the L/R polarity flip",
+    "why": "Correlation of -0.78 over the whole 0:00\ndash0:40 (min -0.8) and a 9.6 dB drop in mono mean left and right are cancelling each other. Anything mono \ndash club subs, phone speakers, broadcast \ndash will hollow out or lose the mix almost entirely, and a mastering engineer can't repair this downstream.",
+    "step_ids": [
+     "F1.1",
+     "F1.2",
+     "F4.1",
+     "F3.1"
+    ]
+   },
+   {
+    "finding_ids": [
+     "F2"
+    ],
+    "title": "Check the low end once polarity is corrected",
+    "why": "Below 150 Hz correlation is -0.78, so kick and bass are the parts most at risk of thinning out in mono. If the flip was the whole cause this resolves itself; if not, the bass has its own width problem.",
+    "step_ids": [
+     "F2.2",
+     "F2.1"
+    ]
+   }
+  ],
+  "listen_for": [
+   "Sum the master to mono (F3.1) and listen through the full 0:40 \ndash the level and body should stay close to the stereo version instead of dropping 9.6 dB.",
+   "Kick and bass in mono on a small speaker: they should stay solid, not thin or hollow.",
+   "Loop 0:00\ndash0:40 with a correlation meter (F4.3); it should sit above 0 the whole way rather than near -0.8.",
+   "Anything that vanishes when you mono the mix (F3.2) \ndash note which tracks and check them for wideners or short stereo delays."
+  ],
+  "strengths": [
+   "True peak is -1.41 dBTP, leaving clean headroom for mastering.",
+   "Integrated loudness of -14.17 LUFS with 12.8 dB peak-to-loudness \ndash plenty of dynamic range preserved for a mix.",
+   "Left/right balance is -0.01 dB, essentially dead centre."
+  ]
+ },
+ "issues": [],
+ "checks": {
+  "ids_valid": "all ids exist",
+  "covers_critical": "all covered",
+  "covers_warnings": "all covered",
+  "numbers_grounded": "13 quoted, all found",
+  "tools_owned": "only owned tools",
+  "stage_appropriate": "no loudness push",
+  "no_invented_problems": "the report has findings"
+ },
+ "judge": {
+  "priority_order": "Polarity flip (critical, F1/F4) is placed first before the low-end check (F2, critical) - though F2 is technically also critical, grouping F1/F4/F3 as the dominant cause is reasonable and matches severity ordering.",
+  "explains_impact": "Priority 1 explains mono cancellation on club subs/phones/broadcast, and priority 2 explains bass/kick thinning in mono.",
+  "groups_causes": "F1, F4, and F3 are grouped as stemming from the same polarity flip, while F2 (low-end specific) is kept separate, matching the report's shared correlation values.",
+  "specific": "Notes cite exact measurements like -0.78 correlation, -0.777 below 150Hz, 9.6dB mono loss, and the 0:00-0:40 timeframe specific to this bounce.",
+  "stage_appropriate": "Notes correctly state levels/headroom are fine for mastering and don't judge loudness as a master would be judged.",
+  "faithful": "The notes claim 'if not, the bass has its own width problem' and imply mono loss issue is separate/could be independent from polarity, but F2 in the report explicitly attributes the low-end issue to the same overall correlation problem (-0.78), and the report doesn't support a claim of a second independent bass width problem beyond what's already covered by F1/F4.",
+  "concise": "The notes are structured and avoid excessive repetition or filler, staying focused on the polarity issue and its consequences."
+ }
+}

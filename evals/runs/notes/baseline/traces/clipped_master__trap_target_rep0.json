@@ -1,0 +1,143 @@
+{
+ "input": {
+  "stage": "master",
+  "setup": "Ableton Live",
+  "duration": "0:40",
+  "channels": "stereo",
+  "score": {
+   "value": 6.2,
+   "of": 10,
+   "label": "Needs work",
+   "if_fixed": 10.0
+  },
+  "measurements": {
+   "integrated_loudness_lufs": -3.56,
+   "loudness_range_lu": 5.04,
+   "true_peak_dbtp": 3.19,
+   "peak_to_loudness_db": 6.8,
+   "lr_correlation": 0.778,
+   "low_end_correlation": 0.783,
+   "mono_loss_db": 0.52,
+   "left_right_balance_db": 0.01
+  },
+  "style": {
+   "going_for": "Trap / hip-hop",
+   "match_percent": 80,
+   "ranges_from": "built-in starting points"
+  },
+  "reference": null,
+  "findings": [
+   {
+    "id": "F1",
+    "kind": "true_peak_over",
+    "severity": "critical",
+    "measured": "True peak is +3.2 dBTP, above full scale; expect distortion on playback and after lossy encoding.",
+    "steps": [
+     {
+      "id": "F1.1",
+      "text": "Put Limiter last on the Main track with Ceiling at −1.0 dB and True Peak on (Live 12; on older versions use −1.5 dB).",
+      "tool": "Limiter"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F1.2",
+      "text": "Before bouncing, play the whole song through a loudness meter and check integrated LUFS and true peak.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F2",
+    "kind": "clipping",
+    "severity": "warning",
+    "measured": "11368 run(s) of clipped samples, first at 0:01, 0:02, 0:03, 0:04, 0:05.",
+    "when": "0:01, 0:02, 0:03, 0:04, 0:05",
+    "steps": [
+     {
+      "id": "F2.1",
+      "text": "Go to 0:01, 0:02, 0:03 and 4 more. Clipping in a master usually means something after the limiter adds gain, or the limiter's ceiling is at 0 dB.",
+      "tool": null
+     },
+     {
+      "id": "F2.2",
+      "text": "Put Limiter last on the Main track with Ceiling at −1.0 dB and True Peak on (Live 12; on older versions use −1.5 dB).",
+      "tool": "Limiter"
+     }
+    ],
+    "other_options": [
+     {
+      "id": "F2.3",
+      "text": "Remove or turn down anything after the limiter, such as tape or saturation plugins.",
+      "tool": null
+     }
+    ]
+   },
+   {
+    "id": "F3",
+    "kind": "louder_than_target",
+    "severity": "warning",
+    "measured": "Loudness is -3.6 LUFS; typical for Trap / hip-hop is -9 to -6 LUFS.",
+    "steps": [
+     {
+      "id": "F3.1",
+      "text": "Lower Limiter's Gain by 2–4 dB and compare at matched volume.",
+      "tool": "Limiter"
+     }
+    ],
+    "other_options": []
+   }
+  ]
+ },
+ "notes": {
+  "headline": "This master is running +3.2 dBTP with over 11,000 clipped runs starting at 0:01 — the output stage needs to be rebuilt before anything else.",
+  "summary": "Your loudness is at -3.6 LUFS, well above the -9 to -6 LUFS that's typical for trap/hip-hop, and the price is showing up as distortion: true peak is +3.2 dBTP and there are 11368 runs of clipped samples, the first at 0:01. Since this is going out as a release master, that will audibly break up on consumer playback and get worse after lossy encoding. The good news is it's all one cause — the output stage — and the fixes are straightforward. Stereo behaviour and balance are in good shape, so you're not chasing anything structural.",
+  "priorities": [
+   {
+    "finding_ids": [
+     "F1",
+     "F2",
+     "F3"
+    ],
+    "title": "Rebuild the output stage: ceiling, clipping, and level",
+    "why": "True peak at +3.2 dBTP means the file is over full scale, so codecs and consumer D/A stages will distort. The 11368 clipped runs starting at 0:01 point to either a 0 dB ceiling or gain added after the limiter. Pulling the level back toward the -9 to -6 LUFS range for the genre solves all three at once and gives the limiter room to work instead of crushing.",
+    "step_ids": [
+     "F1.1",
+     "F2.1",
+     "F3.1",
+     "F2.3"
+    ]
+   }
+  ],
+  "listen_for": [
+   "Play from 0:01 through 0:05 on headphones — the clipped runs start there, so listen for crackle or grit on transients that should be clean.",
+   "After lowering Limiter Gain by 2–4 dB, compare at matched volume and check whether the drums regain punch rather than just sounding smaller.",
+   "Check the 808s and kick on a phone or laptop speaker after setting Ceiling to −1.0 dB — that's where the codec distortion from the over-scale peaks would have shown up first.",
+   "Run the whole song through a loudness meter before the next bounce and confirm integrated LUFS and true peak land where you want them (F1.2)."
+  ],
+  "strengths": [
+   "Left/right balance is essentially dead centre at 0.01 dB.",
+   "Stereo correlation of 0.778 and low-end correlation of 0.783 are healthy — no phase trouble in the bass.",
+   "Mono fold-down only costs 0.52 dB, so the mix translates well on mono playback."
+  ]
+ },
+ "issues": [],
+ "checks": {
+  "ids_valid": "all ids exist",
+  "covers_critical": "all covered",
+  "covers_warnings": "all covered",
+  "numbers_grounded": "16 quoted, all found",
+  "tools_owned": "only owned tools",
+  "stage_appropriate": "not a mix",
+  "no_invented_problems": "the report has findings"
+ },
+ "judge": {
+  "priority_order": "Only one priority group is given (combining F1, F2, F3), so there's no ordering to assess.",
+  "explains_impact": "The priority explains real-world impact: 'codecs and consumer D/A stages will distort' and 'audibly break up on consumer playback and get worse after lossy encoding.'",
+  "groups_causes": "F1 (true peak) and F2 (clipping) share the same limiter-ceiling fix in the report, and grouping F3 (loudness) with them as part of 'gain staging/output stage' is a reasonable causal link the notes make explicit.",
+  "specific": "Notes cite exact measurements (-3.6 LUFS, +3.2 dBTP, 11368 runs, 0.778/0.783 correlation, 0.52 dB mono loss) and the trap/hip-hop target range from the report.",
+  "stage_appropriate": "Notes treat this correctly as a release master judged against consumer playback/codec standards, matching the report's 'master' stage.",
+  "faithful": "All claims (true peak, clipping count, loudness target, correlation figures, mono loss) match the report's measurements without adding unsupported problems.",
+  "concise": "Despite covering multiple points, each sentence adds new information (measurement, cause, or actionable check) without repetition or filler."
+ }
+}
