@@ -7,7 +7,7 @@ from . import refsets
 from .analyze import analyze_file
 from .catalog import DAWS, PACKAGES
 from .reference import MAX_REFERENCES, profile_file
-from .style import TARGETS
+from .style import canonical, style_ids
 from .util import utf8_console
 
 ICONS = {"critical": "[!!]", "warning": "[! ]", "info": "[i ]"}
@@ -26,8 +26,7 @@ def print_summary(r, show_fixes=True):
         print(f"  After fixing issues   {sc['if_fixed']:.1f} / 10")
     if r["style"]:
         sm = r["style"]
-        source = f"ranges from {sm['songs']} songs you measured" if sm.get("songs") else "built-in ranges"
-        print(f"  Style match           {sm['percent']}% to {sm['name']}  ({source})")
+        print(f"  Style match           {sm['percent']}% to {sm['name']}; ranges: {sm['source']['label']}")
         for d in sm["dims"]:
             if d["id"] == "tone":
                 print("    Tone at matched volume, against typical for the style:")
@@ -138,6 +137,14 @@ def load_references(args, parser):
     return refs
 
 
+def style_arg(value):
+    """A --style value as the current style id. Ids a style used to have (trap_hiphop) still work."""
+    sid = canonical(value)
+    if sid is None:
+        raise argparse.ArgumentTypeError(f"unknown style {value!r}. Choose from: {', '.join(style_ids())}")
+    return sid
+
+
 def main(argv=None):
     utf8_console()
     parser = argparse.ArgumentParser(prog="seraphim", description="Seraphim: technical QC for mixes and masters.")
@@ -150,8 +157,10 @@ def main(argv=None):
                         help="Plugin packages you own, comma-separated: " + ", ".join(sorted(PACKAGES)))
     parser.add_argument("--stage", default="auto", choices=["auto", "mix", "master"],
                         help="Is this a mix or a master? (default: guess from loudness)")
-    parser.add_argument("--style", default=None, choices=sorted(TARGETS),
-                        help="What you're going for, so loudness, punch and contrast are judged against that style")
+    parser.add_argument("--style", default=None, type=style_arg, metavar="STYLE",
+                        help="What you're going for, so loudness, punch and contrast are judged against that style. "
+                             "A parent style (hiphop_rap) or a sub-genre (hiphop_rap.drill); a sub-genre "
+                             "uses its parent's ranges until it has its own")
     parser.add_argument("--ref", action="append", metavar="FILE",
                         help=f"A song you want to sound like (repeat for up to {MAX_REFERENCES})")
     parser.add_argument("--ref-set", metavar="NAME", help="Compare with a saved reference set")

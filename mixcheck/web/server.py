@@ -32,7 +32,7 @@ from ..scan import LAUNCHERS, PLATFORM, PLATFORM_NAMES, scan_this_computer
 from ..reference import MAX_REFERENCES, apply_reference, profile_file, sanitize_profile
 from ..remediation import STAGES, attach_fixes, describe_setup, normalize_setup
 from ..score import score_flags
-from ..style import apply_style, style_match
+from ..style import LEGACY_IDS, apply_style, canonical, style_match
 from ..style import options as style_options
 from ..util import utf8_console
 
@@ -61,6 +61,7 @@ def info():
         "platform": {"id": PLATFORM, "noun": PLATFORM_NAMES[PLATFORM],
                      "launcher": LAUNCHERS.get(PLATFORM, "the start script")},
         "style_options": style_options(),
+        "style_aliases": LEGACY_IDS,  # ids a style used to have, so the page can update what it saved
         "accepted_formats": sorted(ALLOWED_SUFFIXES),
         "thresholds": THRESHOLDS,
         "max_references": MAX_REFERENCES,
@@ -262,7 +263,7 @@ def fixes(flags: list = Body(...), setup: dict = Body({}), stage: str = Body("mi
         "score": score_flags(flags, stage, vocal=vocal),
         "style": style_match(measures, target, stage),
         "reference": comparison,
-        "target": target or None,
+        "target": canonical(target),
         "setup": {**user_setup, "label": describe_setup(user_setup)},
         "stage": stage,
     }

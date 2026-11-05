@@ -932,6 +932,7 @@ let setup = loadSetup();   // null until the user has chosen
 let target = "";           // style the user is going for; "" means no preference
 try { target = localStorage.getItem("mixcheck.target") || ""; } catch {}
 let styleOptions = [];
+let styleAliases = {};     // ids a style used to have -> its current id (from the server)
 // Which computer Seraphim runs on, so the page says Mac or PC and names the right start file.
 let platformInfo = { id: "other", noun: "computer", launcher: "the start script" };
 let aiInfo = { available: false, reason: "This copy of Seraphim is older than the notes feature. Restart it after updating." };
@@ -1049,10 +1050,12 @@ async function initSetup() {
       fbStats = info.notes_feedback || fbStats;
       sepInfo = info.separation || sepInfo;
       styleOptions = info.style_options || [];
+      styleAliases = info.style_aliases || {};
     }
   } catch {}
-  $("target-select").innerHTML = `<option value="">No preference</option>` +
-    styleOptions.map((o) => `<option value="${esc(o.id)}">${esc(o.name)}</option>`).join("");
+  // A style saved under an id it used to have (trap_hiphop) is now under its current id.
+  if (styleAliases[target]) { target = styleAliases[target]; try { localStorage.setItem("mixcheck.target", target); } catch {} }
+  $("target-select").innerHTML = `<option value="">No preference</option>` + styleGroups();
   $("target-select").value = styleOptions.some((o) => o.id === target) ? target : "";
   initSplitOption();
   if (!setupOptions) return;
@@ -1114,6 +1117,15 @@ $("setup-dialog").addEventListener("close", () => {
 });
 
 /* What the user is going for: remembered, and applied without re-uploading. */
+// The style menu: each parent with its sub-genres under it.
+function styleGroups() {
+  return styleOptions.filter((o) => !o.parent).map((p) => {
+    const subs = styleOptions.filter((o) => o.parent === p.id);
+    return `<optgroup label="${esc(p.name)}"><option value="${esc(p.id)}">${esc(p.name)}: general</option>` +
+      subs.map((o) => `<option value="${esc(o.id)}">${esc(o.name)}</option>`).join("") + `</optgroup>`;
+  }).join("");
+}
+
 function setTarget(id) {
   target = id || "";
   $("target-select").value = target;
@@ -1913,7 +1925,8 @@ function renderStyle(r) {
     el.innerHTML = `
       <h3>What are you going for?</h3>
       <p>Loudness, punch, contrast and tone depend on the style. Pick one to see how this ${r.stage.value} compares.</p>
-      <div class="choices">${styleOptions.map((o) => `<button type="button" data-target="${esc(o.id)}">${esc(o.name)}</button>`).join("")}</div>`;
+      <div class="choices">${styleOptions.filter((o) => !o.parent).map((o) => `<button type="button" data-target="${esc(o.id)}">${esc(o.name)}</button>`).join("")}</div>
+      <p class="note">For something more specific, such as drill or house, use the style menu above.</p>`;
     return;
   }
   el.className = "style-match";
@@ -1941,10 +1954,11 @@ function renderStyle(r) {
       <span class="where">${d.status === "in" ? "In range" : "See bands"}</span></li>` +
     (sm.tone || []).map((b) => row(b, b.name, "dB", "band", b.words)).join("")).join("");
   const notes = [
-    sm.songs ? `Ranges measured from ${sm.songs} ${sm.name} songs you calibrated with.`
-             : "The shaded zone is typical for this style.",
+    sm.source.kind === "estimated" ? "The shaded zone is a built-in estimate for this style."
+      : sm.source.kind === "inherited" ? `${sm.name} has no ranges of its own yet, so the zone is ${sm.source.from_name}'s: ${sm.source.parent_label}.`
+      : `Ranges: ${sm.source.label}.`,
     sm.stage === "mix" ? "Loudness isn't compared for a mix; mastering sets it." : "",
-    !sm.songs ? "Tone is compared once you calibrate this style with real releases (seraphim-calibrate)." : "",
+    !(sm.tone && sm.tone.length) ? "Tone is compared once this style has been calibrated with real releases (seraphim-calibrate)." : "",
   ].filter(Boolean).join(" ");
   el.innerHTML = `
     <div><div class="pct">${sm.percent}%</div><p class="pct-label">style match</p></div>

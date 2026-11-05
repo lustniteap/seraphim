@@ -18,7 +18,7 @@ from typing import List
 from .util import fmt_time
 
 PROMPT_FILE = Path(__file__).parent / "prompts" / "notes.md"
-PROMPT_VERSION = "notes-v3"  # bump whenever prompts/notes.md or notes_input() changes. v2 = the pensive-fermi prompt; v3 = v2 + vocal estimates (serene-volta)
+PROMPT_VERSION = "notes-v4"  # bump whenever prompts/notes.md or notes_input() changes. v2 = the pensive-fermi prompt; v3 = v2 + vocal estimates; v4 = style provenance label
 DEFAULT_MODEL = "claude-opus-5"
 MAX_TOKENS = 16000
 # If the model declines, the API retries the same request on a fallback model it picks.
@@ -102,7 +102,7 @@ def notes_input(report):
         },
         "style": {
             "going_for": style["name"], "match_percent": style["percent"],
-            "ranges_from": f"{style['songs']} measured releases" if style.get("songs") else "built-in starting points",
+            "ranges_from": style["source"]["label"],  # e.g. "calibrated (12 songs)", "built-in estimate"
         } if style else None,
         "reference": {
             "songs": len(ref["references"]), "match_percent": ref["percent"],

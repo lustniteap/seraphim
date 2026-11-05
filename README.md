@@ -174,22 +174,35 @@ per finding, scaled by how bad the measurement is, in capped areas so one kind o
 the whole score. It also shows the score after fixing everything but notes. Rules: `mixcheck/score.py`.
 
 **Style match (%)** compares loudness, punch (PLR) and contrast (LRA) with what the user is going for:
-Trap / hip-hop, EDM, Pop, Rock / metal, R&B / soul, Acoustic / jazz, Lo-fi, or Film / classical.
-A −6 LUFS master is right for trap and wrong for jazz, so these never cost technical points. For a mix,
+Hip-hop / rap, EDM, Pop, Rock / metal, R&B / soul, Acoustic / jazz, Lo-fi, or Film / classical.
+A −6 LUFS master is right for hip-hop and wrong for jazz, so these never cost technical points. For a mix,
 loudness isn't compared (mastering sets it) and punch is judged against looser ranges. Lo-fi doesn't
 flag a dull top end. Findings like "Louder than your style" come with fix steps for the user's tools.
 The built-in ranges in `mixcheck/style.py` are starting points from common practice. Calibrating a
 style with real releases (below) replaces them and adds tone targets.
 
+Each style has **sub-genres** (31 in all, such as Drill or Boom bap under Hip-hop / rap, or House under
+EDM), picked from the same menu. A sub-genre is only listed where its loudness, punch, contrast or tone
+should differ from its parent's. Until a sub-genre has ranges of its own it uses its parent's, and
+the page says so. Every range also says where it came from: a built-in estimate, **rough** (measured from
+fewer than 8 songs), **calibrated** (8 or more), or inherited from the parent style.
+
 ```bash
-seraphim my_master.wav --style trap_hiphop
+seraphim my_master.wav --style hiphop_rap
+seraphim my_master.wav --style hiphop_rap.drill   # a sub-genre: parent.sub
 ```
+
+The old id `trap_hiphop` still works everywhere (the command line, saved calibrations and the style the
+page remembers); it is now `hiphop_rap`, and Trap is one of its sub-genres.
 
 ### Calibrating styles with real releases
 
 `seraphim-calibrate` measures released songs in each style and sets that style's ranges from them.
-Put 10–20 songs per style in subfolders named after the styles (`trap`, `hip-hop`, `edm`, `pop`, `rock`,
-`rnb`, `acoustic`, `jazz`, `lofi`, `film`, or the style ids), then:
+Put 10–20 songs per style in subfolders named after the styles (`hip-hop`, `trap`, `edm`, `pop`, `rock`,
+`rnb`, `acoustic`, `jazz`, `lofi`, `film`, or the style ids). A bare name such as `trap` or `jazz` means the
+whole parent style. To calibrate a sub-genre, put a folder named for it inside its parent's
+(`hip-hop/drill/`, `hip-hop/boom_bap/`) or use `--style hiphop_rap.drill=FOLDER`; songs directly in the
+parent's folder calibrate the parent. Then:
 
 ```bash
 seraphim-calibrate ~/Music/refs --dry-run    # measure and show the new ranges without saving
@@ -207,8 +220,8 @@ seraphim-calibrate --reset                   # back to the built-in ranges
   Styles you don't calibrate keep their current ranges.
 - The report shows old and new ranges side by side, and names songs that fall outside the new ranges on
   two or more measures, in case they're in the wrong folder.
-- Calibrated styles are also judged on **tone**: "5.7 dB lighter below 100 Hz than typical for Trap /
-  hip-hop", with an EQ step for your tools. Lo-fi still isn't flagged for a dark top end.
+- Calibrated styles are also judged on **tone**: "5.7 dB lighter below 100 Hz than typical for Hip-hop /
+  rap", with an EQ step for your tools. Lo-fi still isn't flagged for a dark top end.
 - Results go to `~/.mixcheck/style_targets.json` (or `$MIXCHECK_HOME`) and apply straight away in the web
   page and the command line. Measurements are cached, so re-running after adding songs is quick.
 

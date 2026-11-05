@@ -4,7 +4,10 @@ Point it at a folder with one subfolder per style, holding released songs in tha
 style (10–20 each is plenty):
 
     songs/
-      trap/   edm/   pop/   rock/   rnb/   acoustic/   lofi/   film/
+      hiphop/   edm/   pop/   rock/   rnb/   acoustic/   lofi/   film/
+
+A sub-genre goes in a folder inside its parent's (hiphop/drill/, hiphop/boom_bap/). Songs directly in
+the parent's folder calibrate the parent; a sub-genre without ranges of its own uses its parent's.
 
 Every song is measured on this computer the same way MixCheck measures a bounce:
 integrated loudness, punch (PLR), contrast (loudness range), and tone in five bands
@@ -36,7 +39,7 @@ from .bands import BAND_IDS, BANDS
 from .loudness import measure_loudness
 from .peaks import true_peak
 from .reference import measure_profile
-from .style import TARGETS, calibration_path, targets
+from .style import LEGACY_IDS, SUBGENRES, TARGETS, calibration_path, canonical, style_ids, targets
 from .util import db, mixcheck_home, utf8_console
 
 AUDIO_SUFFIXES = {".wav", ".wave", ".aif", ".aiff", ".flac", ".mp3"}
@@ -187,13 +190,24 @@ def _norm(s):
 
 
 def aliases():
-    """Folder names that mean each style: its id, its name, and each part of the name."""
+    """Folder names that mean each style: its id, its name, and each part of the name.
+
+    A sub-genre folder is its qualified id ("hiphop_rap.drill") or its parent's name followed by its
+    own ("Hip-hop / rap Drill"). A bare sub-genre name is deliberately not an alias: "trap", "jazz",
+    "classical" and "metal" already mean a whole parent style, and keep doing so. (To calibrate a
+    sub-genre from a folder named for it, put the folder inside its parent's: hiphop_rap/drill.)"""
     out = {}
     for sid, t in TARGETS.items():
         for key in [sid, t["name"], *re.split(r"/| and ", t["name"])]:
             if _norm(key):
                 out[_norm(key)] = sid
-    out["hiphop"], out["rap"], out["dance"], out["house"] = "trap_hiphop", "trap_hiphop", "edm", "edm"
+    for sid, sub in SUBGENRES.items():
+        parent = TARGETS[sub["parent"]]["name"]
+        for key in [sid, f"{parent} {sub['name']}", f"{parent} {sub['slug']}"]:
+            out[_norm(key)] = sid
+    for old, new in LEGACY_IDS.items():
+        out[_norm(old)] = new
+    out["trap"], out["hiphop"], out["rap"], out["dance"], out["house"] = "hiphop_rap", "hiphop_rap", "hiphop_rap", "edm", "edm"
     out["metal"], out["jazz"], out["classical"], out["soundtrack"] = "rock", "acoustic", "film", "film"
     return out
 
@@ -206,6 +220,15 @@ def find_songs(folder):
     return sorted(p for p in Path(folder).rglob("*") if p.suffix.lower() in AUDIO_SUFFIXES and p.is_file())
 
 
+def _sub_in(parent_id, folder_name):
+    """The sub-genre of a parent style that a subfolder name means ("drill", "Boom bap"), or None."""
+    name = _norm(folder_name)
+    for sid, sub in SUBGENRES.items():
+        if sub["parent"] == parent_id and name in (_norm(sub["slug"]), _norm(sub["name"])):
+            return sid
+    return None
+
+
 def collect(root=None, pairs=()):
     """{style id: [song paths]} from a root folder of style subfolders and/or STYLE=FOLDER pairs."""
     groups, unknown = {}, []
@@ -215,12 +238,21 @@ def collect(root=None, pairs=()):
             if sid is None:
                 unknown.append(sub.name)
                 continue
-            groups.setdefault(sid, []).extend(find_songs(sub))
+            # A parent's folder may hold a folder per sub-genre; those songs belong to the sub-genre, not the parent.
+            files, nested = find_songs(sub), 0
+            for child in sorted(p for p in sub.iterdir() if p.is_dir()) if sid in TARGETS else []:
+                child_sid = _sub_in(sid, child.name)
+                if child_sid:
+                    inside = set(find_songs(child))
+                    groups.setdefault(child_sid, []).extend(inside)
+                    files, nested = [f for f in files if f not in inside], nested + 1
+            if files or not nested:
+                groups.setdefault(sid, []).extend(files)
     for pair in pairs:
         key, _, folder = pair.partition("=")
-        sid = key if key in TARGETS else style_for(key)
+        sid = canonical(key) or style_for(key)
         if sid is None or not folder:
-            raise ValueError(f"--style takes STYLE=FOLDER with a style from: {', '.join(TARGETS)}")
+            raise ValueError(f"--style takes STYLE=FOLDER with a style from: {', '.join(style_ids())}")
         groups.setdefault(sid, []).extend(find_songs(folder))
     for sid in groups:
         groups[sid] = sorted({p.resolve() for p in groups[sid]})
@@ -234,8 +266,7 @@ def _fmt(r):
 
 
 def print_style_report(sid, n, old, new, odd, out=print):
-    name = TARGETS[sid]["name"]
-    out(f"\n{name}: {n} song(s)")
+    out(f"\n{old['full_name']}: {n} song(s)")
     for dim, (label, unit) in DIM_NAMES.items():
         mark = "" if list(old[dim]) == new[dim] else "   (changed)"
         out(f"  {label:<10} {_fmt(old[dim]):>16} {unit:<7} -> {_fmt(new[dim])} {unit}{mark}")
@@ -251,13 +282,18 @@ def show(out=print):
     """Print the ranges in use now and where they came from."""
     cal = targets()
     out(f"Style ranges in use (calibration file: {calibration_path()})")
+    waiting = 0
     for sid, t in cal.items():
-        source = f"measured from {t['songs']} songs" if t.get("songs") else "built-in starting points"
-        out(f"\n{t['name']}  ({source})")
+        if t["source"]["kind"] == "inherited":
+            waiting += 1  # same numbers as its parent; nothing new to show
+            continue
+        out(f"\n{t['full_name']}  ({t['source']['label']})")
         for dim, (label, unit) in DIM_NAMES.items():
             out(f"  {label:<10} {_fmt(t[dim])} {unit}")
         for bid, rg in (t.get("tone") or {}).items():
             out(f"  {BANDS[bid][3]:<10} {_fmt(rg)} dB (tone)")
+    if waiting:
+        out(f"\n{waiting} sub-genres have no ranges of their own yet and use their parent's.")
 
 
 # ---------------------------------------------------------------- main
@@ -269,7 +305,7 @@ def calibrate(groups, min_songs=MIN_SONGS, jobs=None, dry_run=False, out=print):
     styles = saved.get("styles") if isinstance(saved.get("styles"), dict) else {}
     new_styles = {}
     for sid, paths in groups.items():
-        name = TARGETS[sid]["name"]
+        name = current[sid]["full_name"]
         out(f"\n{name}: {len(paths)} file(s) in {', '.join(sorted({str(p.parent) for p in paths})) or '(none)'}")
         results, _ = measure_all(paths, jobs, progress=out) if paths else ({}, {})
         if len(results) < min_songs:
@@ -288,6 +324,9 @@ def calibrate(groups, min_songs=MIN_SONGS, jobs=None, dry_run=False, out=print):
         out("\nDry run: nothing saved.")
         return new_styles
     styles.update(new_styles)
+    for old, new in LEGACY_IDS.items():  # a calibration saved under an old id moves to the current one
+        if old in styles:
+            styles.setdefault(new, styles.pop(old))
     _write_json(calibration_path(), {"version": 1, "styles": styles})
     out(f"\nSaved to {calibration_path()}. Seraphim uses these ranges from now on "
         f"(run `seraphim-calibrate --reset` to go back to the built-in ones).")
@@ -299,11 +338,12 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         prog="seraphim-calibrate",
         description="Set each style's target ranges by measuring released songs in that style.",
-        epilog="Folder names can be a style id or name, e.g. trap, hip-hop, edm, pop, rock, rnb, "
-               "acoustic, jazz, lofi, film. Songs are measured on this computer and never copied.")
+        epilog="Folder names can be a style id or name, e.g. hip-hop, edm, pop, rock, rnb, acoustic, jazz, "
+               "lofi, film. For a sub-genre, use its id (hiphop_rap.drill) or put a folder named for it inside "
+               "its parent's (hiphop_rap/drill). Songs are measured on this computer and never copied.")
     parser.add_argument("folder", nargs="?", help="A folder with one subfolder of songs per style")
     parser.add_argument("--style", action="append", default=[], metavar="STYLE=FOLDER",
-                        help="Add a folder for one style (repeatable), e.g. --style trap_hiphop=~/refs/trap")
+                        help="Add a folder for one style or sub-genre (repeatable), e.g. --style hiphop_rap.drill=~/refs/drill")
     parser.add_argument("--min-songs", type=int, default=MIN_SONGS,
                         help=f"Fewest songs needed to calibrate a style (default {MIN_SONGS})")
     parser.add_argument("--jobs", type=int, help="Songs to measure at once (default: CPU cores minus one)")

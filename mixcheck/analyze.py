@@ -15,7 +15,7 @@ from .peaks import measure_peaks
 from .reference import apply_reference, measure_profile
 from .remediation import STAGES, attach_fixes, describe_setup, detect_stage, normalize_setup
 from .score import score_flags
-from .style import TARGETS, measures, style_flags, style_match
+from .style import canonical, measures, style_flags, style_match
 from . import separate
 from .spectrum import measure_spectrum
 from .stereo import measure_stereo
@@ -59,7 +59,7 @@ def analyze_file(path, setup=None, stage="auto", target=None, references=None, p
 
     setup: {"daw": id, "packages": [ids]} from catalog.py.
     stage: "mix", "master", or "auto" to guess from loudness.
-    target: a style id from style.TARGETS, or None for no preference.
+    target: a style id from style.py (a parent, a "parent.sub" sub-genre, or an id it used to have), or None for no preference.
     references: 1–3 profiles from reference.py to compare with, or None.
     progress: called with each name in PROGRESS_STAGES as that part finishes, or None.
     split_vocal: split the mix into vocal and instrumental and check the vocal (slow; needs the
@@ -116,7 +116,7 @@ def analyze_file(path, setup=None, stage="auto", target=None, references=None, p
     setup = normalize_setup(setup)
     report["stage"] = {"value": stage, "detected": detected, "reason": reason}
     report["setup"] = {**setup, "label": describe_setup(setup)}
-    target = target if target in TARGETS else None
+    target = canonical(target)
     report["measures"] = measures(report)
     report["target"] = target
     flags = build_flags(report) + style_flags(report["measures"], target, stage) + vocal_flags(vocal)

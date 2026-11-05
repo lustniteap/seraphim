@@ -210,7 +210,7 @@ def test_every_finding_is_scored():
 def test_style_is_judged_against_the_target():
     from mixcheck.style import apply_style, style_flags, style_match
     loud = {"lufs": -7.0, "plr": 8.0, "lra": 4.0, "air_pct": 0.001}
-    trap, jazz = style_match(loud, "trap_hiphop", "master"), style_match(loud, "acoustic", "master")
+    trap, jazz = style_match(loud, "hiphop_rap", "master"), style_match(loud, "acoustic", "master")
     assert trap["percent"] == 100 and jazz["percent"] < 50
     assert {f["id"] for f in style_flags(loud, "acoustic", "master")} >= {"louder_than_target", "more_limited_than_target"}
     # Lo-fi is dull on purpose; other styles still get the note.
@@ -223,7 +223,7 @@ def test_style_is_judged_against_the_target():
     assert "very_loud" in {f["id"] for f in style_flags(loud, None, "master")}
     # Changing target swaps the style findings and leaves the rest alone.
     flags = [{"id": "clipping", "severity": "warning"}] + style_flags(loud, "acoustic", "master")
-    swapped = apply_style(flags, loud, "trap_hiphop", "master")
+    swapped = apply_style(flags, loud, "hiphop_rap", "master")
     assert [f["id"] for f in swapped] == ["clipping", "no_air"]
 
 
@@ -324,28 +324,28 @@ def test_calibrated_style_ranges_and_tone():
     m = {"lufs": -7.0, "plr": 8.0, "lra": 4.0, "air_pct": 0.1,
          "tone": {"lows": -28.0, "low_mids": -24.0, "mids": -15.0, "presence": -11.0, "highs": -10.0}}
     try:
-        _calibrate_to({"trap_hiphop": {"songs": 12, "lufs": [-8, -5], "plr": [5, 8], "lra": [3, 6], "tone": tone},
+        _calibrate_to({"hiphop_rap": {"songs": 12, "lufs": [-8, -5], "plr": [5, 8], "lra": [3, 6], "tone": tone},
                        "lofi": {"songs": 6, "lufs": [-14, -9], "plr": [8, 12], "lra": [3, 8], "tone": tone},
                        "pop": {"lufs": "loud", "tone": {"lows": [3, 1]}}})
         t = targets()
-        assert t["trap_hiphop"]["lufs"] == (-8, -5) and t["trap_hiphop"]["songs"] == 12
+        assert t["hiphop_rap"]["lufs"] == (-8, -5) and t["hiphop_rap"]["songs"] == 12
         assert t["pop"]["lufs"] == (-10.0, -7.0) and "tone" not in t["pop"]  # malformed values are ignored
         assert t["edm"]["lufs"] == (-8.0, -5.0)  # styles that weren't calibrated keep their ranges
-        assert {o["id"]: o["songs"] for o in options()}["trap_hiphop"] == 12
+        assert {o["id"]: o["songs"] for o in options()}["hiphop_rap"] == 12
 
-        sm = style_match(m, "trap_hiphop", "mix")
+        sm = style_match(m, "hiphop_rap", "mix")
         assert sm["songs"] == 12 and [d["id"] for d in sm["dims"]] == ["plr", "lra", "tone"]
         lows = next(b for b in sm["tone"] if b["id"] == "lows")
         assert lows["status"] == "low" and lows["off_by"] == 4.0
-        tone_flags = [f for f in style_flags(m, "trap_hiphop", "master") if f["id"] == "tone_less_than_target"]
+        tone_flags = [f for f in style_flags(m, "hiphop_rap", "master") if f["id"] == "tone_less_than_target"]
         assert [f["band"] for f in tone_flags] == ["lows", "highs"]
-        assert "4.0 dB lighter below 100 Hz than typical for Trap / hip-hop" in tone_flags[0]["message"]
+        assert "4.0 dB lighter below 100 Hz than typical for Hip-hop / rap" in tone_flags[0]["message"]
         # Lo-fi's dull top end is the point, not a finding.
         lofi = [f for f in style_flags(m, "lofi", "master") if f["id"] == "tone_less_than_target"]
         assert [f["band"] for f in lofi] == ["lows"]
     finally:
         calibration_path().unlink()
-    assert targets()["trap_hiphop"]["lufs"] == (-9.0, -6.0) and "tone" not in targets()["trap_hiphop"]
+    assert targets()["hiphop_rap"]["lufs"] == (-9.0, -6.0) and "tone" not in targets()["hiphop_rap"]
 
 
 def test_calibrate_builds_ranges_from_songs():
@@ -355,9 +355,10 @@ def test_calibrate_builds_ranges_from_songs():
     assert spread([-8.2, -7.9, -7.5, -7.1, -6.6], 2.0) == [-8.5, -6.0]
     assert spread([-7.0] * 5, 2.0) == [-8.0, -6.0]
     names = aliases()
-    assert names["trap"] == names["hiphop"] == names["traphiphop"] == "trap_hiphop"
+    assert names["trap"] == names["hiphop"] == names["traphiphop"] == "hiphop_rap"
     assert names["lofi"] == "lofi" and names["rb"] == "rnb" and names["jazz"] == "acoustic"
 
+    import json
     import tempfile
     import soundfile as sf
     root = tempfile.mkdtemp()
@@ -367,16 +368,182 @@ def test_calibrate_builds_ranges_from_songs():
         sf.write(os.path.join(root, "Hip-Hop", f"s{i}.wav"), _song(seconds=31, bass_db=6.0, seed=i) * 2.5, FS)
     sf.write(os.path.join(root, "Hip-Hop", "clip.wav"), _song(seconds=10, seed=9), FS)
     groups, unknown = collect(root)
-    assert list(groups) == ["trap_hiphop"] and len(groups["trap_hiphop"]) == 4 and unknown == ["not a style"]
+    assert list(groups) == ["hiphop_rap"] and len(groups["hiphop_rap"]) == 4 and unknown == ["not a style"]
     try:
+        _calibrate_to({"trap_hiphop": {"songs": 99, "lufs": [-30, -29]}, "lofi": {"songs": 6, "lufs": [-14, -9]}})
         assert calibrate(groups, min_songs=4, jobs=1, out=lambda *a: None) == {}  # the clip is too short to count
-        new = calibrate(groups, min_songs=3, jobs=1, out=lambda *a: None)["trap_hiphop"]
+        new = calibrate(groups, min_songs=3, jobs=1, out=lambda *a: None)["hiphop_rap"]
         assert new["songs"] == 3 and len(new["tone"]) == 5
-        t = targets()["trap_hiphop"]
+        t = targets()["hiphop_rap"]
         assert t["songs"] == 3 and list(t["lufs"]) == new["lufs"]
         assert t["lufs"][1] - t["lufs"][0] >= 2.0
+        # A calibration saved under the old id moves to the new one when the file is rewritten; others are kept.
+        with open(calibration_path(), encoding="utf-8") as fh:
+            saved = json.load(fh)["styles"]
+        assert "trap_hiphop" not in saved and saved["hiphop_rap"]["songs"] == 3 and saved["lofi"]["songs"] == 6
     finally:
         calibration_path().unlink()
+
+
+def test_old_style_id_keeps_working():
+    import argparse
+    import tempfile
+    from scipy.io import wavfile
+    from mixcheck.cli import style_arg
+    from mixcheck.style import canonical, style_flags, style_match
+    assert canonical("trap_hiphop") == canonical("hiphop_rap") == "hiphop_rap"
+    assert canonical("hiphop_rap.drill") == "hiphop_rap.drill"
+    assert canonical("nope") is None and canonical(None) is None and canonical("") is None and canonical(["x"]) is None
+
+    loud = {"lufs": -7.0, "plr": 8.0, "lra": 4.0, "air_pct": 0.001}
+    assert style_match(loud, "trap_hiphop", "master") == style_match(loud, "hiphop_rap", "master")
+    assert style_flags(loud, "trap_hiphop", "master") == style_flags(loud, "hiphop_rap", "master")
+    assert style_match(loud, "nope", "master") is None
+
+    # The command line takes the old id and the new ones, and says which ids exist when it's wrong.
+    assert style_arg("trap_hiphop") == "hiphop_rap" and style_arg("hiphop_rap.drill") == "hiphop_rap.drill"
+    try:
+        style_arg("rock_n_roll")
+        assert False, "an unknown style should be refused"
+    except argparse.ArgumentTypeError as exc:
+        assert "hiphop_rap" in str(exc) and "hiphop_rap.drill" in str(exc)
+
+    # A whole analysis: the report records the current id, and an unknown one still means no preference.
+    path = os.path.join(tempfile.mkdtemp(), "tone.wav")
+    wavfile.write(path, FS, (stereo(sine(220, -12.0)) * 32767).astype(np.int16))
+    report = analyze_file(path, target="trap_hiphop")
+    assert report["target"] == "hiphop_rap" and report["style"]["name"] == "Hip-hop / rap"
+    assert analyze_file(path, target="nope")["target"] is None
+
+    # The page: it's told the old ids, the style list is grouped, and /api/fixes answers with the current id.
+    try:
+        from fastapi.testclient import TestClient
+    except (ImportError, RuntimeError):  # the web extra or httpx isn't installed
+        return
+    from mixcheck.web import server
+    client = TestClient(server.app)
+    info = client.get("/api/info").json()
+    ids = [o["id"] for o in info["style_options"]]
+    assert info["style_aliases"] == {"trap_hiphop": "hiphop_rap"}
+    assert ids[0] == "hiphop_rap" and "hiphop_rap.drill" in ids and len(ids) == 39
+    res = client.post("/api/fixes", json={"flags": [], "stage": "master", "target": "trap_hiphop", "measures": loud})
+    body = res.json()
+    assert res.status_code == 200 and body["target"] == "hiphop_rap" and body["style"]["name"] == "Hip-hop / rap"
+
+
+def test_calibration_saved_under_the_old_id_still_applies():
+    from mixcheck.style import calibration_path, targets
+    try:
+        _calibrate_to({"trap_hiphop": {"songs": 9, "lufs": [-8, -5]}})
+        t = targets()
+        assert t["hiphop_rap"]["lufs"] == (-8, -5) and t["hiphop_rap"]["source"]["label"] == "calibrated (9 songs)"
+        assert t["hiphop_rap.drill"]["lufs"] == (-8, -5)  # its sub-genres follow it
+        # If a file somehow holds both, the current id wins.
+        _calibrate_to({"trap_hiphop": {"songs": 9, "lufs": [-8, -5]}, "hiphop_rap": {"songs": 10, "lufs": [-7, -4]}})
+        assert targets()["hiphop_rap"]["lufs"] == (-7, -4) and targets()["hiphop_rap"]["songs"] == 10
+    finally:
+        calibration_path().unlink()
+
+
+def test_subgenres_use_their_parents_ranges_until_calibrated():
+    from mixcheck.style import SUBGENRES, TARGETS, calibration_path, options, style_flags, style_ids, style_match, targets
+    # The table: 31 sub-genres, each under a real parent, keyed parent.sub, with a calibration priority.
+    assert len(SUBGENRES) == 31 and len(style_ids()) == 39
+    for sid, sub in SUBGENRES.items():
+        assert sid == f"{sub['parent']}.{sub['slug']}" and sub["parent"] in TARGETS and sub["priority"] in (1, 2, 3)
+    assert len({(s["parent"], s["name"]) for s in SUBGENRES.values()}) == 31
+    assert all(sum(s["parent"] == p for s in SUBGENRES.values()) >= 2 for p in TARGETS)
+    ids = style_ids()
+    assert ids[:7] == ["hiphop_rap", "hiphop_rap.trap", "hiphop_rap.drill", "hiphop_rap.boom_bap",
+                       "hiphop_rap.rage", "hiphop_rap.melodic", "edm"]
+    opts = options()
+    assert [o["id"] for o in opts] == ids
+    assert opts[0]["parent"] is None and opts[0]["name"] == "Hip-hop / rap"
+    assert opts[1]["parent"] == "hiphop_rap" and opts[1]["group"] == "Hip-hop / rap" and opts[1]["name"] == "Trap"
+
+    # Nothing calibrated: every sub-genre has exactly its parent's numbers, and says so.
+    t = targets()
+    for sid, sub in SUBGENRES.items():
+        assert all(t[sid][d] == t[sub["parent"]][d] for d in ("lufs", "plr", "lra"))
+        assert t[sid]["source"]["kind"] == "inherited" and t[sid]["source"]["from"] == sub["parent"]
+        assert "songs" not in t[sid]
+    assert t["hiphop_rap"]["source"]["label"] == "built-in estimate"
+    drill = t["hiphop_rap.drill"]
+    assert drill["source"]["label"] == "inherited from Hip-hop / rap: built-in estimate"
+    assert drill["source"]["from_name"] == "Hip-hop / rap" and drill["source"]["parent_label"] == "built-in estimate"
+    assert t["hiphop_rap"]["source"]["from"] is None and t["hiphop_rap"]["source"]["parent_label"] is None
+    assert drill["name"] == "Drill" and drill["full_name"] == "Drill (Hip-hop / rap)"
+
+    # Flags come down too: lo-fi is dull on purpose, so its sub-genre isn't told it has no air.
+    quiet_top = {"air_pct": 0.001}
+    assert "no_air" not in {f["id"] for f in style_flags(quiet_top, "lofi.chillhop", "master")}
+    assert "no_air" in {f["id"] for f in style_flags(quiet_top, "pop.dance_pop", "master")}
+
+    tone = {"lows": [-24, -20], "low_mids": [-26, -22], "mids": [-17, -13], "presence": [-13, -9], "highs": [-8, -4]}
+    try:
+        _calibrate_to({"hiphop_rap": {"songs": 12, "lufs": [-8, -5], "plr": [5, 8], "lra": [3, 6], "tone": tone},
+                       "hiphop_rap.drill": {"songs": 4, "lufs": [-12, -7]}})
+        t = targets()
+        assert t["hiphop_rap"]["source"]["label"] == "calibrated (12 songs)"
+        # Trap has nothing of its own, so it follows the parent's calibration, tone included.
+        trap = t["hiphop_rap.trap"]
+        assert trap["lufs"] == (-8, -5) and trap["tone"] == t["hiphop_rap"]["tone"]
+        assert trap["source"]["label"] == "inherited from Hip-hop / rap: calibrated (12 songs)"
+        # Drill has its own loudness and takes the rest from the parent, which is unaffected.
+        d = t["hiphop_rap.drill"]
+        assert d["lufs"] == (-12, -7) and d["plr"] == (5, 8) and d["lra"] == (3, 6) and d["tone"] == t["hiphop_rap"]["tone"]
+        assert d["songs"] == 4 and d["source"]["kind"] == "rough" and d["source"]["inherits"] == ["plr", "lra", "tone"]
+        assert d["source"]["label"] == "rough (4 songs); punch, contrast, tone from Hip-hop / rap"
+        assert t["hiphop_rap"]["lufs"] == (-8, -5) and t["hiphop_rap"]["songs"] == 12
+        # What the user sees names the sub-genre and its parent, and where the numbers came from.
+        sm = style_match({"lufs": -20.0, "plr": 6.0, "lra": 4.0}, "hiphop_rap.drill", "master")
+        assert sm["name"] == "Drill (Hip-hop / rap)" and sm["source"]["kind"] == "rough"
+        quiet = next(f for f in style_flags({"lufs": -20.0}, "hiphop_rap.drill", "master") if f["id"] == "quieter_than_target")
+        assert "typical for Drill (Hip-hop / rap) is -12 to -7 LUFS" in quiet["message"]
+        # Under 8 songs is rough; 8 or more is calibrated.
+        _calibrate_to({"pop": {"songs": 7, "lufs": [-9, -7]}, "rock": {"songs": 8, "lufs": [-9, -7]},
+                       "edm": {"songs": 1, "lufs": [-9, -7]}})
+        t = targets()
+        assert t["pop"]["source"]["label"] == "rough (7 songs)" and t["rock"]["source"]["label"] == "calibrated (8 songs)"
+        assert t["edm"]["source"]["label"] == "rough (1 song)"
+    finally:
+        calibration_path().unlink()
+
+
+def test_calibrate_finds_subgenre_folders():
+    import tempfile
+    from pathlib import Path
+    from mixcheck.calibrate import collect, style_for
+    # Qualified names mean a sub-genre; a bare name keeps meaning the whole parent, as it always did.
+    assert style_for("hiphop_rap.drill") == style_for("Hip-hop / rap Drill") == "hiphop_rap.drill"
+    assert style_for("trap") == style_for("rap") == style_for("trap_hiphop") == "hiphop_rap"
+    assert style_for("jazz") == "acoustic" and style_for("classical") == "film" and style_for("Boom bap") is None
+
+    root = Path(tempfile.mkdtemp())
+    for rel in ("Hip-Hop/a.wav", "Hip-Hop/drill/b.wav", "Hip-Hop/drill/deeper/c.wav", "Hip-Hop/Boom Bap/d.wav",
+                "Hip-Hop/other/e.wav", "EDM/house/f.wav"):
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_bytes(b"")
+    groups, unknown = collect(root)
+    names = lambda sid: sorted(p.name for p in groups[sid])
+    assert unknown == []
+    # Songs in a sub-genre's folder calibrate the sub-genre, not the parent; everything else stays with the parent.
+    assert names("hiphop_rap.drill") == ["b.wav", "c.wav"] and names("hiphop_rap.boom_bap") == ["d.wav"]
+    assert names("hiphop_rap") == ["a.wav", "e.wav"]
+    # A parent folder holding nothing but sub-genre folders doesn't also ask to calibrate the parent on no songs.
+    assert names("edm.house") == ["f.wav"] and "edm" not in groups
+
+    # --style takes the current id, a sub-genre, or an id the style used to have.
+    folder = root / "refs"
+    folder.mkdir()
+    (folder / "x.flac").write_bytes(b"")
+    groups, _ = collect(None, [f"trap_hiphop={folder}", f"hiphop_rap.rage={folder}"])
+    assert sorted(groups) == ["hiphop_rap", "hiphop_rap.rage"]
+    try:
+        collect(None, [f"made_up={folder}"])
+        assert False, "an unknown style should be refused"
+    except ValueError as exc:
+        assert "hiphop_rap.drill" in str(exc)
 
 
 class _FakeClient:

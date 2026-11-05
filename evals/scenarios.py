@@ -18,7 +18,7 @@ SCENARIOS = {
     # The other stage and a different toolset: stage-appropriate advice, and only owned tools.
     "other_stage": {"stage": "flip", "setup": {"daw": "logic", "packages": ["fabfilter"]}, "target": ""},
     # A style to aim for, with stock tools only.
-    "trap_target": {"stage": None, "setup": {"daw": "ableton", "packages": []}, "target": "trap_hiphop"},
+    "trap_target": {"stage": None, "setup": {"daw": "ableton", "packages": []}, "target": "hiphop_rap"},
 }
 
 

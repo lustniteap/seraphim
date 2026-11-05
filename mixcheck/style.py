@@ -21,7 +21,7 @@ DEFAULT_LIMITS = {"very_loud_lufs": -9.0, "low_plr_db": 8.0, "low_lra_lu": 4.0, 
 # Ranges for a finished master in each style. Starting points from common practice;
 # `mixcheck-calibrate` replaces them with ranges measured from real releases.
 TARGETS = {
-    "trap_hiphop": {"name": "Trap / hip-hop", "lufs": (-9.0, -6.0), "plr": (6.0, 9.5), "lra": (2.5, 7.0)},
+    "hiphop_rap": {"name": "Hip-hop / rap", "lufs": (-9.0, -6.0), "plr": (6.0, 9.5), "lra": (2.5, 7.0)},
     "edm": {"name": "EDM / dance", "lufs": (-8.0, -5.0), "plr": (5.0, 8.5), "lra": (2.0, 6.0)},
     "pop": {"name": "Pop", "lufs": (-10.0, -7.0), "plr": (7.0, 10.0), "lra": (3.0, 7.0)},
     "rock": {"name": "Rock / metal", "lufs": (-10.0, -6.5), "plr": (6.0, 9.5), "lra": (3.0, 7.0)},
@@ -29,6 +29,52 @@ TARGETS = {
     "acoustic": {"name": "Acoustic / jazz", "lufs": (-16.0, -11.0), "plr": (10.0, 15.0), "lra": (6.0, 12.0)},
     "lofi": {"name": "Lo-fi", "lufs": (-14.0, -9.0), "plr": (8.0, 12.0), "lra": (3.0, 8.0), "dull_ok": True},
     "film": {"name": "Film / classical", "lufs": (-23.0, -16.0), "plr": (14.0, 22.0), "lra": (8.0, 20.0)},
+}
+
+# Ids a style used to go by. Saved calibrations (style_targets.json), command-line --style values
+# and the page's saved choice may still use them, so they keep working everywhere.
+LEGACY_IDS = {"trap_hiphop": "hiphop_rap"}
+
+# Sub-genres, each under one of the eight parent styles above. A sub-genre is only listed when its
+# technical targets should differ from its parent's. Until it has ranges of its own it uses its
+# parent's (see targets()). Key format is "parent.sub". Priority is the order to calibrate them in:
+# 1 first, 2 next, 3 when there's demand. An optional "flags" overrides a flag the parent sets.
+_SUBGENRES = [
+    ("hiphop_rap", "trap", "Trap", 1),
+    ("hiphop_rap", "drill", "Drill", 1),
+    ("hiphop_rap", "boom_bap", "Boom bap", 1),
+    ("hiphop_rap", "rage", "Rage", 1),
+    ("hiphop_rap", "melodic", "Melodic / emo rap", 1),
+    ("edm", "house", "House / tech house", 2),
+    ("edm", "techno", "Techno", 3),
+    ("edm", "dubstep", "Dubstep / bass music", 2),
+    ("edm", "drum_and_bass", "Drum & bass", 3),
+    ("edm", "future_bass", "Melodic / future bass", 3),
+    ("pop", "mainstream", "Mainstream / radio pop", 2),
+    ("pop", "dance_pop", "Dance pop", 2),
+    ("pop", "indie_pop", "Indie / bedroom pop", 2),
+    ("pop", "ballad", "Pop ballad", 3),
+    ("rock", "alternative", "Alternative / indie rock", 2),
+    ("rock", "classic_rock", "Classic rock", 3),
+    ("rock", "punk", "Punk / pop-punk", 3),
+    ("rock", "metal", "Metal / metalcore", 2),
+    ("rnb", "contemporary", "Contemporary R&B", 2),
+    ("rnb", "alternative", "Alternative R&B", 3),
+    ("rnb", "neo_soul", "Neo-soul", 3),
+    ("rnb", "classic_soul", "Classic soul", 3),
+    ("acoustic", "singer_songwriter", "Singer-songwriter / folk", 3),
+    ("acoustic", "americana", "Americana / acoustic band", 3),
+    ("acoustic", "jazz", "Jazz (combo)", 3),
+    ("lofi", "chillhop", "Lo-fi hip hop / chillhop", 2),
+    ("lofi", "indie", "Chill / lo-fi indie", 3),
+    ("film", "trailer", "Trailer / hybrid cinematic", 3),
+    ("film", "orchestral", "Orchestral score", 3),
+    ("film", "classical", "Classical", 3),
+    ("film", "ambient", "Ambient / soundscape", 3),
+]
+SUBGENRES = {
+    f"{parent}.{slug}": {"parent": parent, "slug": slug, "name": name, "priority": priority}
+    for parent, slug, name, priority in _SUBGENRES
 }
 
 # A mix isn't judged on loudness (mastering sets it) and should keep more punch than the master will.
@@ -83,22 +129,109 @@ def _pair(v):
     return None
 
 
+def canonical(target_id):
+    """The current id for a style id (a parent, a "parent.sub" sub-genre, or a legacy id), else None."""
+    if not isinstance(target_id, str):
+        return None
+    sid = LEGACY_IDS.get(target_id, target_id)
+    return sid if sid in TARGETS or sid in SUBGENRES else None
+
+
+def style_ids():
+    """Every style id that can be picked: each parent, then its sub-genres."""
+    return [sid for parent in TARGETS for sid in (parent, *(s for s, v in SUBGENRES.items() if v["parent"] == parent))]
+
+
+def _calibrated(cal, sid):
+    """The saved calibration for one style, also looking under the id it used to have."""
+    for key in (sid, *(old for old, new in LEGACY_IDS.items() if new == sid)):
+        if isinstance(cal.get(key), dict):
+            return cal[key]
+    return None
+
+
+def _overlay(t, c):
+    """Lay a saved calibration over a target. Returns the dimensions the calibration supplied."""
+    own = set()
+    for dim in ("lufs", "plr", "lra"):
+        pair = _pair(c.get(dim))
+        if pair:
+            t[dim] = pair
+            own.add(dim)
+    tone = c.get("tone") if isinstance(c.get("tone"), dict) else {}
+    tone = {b: _pair(tone.get(b)) for b in BANDS if _pair(tone.get(b))}
+    if tone:
+        t["tone"] = tone
+        own.add("tone")
+    songs = c.get("songs")
+    if isinstance(songs, int) and not isinstance(songs, bool):
+        t["songs"] = songs
+    return own
+
+
+# Under this many songs a calibration is "rough"; from here it's "calibrated".
+ROUGH_BELOW = 8
+DIM_WORDS = {"lufs": "loudness", "plr": "punch", "lra": "contrast", "tone": "tone"}
+
+
+def _plural(n):
+    return f"{n} song" + ("" if n == 1 else "s")
+
+
+def _source(t, own, parent=None):
+    """Where a target's numbers came from, so the page and the notes can say how far to trust them.
+
+    kind: "estimated" (built in), "rough" or "calibrated" (measured from songs), or "inherited"
+    (a sub-genre still using its parent's numbers). A sub-genre with some ranges of its own and
+    some from its parent is judged by its own songs and lists what it takes from the parent."""
+    songs = t.get("songs") if own else None
+    inherits = [d for d in DIM_WORDS if parent is not None and d not in own and (d != "tone" or t.get("tone"))]
+    if songs:
+        kind = "rough" if songs < ROUGH_BELOW else "calibrated"
+        label = f"{kind} ({_plural(songs)})"
+        if inherits:
+            label += "; " + ", ".join(DIM_WORDS[d] for d in inherits) + f" from {parent['name']}"
+    elif parent is not None:
+        kind, label = "inherited", f"inherited from {parent['name']}: {parent['source']['label']}"
+    else:
+        kind, label = "estimated", "built-in estimate"
+    borrows = parent is not None and (kind == "inherited" or bool(inherits))
+    return {"kind": kind, "songs": songs or None, "label": label,
+            "from": parent["id"] if borrows else None, "from_name": parent["name"] if borrows else None,
+            "parent_label": parent["source"]["label"] if borrows else None,
+            "inherits": inherits if songs else []}
+
+
 def targets():
-    """Every style's ranges: built-in, with calibrated values laid over the styles that have them."""
+    """Every style's ranges, parents and sub-genres: built-in, with calibrated values laid over the
+    styles that have them. A sub-genre uses its parent's ranges (and flags such as dull_ok) for
+    anything it hasn't been calibrated on itself."""
     out, cal = {}, calibration()
     for sid, base in TARGETS.items():
-        t, c = dict(base), cal.get(sid)
-        if isinstance(c, dict):
-            for dim in ("lufs", "plr", "lra"):
-                t[dim] = _pair(c.get(dim)) or t[dim]
-            tone = c.get("tone") if isinstance(c.get("tone"), dict) else {}
-            tone = {b: _pair(tone.get(b)) for b in BANDS if _pair(tone.get(b))}
-            if tone:
-                t["tone"] = tone
-            if isinstance(c.get("songs"), int):
-                t["songs"] = c["songs"]
+        t = dict(base)
+        c = _calibrated(cal, sid)
+        own = _overlay(t, c) if c else set()
+        t.update(id=sid, parent=None, full_name=t["name"])
+        t["source"] = _source(t, own)
+        out[sid] = t
+    for sid, sub in SUBGENRES.items():
+        parent = out[sub["parent"]]
+        t = {k: v for k, v in parent.items() if k not in ("songs", "source")}
+        c = _calibrated(cal, sid)
+        own = _overlay(t, c) if c else set()
+        t.update(id=sid, parent=sub["parent"], name=sub["name"], full_name=f"{sub['name']} ({parent['name']})",
+                 priority=sub["priority"], **sub.get("flags", {}))
+        t["source"] = _source(t, own, parent)
+        if not own:
+            t.pop("songs", None)
         out[sid] = t
     return out
+
+
+def get_target(target_id):
+    """One style's resolved ranges by any id it has had, or None."""
+    sid = canonical(target_id)
+    return targets()[sid] if sid else None
 
 
 def _num(v):
@@ -119,7 +252,7 @@ def measures(report):
 
 
 def ranges(target_id, stage):
-    t = targets()[target_id]
+    t = get_target(target_id)
     out = {"lra": t["lra"]}
     if stage == "master":
         out.update(lufs=t["lufs"], plr=t["plr"])
@@ -143,7 +276,7 @@ def style_flags(m, target_id, stage):
         flags.append({"id": fid, "severity": severity, "message": message, **data})
 
     lufs, plr, lra, air = (_num(m.get(k)) for k in ("lufs", "plr", "lra", "air_pct"))
-    target = targets().get(target_id)
+    target = get_target(target_id)
 
     if air is not None and air < DEFAULT_LIMITS["lossy_air_pct"] and not (target or {}).get("dull_ok"):
         flag("no_air", "info",
@@ -160,7 +293,7 @@ def style_flags(m, target_id, stage):
             flag("low_lra", "info", f"Loudness range is {lra:.1f} LU; there is little contrast between sections.", value=lra)
         return flags
 
-    name, rg = target["name"], ranges(target_id, stage)
+    name, rg = target["full_name"], ranges(target["id"], stage)
     checks = [
         ("lufs", lufs, "quieter_than_target", "louder_than_target", "LUFS"),
         ("plr", plr, "more_limited_than_target", "more_dynamic_than_target", "dB PLR"),
@@ -215,11 +348,11 @@ def _row(v, lo, hi, tol):
 
 def style_match(m, target_id, stage):
     """How close the file is to the target, overall and per dimension; None with no target."""
-    all_targets = targets()
-    if target_id not in all_targets:
+    t = get_target(target_id)
+    if t is None:
         return None
-    t, dims, tone = all_targets[target_id], [], []
-    for dim, rg in ranges(target_id, stage).items():
+    dims, tone = [], []
+    for dim, rg in ranges(t["id"], stage).items():
         name, unit, tol = DIMS[dim]
         if dim == "tone":
             mine = _tone_values(m)
@@ -243,9 +376,15 @@ def style_match(m, target_id, stage):
         lo, hi = rg
         dims.append({"id": dim, "name": name, "unit": unit, **_row(v, lo, hi, tol)})
     percent = round(100 * sum(d["match"] for d in dims) / len(dims)) if dims else None
-    return {"target": target_id, "name": t["name"], "stage": stage, "percent": percent,
-            "dims": dims, "tone": tone, "songs": t.get("songs")}
+    return {"target": t["id"], "name": t["full_name"], "stage": stage, "percent": percent,
+            "dims": dims, "tone": tone, "songs": t.get("songs"), "source": t["source"]}
 
 
 def options():
-    return [{"id": k, "name": v["name"], "songs": v.get("songs")} for k, v in targets().items()]
+    """Every style the page can offer: each parent, followed by its sub-genres. A sub-genre carries its
+    parent's id so the picker can group them. `songs` is the songs this style's own ranges came from."""
+    all_targets = targets()
+    return [{"id": sid, "name": all_targets[sid]["name"], "parent": all_targets[sid]["parent"],
+             "group": all_targets[all_targets[sid]["parent"] or sid]["name"],
+             "songs": all_targets[sid].get("songs"), "source": all_targets[sid]["source"]}
+            for sid in style_ids()]
