@@ -980,7 +980,10 @@ def test_listener_reply_checks_enforce_the_contract():
     assert bad(lambda r: r["instruments"].append("tempo around 140 BPM"))
     assert bad(lambda r: r["qualities"].append("sounds like it is in F minor"))
     assert bad(lambda r: r["vocal"].update(kind="screamed"))
-    assert bad(lambda r: r["sections"].append({"label": "outro", "start_s": 40, "end_s": 300}))   # past the audio
+    assert bad(lambda r: r["sections"].append({"label": "outro", "start_s": 40, "end_s": 300}))   # far past the audio
+    assert bad(lambda r: r["sections"].append({"label": "outro", "start_s": 70, "end_s": 80}))    # starts after it ends
+    r = _good_listen(); r["sections"][-1]["end_s"] = 71.0                        # a little past the end: kept, clamped
+    assert listen.check(r, 60) == [] and listen.clean(r, 60)["sections"][-1]["end_s"] == 60.0
     assert bad(lambda r: r["sections"].append({"label": "outro", "start_s": 20, "end_s": 50}))    # overlaps
     assert bad(lambda r: r.pop("style"))
     assert listen.check("not an object", 60)
@@ -1035,6 +1038,35 @@ def test_listener_trusts_certificates_and_failed_songs_are_retried():
         from pathlib import Path
         done = listen_eval.load_done(Path(d))
     assert set(done) == {"a"}
+
+
+def test_listener_waits_and_retries_when_the_provider_says_slow_down():
+    import json, tempfile, soundfile as sf
+    from mixcheck import listen
+    calls, naps = [], []
+    def flaky(wav, model, key, ask):
+        calls.append(1)
+        if len(calls) < 3:
+            raise listen.RateLimited("slow down", retry_s=7.0)
+        return json.dumps(_good_listen()), {}
+    real_sleep, real_post = listen.time.sleep, listen._post_json
+    listen.time.sleep = naps.append
+    listen._gemini_real, listen._gemini = getattr(listen, "_gemini_real", None), flaky
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            sf.write(f"{d}/s.wav", np.random.RandomState(1).uniform(-0.3, 0.3, (16000 * 45, 2)), 16000)
+            res = listen.listen_to(f"{d}/s.wav", key="K")
+            assert res["ok"] and naps == [8.0, 8.0]                              # waited what it said, plus a second
+            calls.clear(); naps.clear()
+            def daily(wav, model, key, ask):
+                raise listen.RateLimited("PerDay", daily=True)
+            listen._gemini = daily
+            res = listen.listen_to(f"{d}/s.wav", key="K")
+            assert not res["ok"] and "daily" in res["reason"] and naps == []     # no pointless waiting
+    finally:
+        listen.time.sleep = real_sleep
+        listen._gemini = listen._gemini_real
+        del listen._gemini_real
 
 
 def test_listener_audio_is_small_and_cost_is_estimated():

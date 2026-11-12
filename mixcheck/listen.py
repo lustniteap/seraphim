@@ -39,6 +39,7 @@ PRICE_PER_M_AUDIO = 0.90                  # dollars per million audio input toke
 SECTION_LABELS = ("intro", "verse", "hook", "pre_hook", "bridge", "drop", "beat_only", "breakdown", "outro", "other")
 VOCAL_KINDS = ("rapped", "sung", "rapped_and_sung", "spoken", "none")
 MAX_INSTRUMENTS, MAX_QUALITIES, MAX_SECTIONS = 12, 6, 40
+END_SLACK_S = 20.0                        # a section end this far past the audio is clamped to it; further is rejected
 
 # Numbers that belong to the engine. A free-text field that carries one is a violation.
 _MEASURED = re.compile(r"\d+(\.\d+)?\s*(db|dbfs|dbtp|lufs|lu|hz|khz|bpm|%|percent|ms|semitone)\b|\bbpm\b|\b[a-g][#b]?\s*(major|minor)\b",
@@ -57,10 +58,11 @@ def vocabulary():
     return names
 
 
-def prompt():
+def prompt(duration_s=None):
+    length = f"The audio is {duration_s:.0f} seconds long. " if duration_s else ""
     styles = "\n".join(f"  {sid}: {name}" for sid, name in vocabulary().items())
     return f"""You are listening to a finished or nearly finished song to describe it for a mixing engineer's assistant.
-Describe only what you can hear. Reply with one JSON object and nothing else.
+Describe only what you can hear. {length}Reply with one JSON object and nothing else.
 
 Rules:
 - Do not state any measured quantity: no loudness, no decibels, no frequencies, no tempo or BPM, no musical key, no
@@ -71,7 +73,8 @@ Rules:
 - "instruments": up to {MAX_INSTRUMENTS} short lowercase names of what you hear (for example "808 bass", "hi-hats", "piano").
 - "vocal": "kind" is one of {', '.join(VOCAL_KINDS)}; "present" is true or false.
 - "sections": the song's sections in order, each with a "label" from {', '.join(SECTION_LABELS)} and "start_s" and
-  "end_s" in seconds from the start of the audio you were given. Sections must not overlap and must stay inside the audio.
+  "end_s" in seconds from the start of the audio you were given. Sections must not overlap, and the last one must end where the
+  audio ends.
 - "qualities": up to {MAX_QUALITIES} short plain phrases about things you hear that a meter would not tell us (for example
   "vocal sounds heavily pitch-corrected", "bass sounds distorted"). These are impressions, not measurements.
 
@@ -132,7 +135,7 @@ def check(reply, duration_s):
             if not ok:
                 out.append(f"sections[{i}]: needs a label from the list and numeric start_s and end_s")
                 continue
-            if s["start_s"] < 0 or s["end_s"] <= s["start_s"] or s["end_s"] > duration_s + 2.0:
+            if s["start_s"] < 0 or s["start_s"] >= duration_s or s["end_s"] <= s["start_s"] or s["end_s"] > duration_s + END_SLACK_S:
                 out.append(f"sections[{i}]: times outside the audio ({s['start_s']} to {s['end_s']})")
             elif s["start_s"] < prev_end - 1.0:
                 out.append(f"sections[{i}]: overlaps the previous section")
@@ -140,8 +143,10 @@ def check(reply, duration_s):
     return out
 
 
-def clean(reply):
-    """The reply reduced to the fields in the contract, with the confidence rounded and sections sorted."""
+def clean(reply, duration_s=None):
+    """The reply reduced to the fields in the contract, with the confidence rounded, sections sorted and any section end
+    that runs a little past the audio clamped to it."""
+    end = (lambda t: min(t, duration_s)) if duration_s else (lambda t: t)
     st = reply["style"]
     return {"version": LISTEN_VERSION,
             "style": {"id": st.get("id"), "confidence": round(float(st["confidence"]), 2),
@@ -149,7 +154,7 @@ def clean(reply):
             "instruments": [t.strip().lower() for t in reply["instruments"]],
             "vocal": {"present": reply["vocal"]["present"], "kind": reply["vocal"]["kind"]},
             "sections": sorted(({"label": s["label"], "start_s": round(float(s["start_s"]), 1),
-                                 "end_s": round(float(s["end_s"]), 1)} for s in reply["sections"]),
+                                 "end_s": round(float(end(s["end_s"])), 1)} for s in reply["sections"]),
                                key=lambda s: s["start_s"]),
             "qualities": [{"note": t.strip(), "trust": "heard, unverified"} for t in reply["qualities"]]}
 
@@ -178,6 +183,14 @@ def estimate_cost(duration_s):
 
 # ---------------------------------------------------------------- providers
 
+class RateLimited(RuntimeError):
+    """The provider asked us to slow down. retry_s is how long it said to wait (None if it did not say);
+    daily is True when the limit is for the whole day, where waiting a minute will not help."""
+    def __init__(self, message, retry_s=None, daily=False):
+        super().__init__(message)
+        self.retry_s, self.daily = retry_s, daily
+
+
 def _ssl_context():
     """Certificates to trust. Python installed from python.org on a Mac has none until a setup file is run, so use the
     certifi bundle when it is installed (it comes with the web extras)."""
@@ -196,7 +209,12 @@ def _post_json(url, body, key, timeout=180):
         with urllib.request.urlopen(req, timeout=timeout, context=_ssl_context()) as r:
             return json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
-        detail = e.read().decode("utf-8", "replace")[:300]
+        raw = e.read().decode("utf-8", "replace")
+        detail = raw[:300]
+        if e.code == 429:
+            m = re.search(r'retry(?:Delay"?:\s*"|\s+in\s+)([\d.]+)s', raw)
+            raise RateLimited(f"The provider says the quota or rate limit was reached ({detail[:200]})",
+                              float(m.group(1)) if m else None, "PerDay" in raw or "per day" in raw.lower()) from None
         raise RuntimeError(f"The provider answered {e.code}: {detail}") from None
     except urllib.error.URLError as e:
         why = str(e.reason)
@@ -205,8 +223,8 @@ def _post_json(url, body, key, timeout=180):
         raise RuntimeError(f"Could not reach the provider: {why}.{hint}") from None
 
 
-def _gemini(wav, model, key):
-    body = {"contents": [{"parts": [{"text": prompt()},
+def _gemini(wav, model, key, text):
+    body = {"contents": [{"parts": [{"text": text},
                                     {"inline_data": {"mime_type": "audio/wav", "data": base64.b64encode(wav).decode("ascii")}}]}],
             "generationConfig": {"temperature": 0, "responseMimeType": "application/json"}}
     r = _post_json(ENDPOINT.format(model=model), body, key)
@@ -218,11 +236,23 @@ def _gemini(wav, model, key):
     return text, {"input_tokens": use.get("promptTokenCount"), "output_tokens": use.get("candidatesTokenCount")}
 
 
-def _fake(wav, model, key):
+def _fake(wav, model, key, text):
     """A stand-in that answers well-formed replies with no key and no cost, for testing the harness."""
     return json.dumps({"style": {"id": "hiphop_rap", "confidence": 0.5, "alternatives": []},
                        "instruments": ["808 bass", "hi-hats"], "vocal": {"present": True, "kind": "rapped"},
                        "sections": [{"label": "intro", "start_s": 0.0, "end_s": 8.0}], "qualities": []}), {}
+
+
+def _with_backoff(call, wav, model, key, ask, waits=3):
+    """call(...), waiting and trying again when the provider says to slow down (up to `waits` times)."""
+    for n in range(waits + 1):
+        try:
+            return call(wav, model, key, ask)
+        except RateLimited as e:
+            if e.daily or n == waits:
+                raise RuntimeError(str(e) + (" It looks like a daily limit: wait until tomorrow or turn on billing for the key."
+                                              if e.daily else " Run fewer songs at a time, or turn on billing for the key.")) from None
+            time.sleep(min(65.0, (e.retry_s or 20.0) + 1.0))
 
 
 def listen_to(path, provider="gemini", model=None, key=None):
@@ -239,10 +269,11 @@ def listen_to(path, provider="gemini", model=None, key=None):
     except Exception as e:  # noqa: BLE001 - an unreadable file is a result, not a crash
         return {"ok": False, "reason": f"could not read the audio: {e}"}
     call = _gemini if provider == "gemini" else _fake
+    ask = prompt(sent_s)
     problems, tokens_in, tokens_out = [], 0, 0
     for attempt in (1, 2):
         try:
-            text, usage = call(wav, model, key)
+            text, usage = _with_backoff(call, wav, model, key, ask)
         except RuntimeError as e:
             return {"ok": False, "reason": str(e), "seconds": round(time.time() - t0, 1)}
         tokens_in += usage.get("input_tokens") or 0
@@ -254,7 +285,7 @@ def listen_to(path, provider="gemini", model=None, key=None):
             continue
         problems = check(reply, sent_s)
         if not problems:
-            return {"ok": True, "listen": clean(reply), "attempts": attempt, "model": model,
+            return {"ok": True, "listen": clean(reply, sent_s), "attempts": attempt, "model": model,
                     "usage": {"input_tokens": tokens_in, "output_tokens": tokens_out, "sent_s": round(sent_s, 1),
                               "file_s": round(total_s, 1)},
                     "seconds": round(time.time() - t0, 1)}

@@ -127,6 +127,7 @@ def main():
     ap.add_argument("root", help="the folder of style folders you calibrated from")
     ap.add_argument("--limit", type=int, default=0, help="at most this many songs per style (random, repeatable)")
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--workers", type=int, default=2, help="songs at a time (a free key needs 1 or 2)")
     ap.add_argument("--model", default=listen.DEFAULT_MODEL)
     ap.add_argument("--provider", choices=listen.PROVIDERS, default="gemini")
     ap.add_argument("--fake", action="store_true", help="a stand-in listener: tests the harness, sends nothing")
@@ -168,7 +169,7 @@ def main():
         return {"key": _key(path), "truth": sid, "song": Path(path).name, **res}
 
     if todo:
-        with ThreadPoolExecutor(max_workers=4) as pool, open(folder / "results.jsonl", "a", encoding="utf-8") as out:
+        with ThreadPoolExecutor(max_workers=max(1, a.workers)) as pool, open(folder / "results.jsonl", "a", encoding="utf-8") as out:
             futs = [pool.submit(one, sid, p) for sid, p in todo]
             for i, fut in enumerate(as_completed(futs), 1):
                 row = fut.result()
