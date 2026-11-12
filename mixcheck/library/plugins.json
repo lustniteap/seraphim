@@ -1,0 +1,4373 @@
+{
+ "version": 1,
+ "source": "docs/plugin-catalog-source.md (vendor pages and retail listings, November 2026; verify on each vendor's site)",
+ "plugins": {
+  "waves_abbey_road_emi_tg12345_channel": {
+   "name": "Abbey Road EMI TG12345 Channel",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_audiotrack": {
+   "name": "AudioTrack",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_berzerk_distortion": {
+   "name": "Berzerk Distortion",
+   "group": "Waves",
+   "category": "saturation"
+  },
+  "waves_butch_vig_vocals": {
+   "name": "Butch Vig Vocals",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_c1_compressor": {
+   "name": "C1 Compressor",
+   "group": "Waves",
+   "category": "compressor"
+  },
+  "waves_c4_multiband_compressor": {
+   "name": "C4 Multiband Compressor",
+   "group": "Waves",
+   "category": "compressor"
+  },
+  "waves_cla_echosphere": {
+   "name": "CLA EchoSphere",
+   "group": "Waves",
+   "category": "delay"
+  },
+  "waves_cla_vocals": {
+   "name": "CLA Vocals",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_cla_76_compressor_limiter": {
+   "name": "CLA-76 Compressor / Limiter",
+   "group": "Waves",
+   "category": "limiter"
+  },
+  "waves_clarity_vx": {
+   "name": "Clarity Vx",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_clarity_vx_dereverb": {
+   "name": "Clarity Vx DeReverb",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_curves_resolve": {
+   "name": "Curves Resolve",
+   "group": "Waves",
+   "category": "eq"
+  },
+  "waves_debreath": {
+   "name": "DeBreath",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_deesser": {
+   "name": "DeEsser",
+   "group": "Waves",
+   "category": "de-esser"
+  },
+  "waves_doubler": {
+   "name": "Doubler",
+   "group": "Waves",
+   "category": "imager"
+  },
+  "waves_eddie_kramer_effects_channel": {
+   "name": "Eddie Kramer Effects Channel",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_eddie_kramer_guitar_channel": {
+   "name": "Eddie Kramer Guitar Channel",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_eddie_kramer_vocal_channel": {
+   "name": "Eddie Kramer Vocal Channel",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_emo_d5_dynamics": {
+   "name": "eMo D5 Dynamics",
+   "group": "Waves",
+   "category": "compressor"
+  },
+  "waves_emo_f2_filter": {
+   "name": "eMo F2 Filter",
+   "group": "Waves",
+   "category": "modulation"
+  },
+  "waves_emo_generator": {
+   "name": "eMo Generator",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_emo_q4_equalizer": {
+   "name": "eMo Q4 Equalizer",
+   "group": "Waves",
+   "category": "eq"
+  },
+  "waves_enigma": {
+   "name": "Enigma",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_gemstones": {
+   "name": "Gemstones",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_greg_wells_mixcentric": {
+   "name": "Greg Wells MixCentric",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_gtr_solo": {
+   "name": "GTR Solo",
+   "group": "Waves",
+   "category": "amp"
+  },
+  "waves_gtr3": {
+   "name": "GTR3",
+   "group": "Waves",
+   "category": "amp"
+  },
+  "waves_gtr3_amps": {
+   "name": "GTR3 Amps",
+   "group": "Waves",
+   "category": "amp"
+  },
+  "waves_gtr3_stomps": {
+   "name": "GTR3 Stomps",
+   "group": "Waves",
+   "category": "amp"
+  },
+  "waves_gtr3_toolrack": {
+   "name": "GTR3 ToolRack",
+   "group": "Waves",
+   "category": "amp"
+  },
+  "waves_h_comp_hybrid_compressor": {
+   "name": "H-Comp Hybrid Compressor",
+   "group": "Waves",
+   "category": "compressor"
+  },
+  "waves_h_delay_hybrid_delay": {
+   "name": "H-Delay Hybrid Delay",
+   "group": "Waves",
+   "category": "delay"
+  },
+  "waves_h_eq_hybrid_equalizer": {
+   "name": "H-EQ Hybrid Equalizer",
+   "group": "Waves",
+   "category": "eq"
+  },
+  "waves_idx_intelligent_dynamics": {
+   "name": "IDX Intelligent Dynamics",
+   "group": "Waves",
+   "category": "compressor"
+  },
+  "waves_inphase_lt": {
+   "name": "InPhase LT",
+   "group": "Waves",
+   "category": "modulation"
+  },
+  "waves_ir_l_convolution_reverb": {
+   "name": "IR-L Convolution Reverb",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_kaleidoscopes": {
+   "name": "Kaleidoscopes",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_kramer_master_tape": {
+   "name": "Kramer Master Tape",
+   "group": "Waves",
+   "category": "saturation"
+  },
+  "waves_l1_ultramaximizer": {
+   "name": "L1 Ultramaximizer",
+   "group": "Waves",
+   "category": "limiter"
+  },
+  "waves_loair": {
+   "name": "LoAir",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_lofi_space": {
+   "name": "Lofi Space",
+   "group": "Waves",
+   "category": "saturation"
+  },
+  "waves_magma_lil_tube": {
+   "name": "Magma Lil Tube",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_magma_stressbox": {
+   "name": "Magma StressBox",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_magma_tube_channel_strip": {
+   "name": "Magma Tube Channel Strip",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_manny_marroquin_reverb": {
+   "name": "Manny Marroquin Reverb",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_manny_marroquin_triple_d": {
+   "name": "Manny Marroquin Triple D",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_maserati_acg": {
+   "name": "Maserati ACG",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_maserati_b72": {
+   "name": "Maserati B72",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_maxxbass": {
+   "name": "MaxxBass",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_maxxvolume": {
+   "name": "MaxxVolume",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_metafilter": {
+   "name": "MetaFilter",
+   "group": "Waves",
+   "category": "modulation"
+  },
+  "waves_metaflanger": {
+   "name": "MetaFlanger",
+   "group": "Waves",
+   "category": "modulation"
+  },
+  "waves_mondomod": {
+   "name": "MondoMod",
+   "group": "Waves",
+   "category": "modulation"
+  },
+  "waves_morphoder": {
+   "name": "Morphoder",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_mv2": {
+   "name": "MV2",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_ns1_noise_suppressor": {
+   "name": "NS1 Noise Suppressor",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_nx": {
+   "name": "Nx",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_nx_germano_studios_new_york": {
+   "name": "Nx Germano Studios New York",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_oneknob_brighter": {
+   "name": "OneKnob Brighter",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_oneknob_driver": {
+   "name": "OneKnob Driver",
+   "group": "Waves",
+   "category": "saturation"
+  },
+  "waves_oneknob_filter": {
+   "name": "OneKnob Filter",
+   "group": "Waves",
+   "category": "modulation"
+  },
+  "waves_oneknob_louder": {
+   "name": "OneKnob Louder",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_oneknob_phatter": {
+   "name": "OneKnob Phatter",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_oneknob_pressure": {
+   "name": "OneKnob Pressure",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_oneknob_pumper": {
+   "name": "OneKnob Pumper",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_oneknob_wetter": {
+   "name": "OneKnob Wetter",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_ps22_stereo_maker": {
+   "name": "PS22 Stereo Maker",
+   "group": "Waves",
+   "category": "imager"
+  },
+  "waves_puigtec_eqs": {
+   "name": "PuigTec EQs",
+   "group": "Waves",
+   "category": "eq"
+  },
+  "waves_q10_equalizer": {
+   "name": "Q10 Equalizer",
+   "group": "Waves",
+   "category": "eq"
+  },
+  "waves_renaissance_axx": {
+   "name": "Renaissance Axx",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_renaissance_bass": {
+   "name": "Renaissance Bass",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_renaissance_channel": {
+   "name": "Renaissance Channel",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_renaissance_deesser": {
+   "name": "Renaissance DeEsser",
+   "group": "Waves",
+   "category": "de-esser"
+  },
+  "waves_renaissance_reverb": {
+   "name": "Renaissance Reverb",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_renaissance_vox": {
+   "name": "Renaissance Vox",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_sibilance": {
+   "name": "Sibilance",
+   "group": "Waves",
+   "category": "de-esser"
+  },
+  "waves_silk_vocal": {
+   "name": "Silk Vocal",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_soundshifter": {
+   "name": "SoundShifter",
+   "group": "Waves",
+   "category": "pitch"
+  },
+  "waves_ssl_e_channel": {
+   "name": "SSL E-Channel",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_sub_align": {
+   "name": "Sub Align",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_supertap": {
+   "name": "SuperTap",
+   "group": "Waves",
+   "category": "delay"
+  },
+  "waves_trans_x": {
+   "name": "Trans-X",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_trueverb": {
+   "name": "TrueVerb",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_ultrapitch": {
+   "name": "UltraPitch",
+   "group": "Waves",
+   "category": "pitch"
+  },
+  "waves_v_comp": {
+   "name": "V-Comp",
+   "group": "Waves",
+   "category": "compressor"
+  },
+  "waves_v_eq3": {
+   "name": "V-EQ3",
+   "group": "Waves",
+   "category": "eq"
+  },
+  "waves_v_eq4": {
+   "name": "V-EQ4",
+   "group": "Waves",
+   "category": "eq"
+  },
+  "waves_vitamin_sonic_enhancer": {
+   "name": "Vitamin Sonic Enhancer",
+   "group": "Waves",
+   "category": "saturation"
+  },
+  "waves_vocal_bender": {
+   "name": "Vocal Bender",
+   "group": "Waves",
+   "category": "pitch"
+  },
+  "waves_vocal_rider": {
+   "name": "Vocal Rider",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_voltage_amps": {
+   "name": "Voltage Amps",
+   "group": "Waves",
+   "category": "amp"
+  },
+  "waves_vu_meter": {
+   "name": "VU Meter",
+   "group": "Waves",
+   "category": "meter"
+  },
+  "waves_waves_tune_lt": {
+   "name": "Waves Tune LT",
+   "group": "Waves",
+   "category": "pitch"
+  },
+  "waves_waves_tune_real_time": {
+   "name": "Waves Tune Real-Time",
+   "group": "Waves",
+   "category": "pitch"
+  },
+  "waves_x_fdbk": {
+   "name": "X-FDBK",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_z_noise": {
+   "name": "Z-Noise",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_abbey_road_chambers": {
+   "name": "Abbey Road Chambers",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_abbey_road_j37_tape": {
+   "name": "Abbey Road J37 Tape",
+   "group": "Waves",
+   "category": "saturation"
+  },
+  "waves_abbey_road_redd_consoles": {
+   "name": "Abbey Road REDD Consoles",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_abbey_road_reel_adt": {
+   "name": "Abbey Road Reel ADT",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_abbey_road_reverb_plates": {
+   "name": "Abbey Road Reverb Plates",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_abbey_road_rs124_compressor": {
+   "name": "Abbey Road RS124 Compressor",
+   "group": "Waves",
+   "category": "compressor"
+  },
+  "waves_abbey_road_rs56_passive_eq": {
+   "name": "Abbey Road RS56 Passive EQ",
+   "group": "Waves",
+   "category": "eq"
+  },
+  "waves_abbey_road_saturator": {
+   "name": "Abbey Road Saturator",
+   "group": "Waves",
+   "category": "saturation"
+  },
+  "waves_abbey_road_studio_3": {
+   "name": "Abbey Road Studio 3",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_abbey_road_tg_mastering_chain": {
+   "name": "Abbey Road TG Mastering Chain",
+   "group": "Waves",
+   "category": "modulation"
+  },
+  "waves_abbey_road_vinyl": {
+   "name": "Abbey Road Vinyl",
+   "group": "Waves",
+   "category": "saturation"
+  },
+  "waves_aphex_vintage_aural_exciter": {
+   "name": "Aphex Vintage Aural Exciter",
+   "group": "Waves",
+   "category": "saturation"
+  },
+  "waves_api_2500": {
+   "name": "API 2500",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_api_550": {
+   "name": "API 550",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_api_560": {
+   "name": "API 560",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_atlas_reverb": {
+   "name": "Atlas Reverb",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_bass_rider": {
+   "name": "Bass Rider",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_brauer_motion": {
+   "name": "Brauer Motion",
+   "group": "Waves",
+   "category": "modulation"
+  },
+  "waves_bss_dpr_402": {
+   "name": "BSS DPR-402",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_c6_multiband_compressor": {
+   "name": "C6 Multiband Compressor",
+   "group": "Waves",
+   "category": "compressor"
+  },
+  "waves_center": {
+   "name": "Center",
+   "group": "Waves",
+   "category": "imager"
+  },
+  "waves_cla_bass": {
+   "name": "CLA Bass",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_cla_effects": {
+   "name": "CLA Effects",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_cla_epic": {
+   "name": "CLA Epic",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_cla_guitars": {
+   "name": "CLA Guitars",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_cla_mixdown": {
+   "name": "CLA MixDown",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_cla_mixhub": {
+   "name": "CLA MixHub",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_cla_nx": {
+   "name": "CLA Nx",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_cla_unplugged": {
+   "name": "CLA Unplugged",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_cla_2a_compressor_limiter": {
+   "name": "CLA-2A Compressor / Limiter",
+   "group": "Waves",
+   "category": "limiter"
+  },
+  "waves_cla_3a_compressor_limiter": {
+   "name": "CLA-3A Compressor / Limiter",
+   "group": "Waves",
+   "category": "limiter"
+  },
+  "waves_clarity_vx_dereverb_pro": {
+   "name": "Clarity Vx DeReverb Pro",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_clarity_vx_pro": {
+   "name": "Clarity Vx Pro",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_clarix_lb": {
+   "name": "Clarix LB",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_cobalt_saphira": {
+   "name": "Cobalt Saphira",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_curves_aq": {
+   "name": "Curves AQ",
+   "group": "Waves",
+   "category": "eq"
+  },
+  "waves_curves_equator": {
+   "name": "Curves Equator",
+   "group": "Waves",
+   "category": "eq"
+  },
+  "waves_dbx_160_compressor_limiter": {
+   "name": "dbx 160 Compressor / Limiter",
+   "group": "Waves",
+   "category": "limiter"
+  },
+  "waves_doppler": {
+   "name": "Doppler",
+   "group": "Waves",
+   "category": "modulation"
+  },
+  "waves_dorrough_stereo": {
+   "name": "Dorrough Stereo",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_eddie_kramer_bass_channel": {
+   "name": "Eddie Kramer Bass Channel",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_eddie_kramer_drum_channel": {
+   "name": "Eddie Kramer Drum Channel",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_feedback_hunter": {
+   "name": "Feedback Hunter",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_geq_graphic_equalizer": {
+   "name": "GEQ Graphic Equalizer",
+   "group": "Waves",
+   "category": "eq"
+  },
+  "waves_greg_wells_tonecentric": {
+   "name": "Greg Wells ToneCentric",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_greg_wells_voicecentric": {
+   "name": "Greg Wells VoiceCentric",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_h_reverb_hybrid_reverb": {
+   "name": "H-Reverb Hybrid Reverb",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_inphase": {
+   "name": "InPhase",
+   "group": "Waves",
+   "category": "modulation"
+  },
+  "waves_intrigger_drum_replacer": {
+   "name": "InTrigger Drum Replacer",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_ir1_convolution_reverb": {
+   "name": "IR1 Convolution Reverb",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_ir_live_convolution_reverb": {
+   "name": "IR-Live Convolution Reverb",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_jjp_bass": {
+   "name": "JJP Bass",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_jjp_cymbals_percussion": {
+   "name": "JJP Cymbals & Percussion",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_jjp_guitars": {
+   "name": "JJP Guitars",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_jjp_vocals": {
+   "name": "JJP Vocals",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_kramer_hls_channel": {
+   "name": "Kramer HLS Channel",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_kramer_pie_compressor": {
+   "name": "Kramer PIE Compressor",
+   "group": "Waves",
+   "category": "compressor"
+  },
+  "waves_l3_multimaximizer": {
+   "name": "L3 Multimaximizer",
+   "group": "Waves",
+   "category": "limiter"
+  },
+  "waves_l3_ll_multimaximizer": {
+   "name": "L3-LL Multimaximizer",
+   "group": "Waves",
+   "category": "limiter"
+  },
+  "waves_l3_ll_ultramaximizer": {
+   "name": "L3-LL Ultramaximizer",
+   "group": "Waves",
+   "category": "limiter"
+  },
+  "waves_l4_ultramaximizer": {
+   "name": "L4 Ultramaximizer",
+   "group": "Waves",
+   "category": "limiter"
+  },
+  "waves_linear_phase_eq": {
+   "name": "Linear Phase EQ",
+   "group": "Waves",
+   "category": "eq"
+  },
+  "waves_linear_phase_multiband_compressor": {
+   "name": "Linear Phase Multiband Compressor",
+   "group": "Waves",
+   "category": "compressor"
+  },
+  "waves_magma_bb_tubes": {
+   "name": "Magma BB Tubes",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_magma_springs": {
+   "name": "Magma Springs",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_manny_marroquin_delay": {
+   "name": "Manny Marroquin Delay",
+   "group": "Waves",
+   "category": "delay"
+  },
+  "waves_manny_marroquin_distortion": {
+   "name": "Manny Marroquin Distortion",
+   "group": "Waves",
+   "category": "saturation"
+  },
+  "waves_manny_marroquin_eq": {
+   "name": "Manny Marroquin EQ",
+   "group": "Waves",
+   "category": "eq"
+  },
+  "waves_manny_marroquin_tone_shaper": {
+   "name": "Manny Marroquin Tone Shaper",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_maserati_drm": {
+   "name": "Maserati DRM",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_maserati_grp": {
+   "name": "Maserati GRP",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_maserati_gti": {
+   "name": "Maserati GTi",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_maserati_hmx": {
+   "name": "Maserati HMX",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_maserati_vx1": {
+   "name": "Maserati VX1",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_mdmx_distortion_modules": {
+   "name": "MDMX Distortion Modules",
+   "group": "Waves",
+   "category": "saturation"
+  },
+  "waves_multimod_rack": {
+   "name": "MultiMod Rack",
+   "group": "Waves",
+   "category": "modulation"
+  },
+  "waves_nls_non_linear_summer": {
+   "name": "NLS Non-Linear Summer",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_nx_ocean_way_nashville": {
+   "name": "Nx Ocean Way Nashville",
+   "group": "Waves",
+   "category": "reverb"
+  },
+  "waves_prs_supermodels": {
+   "name": "PRS SuperModels",
+   "group": "Waves",
+   "category": "modulation"
+  },
+  "waves_puigchild_compressor": {
+   "name": "PuigChild Compressor",
+   "group": "Waves",
+   "category": "compressor"
+  },
+  "waves_q_clone": {
+   "name": "Q-Clone",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_retro_fi": {
+   "name": "Retro Fi",
+   "group": "Waves",
+   "category": "saturation"
+  },
+  "waves_scheps_73": {
+   "name": "Scheps 73",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_scheps_omni_channel_2": {
+   "name": "Scheps Omni Channel 2",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_scheps_parallel_particles": {
+   "name": "Scheps Parallel Particles",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_smack_attack": {
+   "name": "Smack Attack",
+   "group": "Waves",
+   "category": "compressor"
+  },
+  "waves_space_rider": {
+   "name": "Space Rider",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_ssl_ev2_channel": {
+   "name": "SSL EV2 Channel",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_ssl_g_channel": {
+   "name": "SSL G-Channel",
+   "group": "Waves",
+   "category": "channel strip"
+  },
+  "waves_ssl_g_equalizer": {
+   "name": "SSL G-Equalizer",
+   "group": "Waves",
+   "category": "eq"
+  },
+  "waves_ssl_g_master_buss_compressor": {
+   "name": "SSL G-Master Buss Compressor",
+   "group": "Waves",
+   "category": "compressor"
+  },
+  "waves_submarine": {
+   "name": "Submarine",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_sync_vx": {
+   "name": "Sync Vx",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_torque": {
+   "name": "Torque",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_tract_spl_meter": {
+   "name": "TRACT SPL Meter",
+   "group": "Waves",
+   "category": "meter"
+  },
+  "waves_tract_system_calibration": {
+   "name": "TRACT System Calibration",
+   "group": "Waves",
+   "category": "meter"
+  },
+  "waves_um225_um226": {
+   "name": "UM225 / UM226",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_w43_noise_reduction_plugin": {
+   "name": "W43 Noise Reduction Plugin",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_waves_tune": {
+   "name": "Waves Tune",
+   "group": "Waves",
+   "category": "pitch"
+  },
+  "waves_wns_noise_suppressor": {
+   "name": "WNS Noise Suppressor",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_x_click": {
+   "name": "X-Click",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_x_crackle": {
+   "name": "X-Crackle",
+   "group": "Waves",
+   "category": "saturation"
+  },
+  "waves_x_hum": {
+   "name": "X-Hum",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "waves_x_noise": {
+   "name": "X-Noise",
+   "group": "Waves",
+   "category": "utility"
+  },
+  "uad_empirical_labs_fatso_tape_simulator": {
+   "name": "Empirical Labs FATSO Tape Simulator",
+   "group": "Universal Audio (UAD)",
+   "category": "saturation"
+  },
+  "uad_studer_a800_multichannel_tape_recorder": {
+   "name": "Studer A800 Multichannel Tape Recorder",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_manley_voxbox_channel_strip": {
+   "name": "Manley VOXBOX Channel Strip",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_emt_140_classic_plate_reverberator": {
+   "name": "EMT 140 Classic Plate Reverberator",
+   "group": "Universal Audio (UAD)",
+   "category": "reverb"
+  },
+  "uad_little_labs_voice_of_god_bass_resonance": {
+   "name": "Little Labs Voice Of God Bass Resonance",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_avalon_vt_737_tube_channel_strip": {
+   "name": "Avalon VT-737 Tube Channel Strip",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_1176_classic_limiter_collection": {
+   "name": "1176 Classic Limiter Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "limiter"
+  },
+  "uad_emt_250_classic_electronic_reverb": {
+   "name": "EMT 250 Classic Electronic Reverb",
+   "group": "Universal Audio (UAD)",
+   "category": "reverb"
+  },
+  "uad_precision_de_esser": {
+   "name": "Precision De-Esser",
+   "group": "Universal Audio (UAD)",
+   "category": "de-esser"
+  },
+  "uad_teletronix_la_3a_classic_audio_leveler": {
+   "name": "Teletronix LA-3A Classic Audio Leveler",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_lexicon_224_digital_reverb": {
+   "name": "Lexicon 224 Digital Reverb",
+   "group": "Universal Audio (UAD)",
+   "category": "reverb"
+  },
+  "uad_empirical_labs_el8_distressor_compressor": {
+   "name": "Empirical Labs EL8 Distressor Compressor",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_ua_175b_176_tube_compressor_collection": {
+   "name": "UA 175B & 176 Tube Compressor Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_manley_tube_preamp": {
+   "name": "Manley Tube Preamp",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_manley_variable_mu_limiter_compressor": {
+   "name": "Manley Variable Mu Limiter Compressor",
+   "group": "Universal Audio (UAD)",
+   "category": "limiter"
+  },
+  "uad_teletronix_la_2a_leveler_collection": {
+   "name": "Teletronix LA-2A Leveler Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_pultec_passive_eq_collection": {
+   "name": "Pultec Passive EQ Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_ep_34_tape_echo": {
+   "name": "EP-34 Tape Echo",
+   "group": "Universal Audio (UAD)",
+   "category": "delay"
+  },
+  "uad_hitsville_eq_collection": {
+   "name": "Hitsville EQ Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_api_preamp": {
+   "name": "API Preamp",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_akg_bx_20_spring_reverb": {
+   "name": "AKG BX 20 Spring Reverb",
+   "group": "Universal Audio (UAD)",
+   "category": "reverb"
+  },
+  "uad_lexicon_480l_digital_reverb_and_effects": {
+   "name": "Lexicon 480L Digital Reverb and Effects",
+   "group": "Universal Audio (UAD)",
+   "category": "reverb"
+  },
+  "uad_galaxy_tape_echo": {
+   "name": "Galaxy Tape Echo",
+   "group": "Universal Audio (UAD)",
+   "category": "delay"
+  },
+  "uad_la_6176_signature_channel_strip": {
+   "name": "LA-6176 Signature Channel Strip",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_elysia_alpha_compressor_v2": {
+   "name": "elysia alpha compressor v2",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_moog_multimode_filter_collection": {
+   "name": "Moog Multimode Filter Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "modulation"
+  },
+  "uad_auto_tune_realtime_x": {
+   "name": "Auto-Tune Realtime X",
+   "group": "Universal Audio (UAD)",
+   "category": "pitch"
+  },
+  "uad_neve_preamp": {
+   "name": "Neve Preamp",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_eventide_h910_harmonizer": {
+   "name": "Eventide H910 Harmonizer",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_ampeg_b_15n_bass_amplifier": {
+   "name": "Ampeg B-15N Bass Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_brigade_chorus": {
+   "name": "Brigade Chorus",
+   "group": "Universal Audio (UAD)",
+   "category": "modulation"
+  },
+  "uad_cooper_time_cube_delay": {
+   "name": "Cooper Time Cube Delay",
+   "group": "Universal Audio (UAD)",
+   "category": "delay"
+  },
+  "uad_vibe_analog_machines": {
+   "name": "Vibe Analog Machines",
+   "group": "Universal Audio (UAD)",
+   "category": "modulation"
+  },
+  "uad_dbx_160_compressor_limiter": {
+   "name": "dbx 160 Compressor / Limiter",
+   "group": "Universal Audio (UAD)",
+   "category": "limiter"
+  },
+  "uad_uad_enigmatic_82_overdrive_special_amp": {
+   "name": "UAD Enigmatic '82 Overdrive Special Amp",
+   "group": "Universal Audio (UAD)",
+   "category": "saturation"
+  },
+  "uad_a_type_multiband_dynamic_enhancer": {
+   "name": "A-Type Multiband Dynamic Enhancer",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_black_box_analog_design_hg_2": {
+   "name": "Black Box Analog Design HG-2",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_ravel": {
+   "name": "Ravel",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_ampex_atr_102_mastering_tape_recorder": {
+   "name": "Ampex ATR-102 Mastering Tape Recorder",
+   "group": "Universal Audio (UAD)",
+   "category": "saturation"
+  },
+  "uad_neve_1073_preamp_eq_collection": {
+   "name": "Neve 1073 Preamp & EQ Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_uad_dream_65_reverb_amplifier": {
+   "name": "UAD Dream '65 Reverb Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "reverb"
+  },
+  "uad_friedman_buxom_betty_amplifier": {
+   "name": "Friedman Buxom Betty Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_precision_k_stereo_ambience_recovery": {
+   "name": "Precision K-Stereo Ambience Recovery",
+   "group": "Universal Audio (UAD)",
+   "category": "imager"
+  },
+  "uad_oxide_tape_recorder": {
+   "name": "Oxide Tape Recorder",
+   "group": "Universal Audio (UAD)",
+   "category": "saturation"
+  },
+  "uad_api_2500_bus_compressor": {
+   "name": "API 2500 Bus Compressor",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_korg_sdd_3000_digital_delay": {
+   "name": "Korg SDD-3000 Digital Delay",
+   "group": "Universal Audio (UAD)",
+   "category": "delay"
+  },
+  "uad_a_da_std_1_stereo_tapped_delay": {
+   "name": "A/DA STD-1 Stereo Tapped Delay",
+   "group": "Universal Audio (UAD)",
+   "category": "delay"
+  },
+  "uad_ampeg_svt_vr_bass_amplifier": {
+   "name": "Ampeg SVT-VR Bass Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_mxr_flanger_doubler": {
+   "name": "MXR Flanger/Doubler",
+   "group": "Universal Audio (UAD)",
+   "category": "imager"
+  },
+  "uad_maag_audio_eq4_ms": {
+   "name": "Maag Audio EQ4 MS",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_shadow_hills_mastering_compressor_class_a": {
+   "name": "Shadow Hills Mastering Compressor Class A",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_uad_ruby_63_top_boost_amplifier": {
+   "name": "UAD Ruby '63 Top Boost Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_helios_type_69_preamp_and_eq_collection": {
+   "name": "Helios Type 69 Preamp and EQ Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_harrison_32c_32c_se_channel_eq": {
+   "name": "Harrison 32C / 32C SE Channel EQ",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_ssl_4000_e_channel_strip": {
+   "name": "SSL 4000 E Channel Strip",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_capitol_mastering_compressor": {
+   "name": "Capitol Mastering Compressor",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_fairchild_tube_limiter_collection": {
+   "name": "Fairchild Tube Limiter Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "limiter"
+  },
+  "uad_api_vision_channel_strip_collection": {
+   "name": "API Vision Channel Strip Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_diezel_herbert_amplifier": {
+   "name": "Diezel Herbert Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_v76_preamplifier": {
+   "name": "V76 Preamplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_gallien_krueger_800rb_bass_amp": {
+   "name": "Gallien-Krueger 800RB Bass Amp",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_fender_55_tweed_deluxe": {
+   "name": "Fender '55 Tweed Deluxe",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_ampeg_svt_3_pro_bass_amplifier": {
+   "name": "Ampeg SVT-3 PRO Bass Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_engl_e646_vs_limited_edition": {
+   "name": "ENGL E646 VS Limited Edition",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_engl_e765_retro_tube": {
+   "name": "ENGL E765 Retro Tube",
+   "group": "Universal Audio (UAD)",
+   "category": "saturation"
+  },
+  "uad_api_500_series_eq_collection": {
+   "name": "API 500 Series EQ Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_trident_a_range_classic_console_eq": {
+   "name": "Trident A-Range Classic Console EQ",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_elysia_karacter_stereo_saturator": {
+   "name": "elysia karacter Stereo Saturator",
+   "group": "Universal Audio (UAD)",
+   "category": "saturation"
+  },
+  "uad_spl_vitalizer_mk3_t": {
+   "name": "SPL Vitalizer MK3-T",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_uad_woodrow_55_instrument_amplifier": {
+   "name": "UAD Woodrow '55 Instrument Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_ssl_4000_g_bus_compressor": {
+   "name": "SSL 4000 G Bus Compressor",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_c_suite_c_vox_noise_ambience_reduction": {
+   "name": "C-Suite C-Vox Noise & Ambience Reduction",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_neve_dynamics_collection": {
+   "name": "Neve Dynamics Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_neve_summing": {
+   "name": "Neve Summing",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_diezel_vh4_amplifier": {
+   "name": "Diezel VH4 Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_tube_tech_cl_1b_mkii_compressor": {
+   "name": "Tube-Tech CL 1B MkII Compressor",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_brainworx_bx_masterdesk_classic": {
+   "name": "Brainworx bx_masterdesk Classic",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_ocean_way_microphone_collection": {
+   "name": "Ocean Way Microphone Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_engl_savage_120_amplifier": {
+   "name": "ENGL Savage 120 Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_eden_wt800_bass_amplifier": {
+   "name": "Eden WT800 Bass Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_sonnox_oxford_dynamic_eq": {
+   "name": "Sonnox Oxford Dynamic EQ",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_sonnox_oxford_limiter_v2": {
+   "name": "Sonnox Oxford Limiter v2",
+   "group": "Universal Audio (UAD)",
+   "category": "limiter"
+  },
+  "uad_vertigo_sound_vsc_2_compressor": {
+   "name": "Vertigo Sound VSC-2 Compressor",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_brainworx_bx_refinement": {
+   "name": "Brainworx bx_refinement",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_chandler_limited_gav19t_amplifier": {
+   "name": "Chandler Limited GAV19T Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_sonnox_oxford_inflator": {
+   "name": "Sonnox Oxford Inflator",
+   "group": "Universal Audio (UAD)",
+   "category": "limiter"
+  },
+  "uad_little_labs_ibp_phase_alignment_tool": {
+   "name": "Little Labs IBP Phase Alignment Tool",
+   "group": "Universal Audio (UAD)",
+   "category": "modulation"
+  },
+  "uad_precision_limiter": {
+   "name": "Precision Limiter",
+   "group": "Universal Audio (UAD)",
+   "category": "limiter"
+  },
+  "uad_precision_eq": {
+   "name": "Precision EQ",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_precision_multiband": {
+   "name": "Precision Multiband",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_precision_maximizer": {
+   "name": "Precision Maximizer",
+   "group": "Universal Audio (UAD)",
+   "category": "limiter"
+  },
+  "uad_uad_lion_68_super_lead_amp": {
+   "name": "UAD Lion '68 Super Lead Amp",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_brainworx_bx_saturator_v2": {
+   "name": "Brainworx bx_saturator V2",
+   "group": "Universal Audio (UAD)",
+   "category": "saturation"
+  },
+  "uad_c_suite_c_max_limiter": {
+   "name": "C-Suite C-Max Limiter",
+   "group": "Universal Audio (UAD)",
+   "category": "limiter"
+  },
+  "uad_capitol_chambers": {
+   "name": "Capitol Chambers",
+   "group": "Universal Audio (UAD)",
+   "category": "reverb"
+  },
+  "uad_c_suite_c_axe_guitar_noise_suppressor": {
+   "name": "C-Suite C-Axe Guitar Noise Suppressor",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_ams_dmx_digital_delay_pitch_shifter": {
+   "name": "AMS DMX Digital Delay & Pitch Shifter",
+   "group": "Universal Audio (UAD)",
+   "category": "delay"
+  },
+  "uad_api_summing": {
+   "name": "API Summing",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_neve_1084_preamp_eq": {
+   "name": "Neve 1084 Preamp & EQ",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_sonnox_oxford_supresser_ds": {
+   "name": "Sonnox Oxford SuprEsser DS",
+   "group": "Universal Audio (UAD)",
+   "category": "de-esser"
+  },
+  "uad_suhr_se100_amplifier": {
+   "name": "Suhr SE100 Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_ams_neve_dfc_channel_strip": {
+   "name": "AMS Neve DFC Channel Strip",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_brainworx_bx_masterdesk": {
+   "name": "Brainworx bx_masterdesk",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_suhr_pt100_amplifier": {
+   "name": "Suhr PT100 Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_a_da_flanger": {
+   "name": "A/DA Flanger",
+   "group": "Universal Audio (UAD)",
+   "category": "modulation"
+  },
+  "uad_dytronics_tri_stereo_chorus": {
+   "name": "Dytronics Tri-Stereo Chorus",
+   "group": "Universal Audio (UAD)",
+   "category": "modulation"
+  },
+  "uad_fuchs_train_ii_amplifier": {
+   "name": "Fuchs Train II Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_fuchs_overdrive_supreme_50_amplifier": {
+   "name": "Fuchs Overdrive Supreme 50 Amplifier",
+   "group": "Universal Audio (UAD)",
+   "category": "saturation"
+  },
+  "uad_chandler_limited_zener_limiter": {
+   "name": "Chandler Limited Zener Limiter",
+   "group": "Universal Audio (UAD)",
+   "category": "limiter"
+  },
+  "uad_chandler_limited_curve_bender_mastering_eq": {
+   "name": "Chandler Limited Curve Bender Mastering EQ",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_sonnox_oxford_envolution": {
+   "name": "Sonnox Oxford Envolution",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_brainworx_bx_digital_v3_eq_collection": {
+   "name": "Brainworx bx_digital V3 EQ Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_tube_tech_eq_collection": {
+   "name": "Tube-Tech EQ Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_neve_88rs_channel_strip_collection": {
+   "name": "Neve 88RS Channel Strip Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_friedman_amplifiers_collection": {
+   "name": "Friedman Amplifiers Collection",
+   "group": "Universal Audio (UAD)",
+   "category": "amp"
+  },
+  "uad_massenburg_mdweq5_parametric_eq": {
+   "name": "Massenburg MDWEQ5 Parametric EQ",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_vertigo_sound_vsm_3_mix_satellite": {
+   "name": "Vertigo Sound VSM-3 Mix Satellite",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_summit_audio_tla_100a_compressor": {
+   "name": "Summit Audio TLA-100A Compressor",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_elysia_mpressor": {
+   "name": "elysia mpressor",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_thermionic_culture_vulture": {
+   "name": "Thermionic Culture Vulture",
+   "group": "Universal Audio (UAD)",
+   "category": "saturation"
+  },
+  "uad_tonelux_tilt_eq": {
+   "name": "Tonelux Tilt EQ",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_valley_people_dyna_mite": {
+   "name": "Valley People Dyna-mite",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_millennia_nseq_2_eq": {
+   "name": "Millennia NSEQ-2 EQ",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_spl_twintube_processor": {
+   "name": "SPL TwinTube Processor",
+   "group": "Universal Audio (UAD)",
+   "category": "utility"
+  },
+  "uad_sonnox_oxford_eq": {
+   "name": "Sonnox Oxford EQ",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_dreamverb_room_modeler": {
+   "name": "DreamVerb Room Modeler",
+   "group": "Universal Audio (UAD)",
+   "category": "reverb"
+  },
+  "uad_spl_transient_designer": {
+   "name": "SPL Transient Designer",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "uad_precision_enhancer_khz": {
+   "name": "Precision Enhancer kHz",
+   "group": "Universal Audio (UAD)",
+   "category": "saturation"
+  },
+  "uad_precision_enhancer_hz": {
+   "name": "Precision Enhancer Hz",
+   "group": "Universal Audio (UAD)",
+   "category": "saturation"
+  },
+  "uad_neve_1081_1081se_classic_console_eq": {
+   "name": "Neve 1081 / 1081SE Classic Console EQ",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_neve_31102_31102se_classic_console_eqs": {
+   "name": "Neve 31102 / 31102SE Classic Console EQs",
+   "group": "Universal Audio (UAD)",
+   "category": "channel strip"
+  },
+  "uad_cambridge_eq": {
+   "name": "Cambridge EQ",
+   "group": "Universal Audio (UAD)",
+   "category": "eq"
+  },
+  "uad_precision_buss_compressor": {
+   "name": "Precision Buss Compressor",
+   "group": "Universal Audio (UAD)",
+   "category": "compressor"
+  },
+  "ff_pro_q_4_equalizer": {
+   "name": "Pro-Q 4",
+   "group": "FabFilter",
+   "category": "eq"
+  },
+  "ff_pro_c_3_compressor": {
+   "name": "Pro-C 3",
+   "group": "FabFilter",
+   "category": "compressor"
+  },
+  "ff_pro_l_2_limiter": {
+   "name": "Pro-L 2",
+   "group": "FabFilter",
+   "category": "limiter"
+  },
+  "ff_pro_r_2_reverb": {
+   "name": "Pro-R 2",
+   "group": "FabFilter",
+   "category": "reverb"
+  },
+  "ff_pro_mb_multiband_compressor": {
+   "name": "Pro-MB (multiband compressor)",
+   "group": "FabFilter",
+   "category": "compressor"
+  },
+  "ff_pro_ds_de_esser": {
+   "name": "Pro-DS (de-esser)",
+   "group": "FabFilter",
+   "category": "de-esser"
+  },
+  "ff_saturn_2_distortion_saturation": {
+   "name": "Saturn 2 (distortion/saturation)",
+   "group": "FabFilter",
+   "category": "saturation"
+  },
+  "ff_timeless_3_delay": {
+   "name": "Timeless 3",
+   "group": "FabFilter",
+   "category": "delay"
+  },
+  "ff_volcano_3_filter": {
+   "name": "Volcano 3",
+   "group": "FabFilter",
+   "category": "modulation"
+  },
+  "ff_simplon_filter": {
+   "name": "Simplon",
+   "group": "FabFilter",
+   "category": "modulation"
+  },
+  "ff_micro_filter": {
+   "name": "Micro",
+   "group": "FabFilter",
+   "category": "modulation"
+  },
+  "iz_ozone_imager": {
+   "name": "Ozone Imager",
+   "group": "iZotope",
+   "category": "imager"
+  },
+  "iz_vocal_doubler": {
+   "name": "Vocal Doubler",
+   "group": "iZotope",
+   "category": "imager"
+  },
+  "iz_vinyl": {
+   "name": "Vinyl",
+   "group": "iZotope",
+   "category": "saturation"
+  },
+  "iz_trash_lite": {
+   "name": "Trash Lite",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_ozone_eq": {
+   "name": "Ozone EQ",
+   "group": "iZotope",
+   "category": "eq"
+  },
+  "iz_ozone_12_advanced": {
+   "name": "Ozone 12 Advanced",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_ozone_12_standard": {
+   "name": "Ozone 12 Standard",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_ozone_12_elements": {
+   "name": "Ozone 12 Elements",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_neutron_5": {
+   "name": "Neutron 5",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_neutron_5_elements": {
+   "name": "Neutron 5 Elements",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_nectar_4_advanced": {
+   "name": "Nectar 4 Advanced",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_nectar_4_standard": {
+   "name": "Nectar 4 Standard",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_nectar_4_elements": {
+   "name": "Nectar 4 Elements",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_rx_12_advanced": {
+   "name": "RX 12 Advanced",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_rx_12_standard": {
+   "name": "RX 12 Standard",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_rx_12_elements": {
+   "name": "RX 12 Elements",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_trash": {
+   "name": "Trash",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_tonal_balance_control_3": {
+   "name": "Tonal Balance Control 3",
+   "group": "iZotope",
+   "category": "meter"
+  },
+  "iz_velvet": {
+   "name": "Velvet",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_photon": {
+   "name": "Photon",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_equinox": {
+   "name": "Equinox",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_aurora": {
+   "name": "Aurora",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_stutter_edit_2": {
+   "name": "Stutter Edit 2",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_plasma": {
+   "name": "Plasma",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_fxeq": {
+   "name": "FXEQ",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_cascadia": {
+   "name": "Cascadia",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_neoverb": {
+   "name": "Neoverb",
+   "group": "iZotope",
+   "category": "reverb"
+  },
+  "iz_music_production_suite_9": {
+   "name": "Music Production Suite 9",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_rx_post_production_suite_9": {
+   "name": "RX Post Production Suite 9",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "iz_elements_suite_12": {
+   "name": "Elements Suite 12",
+   "group": "iZotope",
+   "category": "utility"
+  },
+  "pa_black_box_analog_design_hg_2ms": {
+   "name": "Black Box Analog Design HG-2MS",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_m_ag_audio_eq4_ms": {
+   "name": "Mäag Audio EQ4 MS",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_spl_transient_designer_plus": {
+   "name": "SPL Transient Designer Plus",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_spl_vitalizer_mk3_t": {
+   "name": "SPL Vitalizer MK3-T",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_hears_perfection": {
+   "name": "HEARS Perfection",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_spl_machine_head": {
+   "name": "SPL Machine Head",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_console_ssl_4000_e": {
+   "name": "Brainworx bx_console SSL 4000 E",
+   "group": "Plugin Alliance",
+   "category": "channel strip"
+  },
+  "pa_adptr_audio_utopia": {
+   "name": "ADPTR Audio Utopia",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_pulsar": {
+   "name": "Brainworx bx_pulsar",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_elysia_alpha_compressor_v2": {
+   "name": "Elysia alpha compressor V2",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_amek_mastering_compressor": {
+   "name": "AMEK Mastering Compressor",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_apogee_clearmountain_8068": {
+   "name": "Apogee Clearmountain 8068",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_apogee_clearmountain_domain": {
+   "name": "Apogee Clearmountain Domain",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_apogee_clearmountain_spaces": {
+   "name": "Apogee Clearmountain Spaces",
+   "group": "Plugin Alliance",
+   "category": "reverb"
+  },
+  "pa_apogee_clearmountain_phases": {
+   "name": "Apogee Clearmountain Phases",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_brainworx_bx_digital_v3": {
+   "name": "Brainworx bx_digital V3",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_spl_big": {
+   "name": "SPL BiG",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_ds_audio_tantra_2": {
+   "name": "DS Audio TANTRA 2",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_apogee_ecs2_channel_strip": {
+   "name": "Apogee ECS2 Channel Strip",
+   "group": "Plugin Alliance",
+   "category": "channel strip"
+  },
+  "pa_apogee_opto_3a": {
+   "name": "Apogee Opto-3A",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_adptr_audio_metric_ab": {
+   "name": "ADPTR Audio Metric AB",
+   "group": "Plugin Alliance",
+   "category": "meter"
+  },
+  "pa_apogee_clearmountain_dance": {
+   "name": "Apogee Clearmountain Dance",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_apogee_eqp_1a": {
+   "name": "Apogee EQP-1A",
+   "group": "Plugin Alliance",
+   "category": "eq"
+  },
+  "pa_apogee_meq_5": {
+   "name": "Apogee MEQ-5",
+   "group": "Plugin Alliance",
+   "category": "eq"
+  },
+  "pa_lindell_audio_eq825": {
+   "name": "Lindell Audio EQ825",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_console_amek_9099": {
+   "name": "Brainworx bx_console AMEK 9099",
+   "group": "Plugin Alliance",
+   "category": "channel strip"
+  },
+  "pa_brainworx_bx_clipper": {
+   "name": "Brainworx bx_clipper",
+   "group": "Plugin Alliance",
+   "category": "limiter"
+  },
+  "pa_brainworx_bx_console_amek_200": {
+   "name": "Brainworx bx_console AMEK 200",
+   "group": "Plugin Alliance",
+   "category": "channel strip"
+  },
+  "pa_black_box_analog_design_hg_q": {
+   "name": "Black Box Analog Design HG-Q",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_tonebox": {
+   "name": "Brainworx bx_tonebox",
+   "group": "Plugin Alliance",
+   "category": "eq"
+  },
+  "pa_brainworx_bx_masterdesk_pro": {
+   "name": "Brainworx bx_masterdesk PRO",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_aura": {
+   "name": "Brainworx bx_aura",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_hum_audio_laal": {
+   "name": "HUM Audio LAAL",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_bettermaker_mastering_compressor": {
+   "name": "Bettermaker Mastering Compressor",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_brainworx_bx_glue": {
+   "name": "Brainworx bx_glue",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_amek_eq_200": {
+   "name": "AMEK EQ 200",
+   "group": "Plugin Alliance",
+   "category": "eq"
+  },
+  "pa_bettermaker_bm60": {
+   "name": "Bettermaker BM60",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_kiive_audio_tape_face": {
+   "name": "Kiive Audio Tape Face",
+   "group": "Plugin Alliance",
+   "category": "saturation"
+  },
+  "pa_brainworx_bx_xl_v3": {
+   "name": "Brainworx bx_XL V3",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_lindell_audio_50_series": {
+   "name": "Lindell Audio 50 Series",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_looptrotter_sa2rate_2": {
+   "name": "Looptrotter SA2RATE 2",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_knif_audio_knifonium": {
+   "name": "Knif Audio Knifonium",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_neold_wunderlich": {
+   "name": "NEOLD WUNDERLICH",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_ds_audio_thorn": {
+   "name": "DS Audio Thorn",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_enhancer": {
+   "name": "Brainworx bx_enhancer",
+   "group": "Plugin Alliance",
+   "category": "saturation"
+  },
+  "pa_knif_audio_soma": {
+   "name": "Knif Audio Soma",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_bettermaker_passive_equalizer": {
+   "name": "Bettermaker Passive Equalizer",
+   "group": "Plugin Alliance",
+   "category": "eq"
+  },
+  "pa_elysia_karacter": {
+   "name": "Elysia karacter",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_lindell_audio_69_series": {
+   "name": "Lindell Audio 69 Series",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_adptr_audio_hype": {
+   "name": "ADPTR Audio HYPE",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_m_ag_audio_magnum_k": {
+   "name": "Mäag Audio Magnum-K",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_elysia_mpressor": {
+   "name": "Elysia mpressor",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_ampeg_v_4b": {
+   "name": "Ampeg V-4B",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_harris_doyle_natalus_dsceq": {
+   "name": "Harris Doyle Natalus DSCEQ",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_oberhausen": {
+   "name": "Brainworx bx_oberhausen",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_lindell_audio_mu_66": {
+   "name": "Lindell Audio MU-66",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_rockergain100": {
+   "name": "Brainworx bx_rockergain100",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_fuchs_overdrive_supreme_50": {
+   "name": "Fuchs Overdrive Supreme 50",
+   "group": "Plugin Alliance",
+   "category": "saturation"
+  },
+  "pa_brainworx_bx_console_focusrite_sc": {
+   "name": "Brainworx bx_console Focusrite SC",
+   "group": "Plugin Alliance",
+   "category": "channel strip"
+  },
+  "pa_brainworx_bx_townhouse_buss_compressor": {
+   "name": "Brainworx bx_townhouse Buss Compressor",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_black_box_analog_design_hg_2": {
+   "name": "Black Box Analog Design HG-2",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_m_ag_audio_eq4": {
+   "name": "Mäag Audio EQ4",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_shadow_hills_mastering_compressor_class_a": {
+   "name": "Shadow Hills Mastering Compressor Class A",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_three_body_technology_kirchhoff_eq": {
+   "name": "Three-Body Technology Kirchhoff-EQ",
+   "group": "Plugin Alliance",
+   "category": "eq"
+  },
+  "pa_brainworx_bx_limiter_true_peak": {
+   "name": "Brainworx bx_limiter True Peak",
+   "group": "Plugin Alliance",
+   "category": "limiter"
+  },
+  "pa_brainworx_bx_console_ssl_9000_j": {
+   "name": "Brainworx bx_console SSL 9000 J",
+   "group": "Plugin Alliance",
+   "category": "channel strip"
+  },
+  "pa_shadow_hills_mastering_compressor": {
+   "name": "Shadow Hills Mastering Compressor",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_lindell_audio_80_series": {
+   "name": "Lindell Audio 80 Series",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_neold_rz062": {
+   "name": "NEOLD RZ062",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_shadow_hills_optomax": {
+   "name": "Shadow Hills OptoMax",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_brainworx_bx_console_ssl_4000_g": {
+   "name": "Brainworx bx_console SSL 4000 G",
+   "group": "Plugin Alliance",
+   "category": "channel strip"
+  },
+  "pa_swivel_audio_spread": {
+   "name": "Swivel Audio Spread",
+   "group": "Plugin Alliance",
+   "category": "imager"
+  },
+  "pa_unfiltered_audio_bass_mint": {
+   "name": "Unfiltered Audio Bass-Mint",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_unfiltered_audio_battalion": {
+   "name": "Unfiltered Audio Battalion",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_maor_appelbaum_mastering_hendyamps_the_oven": {
+   "name": "Maor Appelbaum Mastering & Hendyamps THE OVEN",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_purple_audio_mc77": {
+   "name": "Purple Audio MC77",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_ampeg_b_15n": {
+   "name": "Ampeg B-15N",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_brainworx_bx_saturator_v2": {
+   "name": "Brainworx bx_saturator V2",
+   "group": "Plugin Alliance",
+   "category": "saturation"
+  },
+  "pa_ampeg_svt_vr": {
+   "name": "Ampeg SVT-VR",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_dangerous_music_bax_eq": {
+   "name": "Dangerous Music BAX EQ",
+   "group": "Plugin Alliance",
+   "category": "eq"
+  },
+  "pa_unfiltered_audio_specops": {
+   "name": "Unfiltered Audio SpecOps",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_unfiltered_audio_silo": {
+   "name": "Unfiltered Audio SILO",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_vertigo_vsm_3": {
+   "name": "Vertigo VSM-3",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_proaudiodsp_dsm_v3": {
+   "name": "ProAudioDSP DSM V3",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_spl_iron": {
+   "name": "SPL IRON",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_louder_than_liftoff_silver_bullet_mk2": {
+   "name": "Louder Than Liftoff SILVER BULLET mk2",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_adptr_audio_streamliner": {
+   "name": "ADPTR Audio Streamliner",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_three_body_technology_cenozoix_compressor": {
+   "name": "Three-Body Technology Cenozoix Compressor",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_brainworx_bx_stereomaker": {
+   "name": "Brainworx bx_stereomaker",
+   "group": "Plugin Alliance",
+   "category": "imager"
+  },
+  "pa_lindell_audio_902_de_esser": {
+   "name": "Lindell Audio 902 De-Esser",
+   "group": "Plugin Alliance",
+   "category": "de-esser"
+  },
+  "pa_kiive_audio_xtcomp": {
+   "name": "Kiive Audio XTComp",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_spl_pq": {
+   "name": "SPL PQ",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_vertigo_vss_2": {
+   "name": "Vertigo VSS-2",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_three_body_technology_trinity_shaper": {
+   "name": "Three-Body Technology Trinity Shaper",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_m_ag_audio_eq2": {
+   "name": "Mäag Audio EQ2",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_thx_spatial_creator": {
+   "name": "THX Spatial Creator",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_masterdesk_true_peak": {
+   "name": "Brainworx bx_masterdesk True Peak",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_control_v2": {
+   "name": "Brainworx bx_control V2",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_unfiltered_audio_triad": {
+   "name": "Unfiltered Audio TRIAD",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_spl_de_verb_plus": {
+   "name": "SPL De-Verb Plus",
+   "group": "Plugin Alliance",
+   "category": "reverb"
+  },
+  "pa_unfiltered_audio_lo_fi_af": {
+   "name": "Unfiltered Audio LO-FI-AF",
+   "group": "Plugin Alliance",
+   "category": "saturation"
+  },
+  "pa_amek_eq_250": {
+   "name": "AMEK EQ 250",
+   "group": "Plugin Alliance",
+   "category": "eq"
+  },
+  "pa_unfiltered_audio_dent_2": {
+   "name": "Unfiltered Audio Dent 2",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_vertigo_vsc_2": {
+   "name": "Vertigo VSC-2",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_unfiltered_audio_byome": {
+   "name": "Unfiltered Audio BYOME",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_swivel_audio_hitstrip": {
+   "name": "Swivel Audio HitStrip",
+   "group": "Plugin Alliance",
+   "category": "channel strip"
+  },
+  "pa_brainworx_bx_rooms": {
+   "name": "Brainworx bx_rooMS",
+   "group": "Plugin Alliance",
+   "category": "reverb"
+  },
+  "pa_neold_oldtimer": {
+   "name": "NEOLD OLDTIMER",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_unfiltered_audio_needlepoint": {
+   "name": "Unfiltered Audio Needlepoint",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_gallien_krueger_800rb": {
+   "name": "Gallien-Krueger 800RB",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_bettermaker_eq232d": {
+   "name": "Bettermaker EQ232D",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_swivel_audio_knocktonal": {
+   "name": "Swivel Audio Knocktonal",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_millennia_nseq_2": {
+   "name": "Millennia NSEQ-2",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_2098_eq": {
+   "name": "Brainworx bx_2098 EQ",
+   "group": "Plugin Alliance",
+   "category": "eq"
+  },
+  "pa_unfiltered_audio_sandman_pro": {
+   "name": "Unfiltered Audio Sandman Pro",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_diezel_vh4": {
+   "name": "Diezel VH4",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_ada_flanger": {
+   "name": "ADA Flanger",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_neold_v76u73": {
+   "name": "NEOLD V76U73",
+   "group": "Plugin Alliance",
+   "category": "channel strip"
+  },
+  "pa_acme_audio_opticom_xla_3": {
+   "name": "ACME Audio Opticom XLA-3",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_unfiltered_audio_lion": {
+   "name": "Unfiltered Audio LION",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_spl_hawkeye": {
+   "name": "SPL HawkEye",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_bettermaker_bus_compressor": {
+   "name": "Bettermaker Bus Compressor",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_ampeg_svt_3pro": {
+   "name": "Ampeg SVT-3PRO",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_adptr_audio_sculpt": {
+   "name": "ADPTR Audio SCULPT",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_noveltech_vocal_enhancer": {
+   "name": "Noveltech Vocal Enhancer",
+   "group": "Plugin Alliance",
+   "category": "saturation"
+  },
+  "pa_brainworx_bx_limiter": {
+   "name": "Brainworx bx_limiter",
+   "group": "Plugin Alliance",
+   "category": "limiter"
+  },
+  "pa_mixland_vac_attack": {
+   "name": "Mixland Vac Attack",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_unfiltered_audio_tails": {
+   "name": "Unfiltered Audio TAILS",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_elysia_museq": {
+   "name": "Elysia museq",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_neold_u2a": {
+   "name": "NEOLD U2A",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_bassdude": {
+   "name": "Brainworx bx_bassdude",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_karanyi_sounds_wavesurfer": {
+   "name": "Karanyi Sounds Wavesurfer",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_neold_warble": {
+   "name": "NEOLD WARBLE",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_elysia_nvelope": {
+   "name": "Elysia nvelope",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_lindell_audio_sbc": {
+   "name": "Lindell Audio SBC",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_paneq": {
+   "name": "Brainworx bx_panEQ",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_delay_2500": {
+   "name": "Brainworx bx_delay 2500",
+   "group": "Plugin Alliance",
+   "category": "delay"
+  },
+  "pa_millennia_tcl_2": {
+   "name": "Millennia TCL-2",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_neold_big_al": {
+   "name": "NEOLD BIG AL",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_spl_twintube": {
+   "name": "SPL TwinTube",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_opto": {
+   "name": "Brainworx bx_opto",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_brainworx_bx_dyneq_v2": {
+   "name": "Brainworx bx_dynEQ V2",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_engl_savage_120": {
+   "name": "ENGL Savage 120",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_unfiltered_audio_fault": {
+   "name": "Unfiltered Audio Fault",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_swivel_audio_bde": {
+   "name": "Swivel Audio BDE",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_tomo_audiolabs_lisa": {
+   "name": "TOMO Audiolabs LISA",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_spl_de_esser_collection": {
+   "name": "SPL De-Esser Collection",
+   "group": "Plugin Alliance",
+   "category": "de-esser"
+  },
+  "pa_unfiltered_audio_indent_2": {
+   "name": "Unfiltered Audio Indent 2",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_cut_classic_high_flyer": {
+   "name": "Cut Classic High Flyer",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_fiedler_audio_stage": {
+   "name": "fiedler audio stage",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_lindell_audio_mbc": {
+   "name": "Lindell Audio MBC",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_friedman_be_100": {
+   "name": "Friedman BE-100",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_unfiltered_audio_instant_delay": {
+   "name": "Unfiltered Audio Instant Delay",
+   "group": "Plugin Alliance",
+   "category": "delay"
+  },
+  "pa_noveltech_character": {
+   "name": "Noveltech Character",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_lindell_audio_te_100": {
+   "name": "Lindell Audio TE-100",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_neold_u17": {
+   "name": "NEOLD U17",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_lindell_audio_354e": {
+   "name": "Lindell Audio 354E",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_spl_drumxchanger": {
+   "name": "SPL DrumXchanger",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_lindell_audio_6x_500": {
+   "name": "Lindell Audio 6X-500",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_lindell_audio_channelx": {
+   "name": "Lindell Audio ChannelX",
+   "group": "Plugin Alliance",
+   "category": "channel strip"
+  },
+  "pa_unfiltered_audio_zip": {
+   "name": "Unfiltered Audio Zip",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_brainworx_bx_cleansweep_pro": {
+   "name": "Brainworx bx_cleansweep Pro",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_hybrid_v2": {
+   "name": "Brainworx bx_hybrid V2",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_elysia_phil_s_cascade": {
+   "name": "Elysia Phil's Cascade",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_fiedler_audio_splat": {
+   "name": "fiedler audio splat",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_diezel_herbert": {
+   "name": "Diezel Herbert",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_spl_passeq": {
+   "name": "SPL Passeq",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_bettermaker_c502v": {
+   "name": "Bettermaker C502V",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_lindell_audio_7x_500": {
+   "name": "Lindell Audio 7X-500",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_lindell_audio_pex_500": {
+   "name": "Lindell Audio PEX-500",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_ampeg_svt_vr_classic": {
+   "name": "Ampeg SVT-VR Classic",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_brainworx_bx_rockrack_v3": {
+   "name": "Brainworx bx_rockrack V3",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_unfiltered_audio_g8": {
+   "name": "Unfiltered Audio G8",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_ada_std_1_stereo_tapped_delay": {
+   "name": "ADA STD-1 Stereo Tapped Delay",
+   "group": "Plugin Alliance",
+   "category": "delay"
+  },
+  "pa_suhr_se100": {
+   "name": "Suhr SE100",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_brainworx_bx_megadual": {
+   "name": "Brainworx bx_megadual",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_friedman_buxom_betty": {
+   "name": "Friedman Buxom Betty",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_suhr_pt100": {
+   "name": "Suhr PT100",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_louder_than_liftoff_chop_shop": {
+   "name": "Louder Than Liftoff Chop Shop",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_engl_e646_vs": {
+   "name": "ENGL E646 VS",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_spl_eq_ranger_plus": {
+   "name": "SPL EQ Ranger Plus",
+   "group": "Plugin Alliance",
+   "category": "eq"
+  },
+  "pa_friedman_ds_40": {
+   "name": "Friedman DS-40",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_spl_attacker_plus": {
+   "name": "SPL Attacker Plus",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_chandler_limited_gav19t": {
+   "name": "Chandler Limited GAV19T",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_engl_e765_rt": {
+   "name": "ENGL E765 RT",
+   "group": "Plugin Alliance",
+   "category": "amp"
+  },
+  "pa_unfiltered_audio_sandman": {
+   "name": "Unfiltered Audio Sandman",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_fuchs_train_ii": {
+   "name": "Fuchs Train II",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_spl_mo_verb_plus": {
+   "name": "SPL Mo-Verb Plus",
+   "group": "Plugin Alliance",
+   "category": "reverb"
+  },
+  "pa_brainworx_bx_meter": {
+   "name": "Brainworx bx_meter",
+   "group": "Plugin Alliance",
+   "category": "meter"
+  },
+  "pa_brainworx_bx_bluechorus2": {
+   "name": "Brainworx bx_bluechorus2",
+   "group": "Plugin Alliance",
+   "category": "delay"
+  },
+  "pa_brainworx_bx_shredspread": {
+   "name": "Brainworx bx_shredspread",
+   "group": "Plugin Alliance",
+   "category": "imager"
+  },
+  "pa_brainworx_bx_subfilter": {
+   "name": "Brainworx bx_subfilter",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_brainworx_bx_rockrack_v3_player": {
+   "name": "Brainworx bx_rockrack V3 Player",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_blackdist2": {
+   "name": "Brainworx bx_blackdist2",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_metal2": {
+   "name": "Brainworx bx_metal2",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_yellowdrive": {
+   "name": "Brainworx bx_yellowdrive",
+   "group": "Plugin Alliance",
+   "category": "saturation"
+  },
+  "pa_brainworx_bx_greenscreamer": {
+   "name": "Brainworx bx_greenscreamer",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_boom": {
+   "name": "Brainworx bx_boom!",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_solo": {
+   "name": "Brainworx bx_solo",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_spl_free_ranger": {
+   "name": "SPL Free Ranger",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_distorange": {
+   "name": "Brainworx bx_distorange",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_megasingle": {
+   "name": "Brainworx bx_megasingle",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_bx_opto_pedal": {
+   "name": "Brainworx bx_opto Pedal",
+   "group": "Plugin Alliance",
+   "category": "compressor"
+  },
+  "pa_brainworx_bx_cleansweep_v2": {
+   "name": "Brainworx bx_cleansweep V2",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "pa_brainworx_niveau_filter_elysia": {
+   "name": "Brainworx niveau filter (Elysia)",
+   "group": "Plugin Alliance",
+   "category": "modulation"
+  },
+  "pa_brainworx_bx_masterdesk_classic": {
+   "name": "Brainworx bx_masterdesk Classic",
+   "group": "Plugin Alliance",
+   "category": "utility"
+  },
+  "avid_bf_2a": {
+   "name": "BF-2A",
+   "group": "Avid (Pro Tools)",
+   "category": "compressor"
+  },
+  "avid_bf_3a": {
+   "name": "BF-3A",
+   "group": "Avid (Pro Tools)",
+   "category": "compressor"
+  },
+  "avid_bf_76": {
+   "name": "BF-76",
+   "group": "Avid (Pro Tools)",
+   "category": "compressor"
+  },
+  "avid_channel_strip": {
+   "name": "Channel Strip",
+   "group": "Avid (Pro Tools)",
+   "category": "channel strip"
+  },
+  "avid_dynamics_iii_compressor_limiter": {
+   "name": "Dynamics III Compressor/Limiter",
+   "group": "Avid (Pro Tools)",
+   "category": "limiter"
+  },
+  "avid_dynamics_iii_de_esser": {
+   "name": "Dynamics III De-Esser",
+   "group": "Avid (Pro Tools)",
+   "category": "de-esser"
+  },
+  "avid_eq_iii_1_band": {
+   "name": "EQ III 1-Band",
+   "group": "Avid (Pro Tools)",
+   "category": "eq"
+  },
+  "avid_eq_iii_7_band": {
+   "name": "EQ III 7-Band",
+   "group": "Avid (Pro Tools)",
+   "category": "eq"
+  },
+  "avid_fairchild_660": {
+   "name": "Fairchild 660",
+   "group": "Avid (Pro Tools)",
+   "category": "compressor"
+  },
+  "avid_fairchild_670": {
+   "name": "Fairchild 670",
+   "group": "Avid (Pro Tools)",
+   "category": "compressor"
+  },
+  "avid_focusrite_d2": {
+   "name": "Focusrite d2",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_focusrite_d3": {
+   "name": "Focusrite d3",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_graphic_eq": {
+   "name": "Graphic EQ",
+   "group": "Avid (Pro Tools)",
+   "category": "eq"
+  },
+  "avid_impact": {
+   "name": "Impact",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_maxim": {
+   "name": "Maxim",
+   "group": "Avid (Pro Tools)",
+   "category": "limiter"
+  },
+  "avid_pultec_eqh_2": {
+   "name": "Pultec EQH-2",
+   "group": "Avid (Pro Tools)",
+   "category": "eq"
+  },
+  "avid_pultec_eqp_1a": {
+   "name": "Pultec EQP-1A",
+   "group": "Avid (Pro Tools)",
+   "category": "eq"
+  },
+  "avid_pultec_meq_5": {
+   "name": "Pultec MEQ-5",
+   "group": "Avid (Pro Tools)",
+   "category": "eq"
+  },
+  "avid_purple_audio_mc_77": {
+   "name": "Purple Audio MC-77",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_smack": {
+   "name": "Smack!",
+   "group": "Avid (Pro Tools)",
+   "category": "compressor"
+  },
+  "avid_air_chorus": {
+   "name": "AIR Chorus",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_air_distortion": {
+   "name": "AIR Distortion",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_air_enhancer": {
+   "name": "AIR Enhancer",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_air_ensemble": {
+   "name": "AIR Ensemble",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_air_filter_gate": {
+   "name": "AIR Filter Gate",
+   "group": "Avid (Pro Tools)",
+   "category": "compressor"
+  },
+  "avid_air_flanger": {
+   "name": "AIR Flanger",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_air_frequency_shifter": {
+   "name": "AIR Frequency Shifter",
+   "group": "Avid (Pro Tools)",
+   "category": "pitch"
+  },
+  "avid_air_fuzz_wah": {
+   "name": "AIR Fuzz-Wah",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_air_kill_eq": {
+   "name": "AIR Kill EQ",
+   "group": "Avid (Pro Tools)",
+   "category": "eq"
+  },
+  "avid_air_lo_fi": {
+   "name": "AIR Lo-Fi",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_d_fi_recti_fi": {
+   "name": "D-Fi Recti-Fi",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_d_fi_sci_fi": {
+   "name": "D-Fi Sci-Fi",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_d_fi_vari_fi_audiosuite_only": {
+   "name": "D-Fi Vari-Fi",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_eleven_lite": {
+   "name": "Eleven Lite",
+   "group": "Avid (Pro Tools)",
+   "category": "amp"
+  },
+  "avid_eleven_mk_ii": {
+   "name": "Eleven MK II",
+   "group": "Avid (Pro Tools)",
+   "category": "amp"
+  },
+  "avid_moogerfooger_12_stage_phaser": {
+   "name": "Moogerfooger 12-Stage Phaser",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_moogerfooger_analog_delay": {
+   "name": "Moogerfooger Analog Delay",
+   "group": "Avid (Pro Tools)",
+   "category": "delay"
+  },
+  "avid_moogerfooger_lowpass_filter": {
+   "name": "Moogerfooger Lowpass Filter",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_moogerfooger_ring_modulator": {
+   "name": "Moogerfooger Ring Modulator",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_reel_tape_flanger": {
+   "name": "Reel Tape Flanger",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_air_multichorus": {
+   "name": "AIR MultiChorus",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_air_phaser": {
+   "name": "AIR Phaser",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_air_stereo_width": {
+   "name": "AIR Stereo Width",
+   "group": "Avid (Pro Tools)",
+   "category": "imager"
+  },
+  "avid_air_talkbox": {
+   "name": "AIR Talkbox",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_air_vintage_filter": {
+   "name": "AIR Vintage Filter",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_d_fi_lo_fi": {
+   "name": "D-Fi Lo-Fi",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_reel_tape_saturation": {
+   "name": "Reel Tape Saturation",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_sansamp_psa_1": {
+   "name": "SansAmp PSA-1",
+   "group": "Avid (Pro Tools)",
+   "category": "amp"
+  },
+  "avid_voce_chorus_vibrato": {
+   "name": "Voce Chorus/Vibrato",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_voce_spin": {
+   "name": "Voce Spin",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_air_dynamic_delay": {
+   "name": "AIR Dynamic Delay",
+   "group": "Avid (Pro Tools)",
+   "category": "delay"
+  },
+  "avid_air_multi_delay": {
+   "name": "AIR Multi-Delay",
+   "group": "Avid (Pro Tools)",
+   "category": "delay"
+  },
+  "avid_air_nonlinear_reverb": {
+   "name": "AIR Nonlinear Reverb",
+   "group": "Avid (Pro Tools)",
+   "category": "reverb"
+  },
+  "avid_air_reverb": {
+   "name": "AIR Reverb",
+   "group": "Avid (Pro Tools)",
+   "category": "reverb"
+  },
+  "avid_air_spring_reverb": {
+   "name": "AIR Spring Reverb",
+   "group": "Avid (Pro Tools)",
+   "category": "reverb"
+  },
+  "avid_d_verb": {
+   "name": "D-Verb",
+   "group": "Avid (Pro Tools)",
+   "category": "reverb"
+  },
+  "avid_mod_delay_iii": {
+   "name": "Mod Delay III",
+   "group": "Avid (Pro Tools)",
+   "category": "delay"
+  },
+  "avid_reel_tape_delay": {
+   "name": "Reel Tape Delay",
+   "group": "Avid (Pro Tools)",
+   "category": "delay"
+  },
+  "avid_reverb_one": {
+   "name": "Reverb One",
+   "group": "Avid (Pro Tools)",
+   "category": "reverb"
+  },
+  "avid_studio_reverb": {
+   "name": "Studio Reverb",
+   "group": "Avid (Pro Tools)",
+   "category": "reverb"
+  },
+  "avid_tape_echo": {
+   "name": "Tape Echo",
+   "group": "Avid (Pro Tools)",
+   "category": "delay"
+  },
+  "avid_tel_ray_variable_delay": {
+   "name": "Tel-Ray Variable Delay",
+   "group": "Avid (Pro Tools)",
+   "category": "delay"
+  },
+  "avid_bbd_delay": {
+   "name": "BBD Delay",
+   "group": "Avid (Pro Tools)",
+   "category": "delay"
+  },
+  "avid_black_op_distortion": {
+   "name": "Black Op Distortion",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_black_shiny_wah": {
+   "name": "Black Shiny Wah",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_black_spring": {
+   "name": "Black Spring",
+   "group": "Avid (Pro Tools)",
+   "category": "reverb"
+  },
+  "avid_c1_chorus_vibrato": {
+   "name": "C1 Chorus/Vibrato",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_dc_distortion": {
+   "name": "DC Distortion",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_flanger": {
+   "name": "Flanger",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_gray_compressor": {
+   "name": "Gray Compressor",
+   "group": "Avid (Pro Tools)",
+   "category": "compressor"
+  },
+  "avid_green_jrc_overdrive": {
+   "name": "Green JRC Overdrive",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_orange_phaser": {
+   "name": "Orange Phaser",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_roto_speaker": {
+   "name": "Roto Speaker",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_tri_knob_fuzz": {
+   "name": "Tri-Knob Fuzz",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_vibe_phaser": {
+   "name": "Vibe Phaser",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_white_boost": {
+   "name": "White Boost",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_dc_offset_removal_audiosuite_only": {
+   "name": "DC Offset Removal",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_dither": {
+   "name": "Dither",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_down_mixer": {
+   "name": "Down Mixer",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_duplicate_audiosuite_only": {
+   "name": "Duplicate",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_gain_audiosuite_only": {
+   "name": "Gain",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_intune": {
+   "name": "InTune",
+   "group": "Avid (Pro Tools)",
+   "category": "pitch"
+  },
+  "avid_invert_audiosuite_only": {
+   "name": "Invert",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_mastermeter": {
+   "name": "MasterMeter",
+   "group": "Avid (Pro Tools)",
+   "category": "meter"
+  },
+  "avid_normalize_audiosuite_only": {
+   "name": "Normalize",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_pitch_shift_audiosuite_only": {
+   "name": "Pitch Shift",
+   "group": "Avid (Pro Tools)",
+   "category": "pitch"
+  },
+  "avid_pow_r_dither": {
+   "name": "POW-r Dither",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_reverse_audiosuite_only": {
+   "name": "Reverse",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_signal_generator": {
+   "name": "Signal Generator",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_sound_replacer_audiosuite_only": {
+   "name": "Sound Replacer",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_time_adjuster": {
+   "name": "Time Adjuster",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_time_compression_expansion_audiosuite_only": {
+   "name": "Time Compression/Expansion",
+   "group": "Avid (Pro Tools)",
+   "category": "compressor"
+  },
+  "avid_time_shift_audiosuite_only": {
+   "name": "Time Shift",
+   "group": "Avid (Pro Tools)",
+   "category": "pitch"
+  },
+  "avid_trim": {
+   "name": "Trim",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_pitch_ii": {
+   "name": "Pitch II",
+   "group": "Avid (Pro Tools)",
+   "category": "pitch"
+  },
+  "avid_304c_compressor": {
+   "name": "304C Compressor",
+   "group": "Avid (Pro Tools)",
+   "category": "compressor"
+  },
+  "avid_304e_equalizer": {
+   "name": "304E Equalizer",
+   "group": "Avid (Pro Tools)",
+   "category": "eq"
+  },
+  "avid_pro_compressor": {
+   "name": "Pro Compressor",
+   "group": "Avid (Pro Tools)",
+   "category": "compressor"
+  },
+  "avid_pro_limiter": {
+   "name": "Pro Limiter",
+   "group": "Avid (Pro Tools)",
+   "category": "limiter"
+  },
+  "avid_pro_multiband_dynamics": {
+   "name": "Pro Multiband Dynamics",
+   "group": "Avid (Pro Tools)",
+   "category": "compressor"
+  },
+  "avid_heat": {
+   "name": "HEAT",
+   "group": "Avid (Pro Tools)",
+   "category": "saturation"
+  },
+  "avid_pro_subharmonic": {
+   "name": "Pro Subharmonic",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_revibe_ii": {
+   "name": "ReVibe II",
+   "group": "Avid (Pro Tools)",
+   "category": "modulation"
+  },
+  "avid_space": {
+   "name": "Space",
+   "group": "Avid (Pro Tools)",
+   "category": "utility"
+  },
+  "avid_x_form": {
+   "name": "X-Form",
+   "group": "Avid (Pro Tools)",
+   "category": "pitch"
+  },
+  "fl_fruity_db_meter": {
+   "name": "Fruity dB Meter",
+   "group": "Image-Line (FL Studio)",
+   "category": "meter"
+  },
+  "fl_fruity_spectroman": {
+   "name": "Fruity Spectroman",
+   "group": "Image-Line (FL Studio)",
+   "category": "meter"
+  },
+  "fl_wave_candy": {
+   "name": "Wave Candy",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_distructor": {
+   "name": "Distructor",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_equo": {
+   "name": "EQUO",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_frequency_splitter": {
+   "name": "Frequency Splitter",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_fruity_balance": {
+   "name": "Fruity Balance",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_fruity_chorus": {
+   "name": "Fruity Chorus",
+   "group": "Image-Line (FL Studio)",
+   "category": "modulation"
+  },
+  "fl_fruity_compressor": {
+   "name": "Fruity Compressor",
+   "group": "Image-Line (FL Studio)",
+   "category": "compressor"
+  },
+  "fl_fruity_convolver": {
+   "name": "Fruity Convolver",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_fruity_delay_2": {
+   "name": "Fruity Delay 2",
+   "group": "Image-Line (FL Studio)",
+   "category": "delay"
+  },
+  "fl_fruity_delay_3": {
+   "name": "Fruity Delay 3",
+   "group": "Image-Line (FL Studio)",
+   "category": "delay"
+  },
+  "fl_fruity_delay_bank": {
+   "name": "Fruity Delay Bank",
+   "group": "Image-Line (FL Studio)",
+   "category": "delay"
+  },
+  "fl_fruity_fast_dist": {
+   "name": "Fruity Fast Dist",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_fruity_filter": {
+   "name": "Fruity Filter",
+   "group": "Image-Line (FL Studio)",
+   "category": "modulation"
+  },
+  "fl_fruity_flanger": {
+   "name": "Fruity Flanger",
+   "group": "Image-Line (FL Studio)",
+   "category": "modulation"
+  },
+  "fl_fruity_flangus": {
+   "name": "Fruity Flangus",
+   "group": "Image-Line (FL Studio)",
+   "category": "modulation"
+  },
+  "fl_fruity_limiter": {
+   "name": "Fruity Limiter",
+   "group": "Image-Line (FL Studio)",
+   "category": "limiter"
+  },
+  "fl_fruity_multiband_compressor": {
+   "name": "Fruity Multiband Compressor",
+   "group": "Image-Line (FL Studio)",
+   "category": "compressor"
+  },
+  "fl_fruity_parametric_eq": {
+   "name": "Fruity Parametric EQ",
+   "group": "Image-Line (FL Studio)",
+   "category": "eq"
+  },
+  "fl_fruity_parametric_eq2": {
+   "name": "Fruity Parametric EQ2",
+   "group": "Image-Line (FL Studio)",
+   "category": "meter"
+  },
+  "fl_fruity_phaser": {
+   "name": "Fruity Phaser",
+   "group": "Image-Line (FL Studio)",
+   "category": "modulation"
+  },
+  "fl_fruity_reeverb_2": {
+   "name": "Fruity Reeverb 2",
+   "group": "Image-Line (FL Studio)",
+   "category": "reverb"
+  },
+  "fl_fruity_soft_clipper": {
+   "name": "Fruity Soft Clipper",
+   "group": "Image-Line (FL Studio)",
+   "category": "limiter"
+  },
+  "fl_fruity_squeeze": {
+   "name": "Fruity Squeeze",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_fruity_stereo_enhancer": {
+   "name": "Fruity Stereo Enhancer",
+   "group": "Image-Line (FL Studio)",
+   "category": "imager"
+  },
+  "fl_fruity_stereo_shaper": {
+   "name": "Fruity Stereo Shaper",
+   "group": "Image-Line (FL Studio)",
+   "category": "imager"
+  },
+  "fl_fruity_waveshaper": {
+   "name": "Fruity WaveShaper",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_soundgoodizer": {
+   "name": "Soundgoodizer",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_emphasizer": {
+   "name": "Emphasizer",
+   "group": "Image-Line (FL Studio)",
+   "category": "modulation"
+  },
+  "fl_frequency_shifter": {
+   "name": "Frequency Shifter",
+   "group": "Image-Line (FL Studio)",
+   "category": "pitch"
+  },
+  "fl_hyper_chorus": {
+   "name": "Hyper Chorus",
+   "group": "Image-Line (FL Studio)",
+   "category": "modulation"
+  },
+  "fl_maximus": {
+   "name": "Maximus",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_multiband_delay": {
+   "name": "Multiband Delay",
+   "group": "Image-Line (FL Studio)",
+   "category": "delay"
+  },
+  "fl_spreader": {
+   "name": "Spreader",
+   "group": "Image-Line (FL Studio)",
+   "category": "imager"
+  },
+  "fl_slicex": {
+   "name": "Slicex",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_soundfont_player": {
+   "name": "SoundFont Player",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_sytrus": {
+   "name": "Sytrus",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_edison": {
+   "name": "Edison",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_newtime": {
+   "name": "Newtime",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_gross_beat": {
+   "name": "Gross Beat",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_hardcore_11_guitar_fx": {
+   "name": "Hardcore (11 Guitar FX)",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_low_lifter": {
+   "name": "Low Lifter",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_pitcher": {
+   "name": "Pitcher",
+   "group": "Image-Line (FL Studio)",
+   "category": "pitch"
+  },
+  "fl_vintage_chorus": {
+   "name": "Vintage Chorus",
+   "group": "Image-Line (FL Studio)",
+   "category": "modulation"
+  },
+  "fl_vintage_phaser": {
+   "name": "Vintage Phaser",
+   "group": "Image-Line (FL Studio)",
+   "category": "modulation"
+  },
+  "fl_harmless": {
+   "name": "Harmless",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_newtone": {
+   "name": "Newtone",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_transmitter": {
+   "name": "Transmitter",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "fl_luxeverb": {
+   "name": "LuxeVerb",
+   "group": "Image-Line (FL Studio)",
+   "category": "reverb"
+  },
+  "fl_pitch_shifter": {
+   "name": "Pitch Shifter",
+   "group": "Image-Line (FL Studio)",
+   "category": "pitch"
+  },
+  "fl_transient_processor": {
+   "name": "Transient Processor",
+   "group": "Image-Line (FL Studio)",
+   "category": "compressor"
+  },
+  "fl_emphasis": {
+   "name": "Emphasis",
+   "group": "Image-Line (FL Studio)",
+   "category": "modulation"
+  },
+  "fl_transporter": {
+   "name": "Transporter",
+   "group": "Image-Line (FL Studio)",
+   "category": "utility"
+  },
+  "logic_reverb_chromaverb_quantec_room_simulator_space_designer": {
+   "name": "Reverb: ChromaVerb, Quantec Room Simulator, Space Designer",
+   "group": "Apple (Logic Pro)",
+   "category": "reverb"
+  },
+  "logic_delay_delay_designer": {
+   "name": "Delay: Delay Designer",
+   "group": "Apple (Logic Pro)",
+   "category": "delay"
+  },
+  "logic_eq_linear_phase_eq_match_eq_vintage_eq_collection": {
+   "name": "EQ: Linear Phase EQ, Match EQ, Vintage EQ Collection",
+   "group": "Apple (Logic Pro)",
+   "category": "eq"
+  },
+  "logic_filter_spectral_gate": {
+   "name": "Filter: Spectral Gate",
+   "group": "Apple (Logic Pro)",
+   "category": "compressor"
+  },
+  "logic_pitch_pitch_correction_pitch_shifter_vocal_transformer": {
+   "name": "Pitch: Pitch Correction, Pitch Shifter, Vocal Transformer",
+   "group": "Apple (Logic Pro)",
+   "category": "pitch"
+  },
+  "logic_other_named_in_apple_s_creator_studio_and_effects_pages_chromaglow_ai_texture_effect": {
+   "name": "Other named in Apple's Creator Studio and effects pages: ChromaGlow (AI texture effect)",
+   "group": "Apple (Logic Pro)",
+   "category": "utility"
+  }
+ },
+ "bundles": [
+  {
+   "id": "waves_essential",
+   "name": "Waves Essential",
+   "plugins": [
+    "waves_abbey_road_emi_tg12345_channel",
+    "waves_audiotrack",
+    "waves_berzerk_distortion",
+    "waves_butch_vig_vocals",
+    "waves_c1_compressor",
+    "waves_c4_multiband_compressor",
+    "waves_cla_echosphere",
+    "waves_cla_vocals",
+    "waves_cla_76_compressor_limiter",
+    "waves_clarity_vx",
+    "waves_clarity_vx_dereverb",
+    "waves_curves_resolve",
+    "waves_debreath",
+    "waves_deesser",
+    "waves_doubler",
+    "waves_eddie_kramer_effects_channel",
+    "waves_eddie_kramer_guitar_channel",
+    "waves_eddie_kramer_vocal_channel",
+    "waves_emo_d5_dynamics",
+    "waves_emo_f2_filter",
+    "waves_emo_generator",
+    "waves_emo_q4_equalizer",
+    "waves_enigma",
+    "waves_f6",
+    "waves_gemstones",
+    "waves_greg_wells_mixcentric",
+    "waves_gtr_solo",
+    "waves_gtr3",
+    "waves_gtr3_amps",
+    "waves_gtr3_stomps",
+    "waves_gtr3_toolrack",
+    "waves_h_comp_hybrid_compressor",
+    "waves_h_delay_hybrid_delay",
+    "waves_h_eq_hybrid_equalizer",
+    "waves_idx_intelligent_dynamics",
+    "waves_inphase_lt",
+    "waves_ir_l_convolution_reverb",
+    "waves_kaleidoscopes",
+    "waves_kramer_master_tape",
+    "waves_l1_ultramaximizer",
+    "waves_l2",
+    "waves_loair",
+    "waves_lofi_space",
+    "waves_magma_lil_tube",
+    "waves_magma_stressbox",
+    "waves_magma_tube_channel_strip",
+    "waves_manny_marroquin_reverb",
+    "waves_manny_marroquin_triple_d",
+    "waves_maserati_acg",
+    "waves_maserati_b72",
+    "waves_maxxbass",
+    "waves_maxxvolume",
+    "waves_metafilter",
+    "waves_metaflanger",
+    "waves_mondomod",
+    "waves_morphoder",
+    "waves_mv2",
+    "waves_ns1_noise_suppressor",
+    "waves_nx",
+    "waves_nx_germano_studios_new_york",
+    "waves_oneknob_brighter",
+    "waves_oneknob_driver",
+    "waves_oneknob_filter",
+    "waves_oneknob_louder",
+    "waves_oneknob_phatter",
+    "waves_oneknob_pressure",
+    "waves_oneknob_pumper",
+    "waves_oneknob_wetter",
+    "waves_paz",
+    "waves_ps22_stereo_maker",
+    "waves_puigtec_eqs",
+    "waves_q10_equalizer",
+    "waves_renaissance_axx",
+    "waves_renaissance_bass",
+    "waves_renaissance_channel",
+    "waves_ren_comp",
+    "waves_renaissance_deesser",
+    "waves_ren_eq",
+    "waves_renaissance_reverb",
+    "waves_renaissance_vox",
+    "waves_s1_imager",
+    "waves_sibilance",
+    "waves_silk_vocal",
+    "waves_soundshifter",
+    "waves_ssl_e_channel",
+    "waves_sub_align",
+    "waves_supertap",
+    "waves_trans_x",
+    "waves_trueverb",
+    "waves_ultrapitch",
+    "waves_v_comp",
+    "waves_v_eq3",
+    "waves_v_eq4",
+    "waves_vitamin_sonic_enhancer",
+    "waves_vocal_bender",
+    "waves_vocal_rider",
+    "waves_voltage_amps",
+    "waves_vu_meter",
+    "waves_waves_tune_lt",
+    "waves_waves_tune_real_time",
+    "waves_wlm",
+    "waves_x_fdbk",
+    "waves_z_noise"
+   ]
+  },
+  {
+   "id": "waves_ultimate",
+   "name": "Waves Ultimate",
+   "plugins": [
+    "waves_abbey_road_emi_tg12345_channel",
+    "waves_audiotrack",
+    "waves_berzerk_distortion",
+    "waves_butch_vig_vocals",
+    "waves_c1_compressor",
+    "waves_c4_multiband_compressor",
+    "waves_cla_echosphere",
+    "waves_cla_vocals",
+    "waves_cla_76_compressor_limiter",
+    "waves_clarity_vx",
+    "waves_clarity_vx_dereverb",
+    "waves_curves_resolve",
+    "waves_debreath",
+    "waves_deesser",
+    "waves_doubler",
+    "waves_eddie_kramer_effects_channel",
+    "waves_eddie_kramer_guitar_channel",
+    "waves_eddie_kramer_vocal_channel",
+    "waves_emo_d5_dynamics",
+    "waves_emo_f2_filter",
+    "waves_emo_generator",
+    "waves_emo_q4_equalizer",
+    "waves_enigma",
+    "waves_f6",
+    "waves_gemstones",
+    "waves_greg_wells_mixcentric",
+    "waves_gtr_solo",
+    "waves_gtr3",
+    "waves_gtr3_amps",
+    "waves_gtr3_stomps",
+    "waves_gtr3_toolrack",
+    "waves_h_comp_hybrid_compressor",
+    "waves_h_delay_hybrid_delay",
+    "waves_h_eq_hybrid_equalizer",
+    "waves_idx_intelligent_dynamics",
+    "waves_inphase_lt",
+    "waves_ir_l_convolution_reverb",
+    "waves_kaleidoscopes",
+    "waves_kramer_master_tape",
+    "waves_l1_ultramaximizer",
+    "waves_l2",
+    "waves_loair",
+    "waves_lofi_space",
+    "waves_magma_lil_tube",
+    "waves_magma_stressbox",
+    "waves_magma_tube_channel_strip",
+    "waves_manny_marroquin_reverb",
+    "waves_manny_marroquin_triple_d",
+    "waves_maserati_acg",
+    "waves_maserati_b72",
+    "waves_maxxbass",
+    "waves_maxxvolume",
+    "waves_metafilter",
+    "waves_metaflanger",
+    "waves_mondomod",
+    "waves_morphoder",
+    "waves_mv2",
+    "waves_ns1_noise_suppressor",
+    "waves_nx",
+    "waves_nx_germano_studios_new_york",
+    "waves_oneknob_brighter",
+    "waves_oneknob_driver",
+    "waves_oneknob_filter",
+    "waves_oneknob_louder",
+    "waves_oneknob_phatter",
+    "waves_oneknob_pressure",
+    "waves_oneknob_pumper",
+    "waves_oneknob_wetter",
+    "waves_paz",
+    "waves_ps22_stereo_maker",
+    "waves_puigtec_eqs",
+    "waves_q10_equalizer",
+    "waves_renaissance_axx",
+    "waves_renaissance_bass",
+    "waves_renaissance_channel",
+    "waves_ren_comp",
+    "waves_renaissance_deesser",
+    "waves_ren_eq",
+    "waves_renaissance_reverb",
+    "waves_renaissance_vox",
+    "waves_s1_imager",
+    "waves_sibilance",
+    "waves_silk_vocal",
+    "waves_soundshifter",
+    "waves_ssl_e_channel",
+    "waves_sub_align",
+    "waves_supertap",
+    "waves_trans_x",
+    "waves_trueverb",
+    "waves_ultrapitch",
+    "waves_v_comp",
+    "waves_v_eq3",
+    "waves_v_eq4",
+    "waves_vitamin_sonic_enhancer",
+    "waves_vocal_bender",
+    "waves_vocal_rider",
+    "waves_voltage_amps",
+    "waves_vu_meter",
+    "waves_waves_tune_lt",
+    "waves_waves_tune_real_time",
+    "waves_wlm",
+    "waves_x_fdbk",
+    "waves_z_noise",
+    "waves_abbey_road_chambers",
+    "waves_abbey_road_j37_tape",
+    "waves_abbey_road_redd_consoles",
+    "waves_abbey_road_reel_adt",
+    "waves_abbey_road_reverb_plates",
+    "waves_abbey_road_rs124_compressor",
+    "waves_abbey_road_rs56_passive_eq",
+    "waves_abbey_road_saturator",
+    "waves_abbey_road_studio_3",
+    "waves_abbey_road_tg_mastering_chain",
+    "waves_abbey_road_vinyl",
+    "waves_aphex_vintage_aural_exciter",
+    "waves_api_2500",
+    "waves_api_550",
+    "waves_api_560",
+    "waves_atlas_reverb",
+    "waves_bass_rider",
+    "waves_brauer_motion",
+    "waves_bss_dpr_402",
+    "waves_c6_multiband_compressor",
+    "waves_center",
+    "waves_cla_bass",
+    "waves_cla_effects",
+    "waves_cla_epic",
+    "waves_cla_guitars",
+    "waves_cla_mixdown",
+    "waves_cla_mixhub",
+    "waves_cla_nx",
+    "waves_cla_unplugged",
+    "waves_cla_2a_compressor_limiter",
+    "waves_cla_3a_compressor_limiter",
+    "waves_clarity_vx_dereverb_pro",
+    "waves_clarity_vx_pro",
+    "waves_clarix_lb",
+    "waves_cobalt_saphira",
+    "waves_curves_aq",
+    "waves_curves_equator",
+    "waves_dbx_160_compressor_limiter",
+    "waves_doppler",
+    "waves_dorrough_stereo",
+    "waves_eddie_kramer_bass_channel",
+    "waves_eddie_kramer_drum_channel",
+    "waves_feedback_hunter",
+    "waves_geq_graphic_equalizer",
+    "waves_greg_wells_tonecentric",
+    "waves_greg_wells_voicecentric",
+    "waves_h_reverb_hybrid_reverb",
+    "waves_inphase",
+    "waves_intrigger_drum_replacer",
+    "waves_ir1_convolution_reverb",
+    "waves_ir_live_convolution_reverb",
+    "waves_jjp_bass",
+    "waves_jjp_cymbals_percussion",
+    "waves_jjp_guitars",
+    "waves_jjp_vocals",
+    "waves_kramer_hls_channel",
+    "waves_kramer_pie_compressor",
+    "waves_l3_multimaximizer",
+    "waves_l3_ll_multimaximizer",
+    "waves_l3_ll_ultramaximizer",
+    "waves_l4_ultramaximizer",
+    "waves_linear_phase_eq",
+    "waves_linear_phase_multiband_compressor",
+    "waves_magma_bb_tubes",
+    "waves_magma_springs",
+    "waves_manny_marroquin_delay",
+    "waves_manny_marroquin_distortion",
+    "waves_manny_marroquin_eq",
+    "waves_manny_marroquin_tone_shaper",
+    "waves_maserati_drm",
+    "waves_maserati_grp",
+    "waves_maserati_gti",
+    "waves_maserati_hmx",
+    "waves_maserati_vx1",
+    "waves_mdmx_distortion_modules",
+    "waves_multimod_rack",
+    "waves_nls_non_linear_summer",
+    "waves_nx_ocean_way_nashville",
+    "waves_prs_supermodels",
+    "waves_puigchild_compressor",
+    "waves_q_clone",
+    "waves_retro_fi",
+    "waves_scheps_73",
+    "waves_scheps_omni_channel_2",
+    "waves_scheps_parallel_particles",
+    "waves_smack_attack",
+    "waves_space_rider",
+    "waves_ssl_ev2_channel",
+    "waves_ssl_g_channel",
+    "waves_ssl_g_equalizer",
+    "waves_ssl_g_master_buss_compressor",
+    "waves_submarine",
+    "waves_sync_vx",
+    "waves_torque",
+    "waves_tract_spl_meter",
+    "waves_tract_system_calibration",
+    "waves_um225_um226",
+    "waves_w43_noise_reduction_plugin",
+    "waves_waves_tune",
+    "waves_wns_noise_suppressor",
+    "waves_x_click",
+    "waves_x_crackle",
+    "waves_x_hum",
+    "waves_x_noise"
+   ]
+  },
+  {
+   "id": "pro_tools_artist",
+   "name": "Pro Tools Artist",
+   "plugins": [
+    "avid_bf_2a",
+    "avid_bf_3a",
+    "avid_bf_76",
+    "avid_channel_strip",
+    "avid_dynamics_iii_compressor_limiter",
+    "avid_dynamics_iii_de_esser",
+    "avid_eq_iii_1_band",
+    "avid_eq_iii_7_band",
+    "avid_fairchild_660",
+    "avid_fairchild_670",
+    "avid_focusrite_d2",
+    "avid_focusrite_d3",
+    "avid_graphic_eq",
+    "avid_impact",
+    "avid_maxim",
+    "avid_pultec_eqh_2",
+    "avid_pultec_eqp_1a",
+    "avid_pultec_meq_5",
+    "avid_purple_audio_mc_77",
+    "avid_smack",
+    "avid_air_chorus",
+    "avid_air_distortion",
+    "avid_air_enhancer",
+    "avid_air_ensemble",
+    "avid_air_filter_gate",
+    "avid_air_flanger",
+    "avid_air_frequency_shifter",
+    "avid_air_fuzz_wah",
+    "avid_air_kill_eq",
+    "avid_air_lo_fi",
+    "avid_d_fi_recti_fi",
+    "avid_d_fi_sci_fi",
+    "avid_d_fi_vari_fi_audiosuite_only",
+    "avid_eleven_lite",
+    "avid_eleven_mk_ii",
+    "avid_moogerfooger_12_stage_phaser",
+    "avid_moogerfooger_analog_delay",
+    "avid_moogerfooger_lowpass_filter",
+    "avid_moogerfooger_ring_modulator",
+    "avid_reel_tape_flanger",
+    "avid_air_multichorus",
+    "avid_air_phaser",
+    "avid_air_stereo_width",
+    "avid_air_talkbox",
+    "avid_air_vintage_filter",
+    "avid_d_fi_lo_fi",
+    "avid_reel_tape_saturation",
+    "avid_sansamp_psa_1",
+    "avid_voce_chorus_vibrato",
+    "avid_voce_spin",
+    "avid_air_dynamic_delay",
+    "avid_air_multi_delay",
+    "avid_air_nonlinear_reverb",
+    "avid_air_reverb",
+    "avid_air_spring_reverb",
+    "avid_d_verb",
+    "avid_mod_delay_iii",
+    "avid_reel_tape_delay",
+    "avid_reverb_one",
+    "avid_studio_reverb",
+    "avid_tape_echo",
+    "avid_tel_ray_variable_delay",
+    "avid_bbd_delay",
+    "avid_black_op_distortion",
+    "avid_black_shiny_wah",
+    "avid_black_spring",
+    "avid_c1_chorus_vibrato",
+    "avid_dc_distortion",
+    "avid_flanger",
+    "avid_gray_compressor",
+    "avid_green_jrc_overdrive",
+    "avid_orange_phaser",
+    "avid_roto_speaker",
+    "avid_tri_knob_fuzz",
+    "avid_vibe_phaser",
+    "avid_white_boost",
+    "avid_dc_offset_removal_audiosuite_only",
+    "avid_dither",
+    "avid_down_mixer",
+    "avid_duplicate_audiosuite_only",
+    "avid_gain_audiosuite_only",
+    "avid_intune",
+    "avid_invert_audiosuite_only",
+    "avid_mastermeter",
+    "avid_normalize_audiosuite_only",
+    "avid_pitch_shift_audiosuite_only",
+    "avid_pow_r_dither",
+    "avid_reverse_audiosuite_only",
+    "avid_signal_generator",
+    "avid_sound_replacer_audiosuite_only",
+    "avid_time_adjuster",
+    "avid_time_compression_expansion_audiosuite_only",
+    "avid_time_shift_audiosuite_only",
+    "avid_trim",
+    "avid_pitch_ii"
+   ]
+  },
+  {
+   "id": "pro_tools_studio",
+   "name": "Pro Tools Studio",
+   "plugins": [
+    "avid_bf_2a",
+    "avid_bf_3a",
+    "avid_bf_76",
+    "avid_channel_strip",
+    "avid_dynamics_iii_compressor_limiter",
+    "avid_dynamics_iii_de_esser",
+    "avid_eq_iii_1_band",
+    "avid_eq_iii_7_band",
+    "avid_fairchild_660",
+    "avid_fairchild_670",
+    "avid_focusrite_d2",
+    "avid_focusrite_d3",
+    "avid_graphic_eq",
+    "avid_impact",
+    "avid_maxim",
+    "avid_pultec_eqh_2",
+    "avid_pultec_eqp_1a",
+    "avid_pultec_meq_5",
+    "avid_purple_audio_mc_77",
+    "avid_smack",
+    "avid_air_chorus",
+    "avid_air_distortion",
+    "avid_air_enhancer",
+    "avid_air_ensemble",
+    "avid_air_filter_gate",
+    "avid_air_flanger",
+    "avid_air_frequency_shifter",
+    "avid_air_fuzz_wah",
+    "avid_air_kill_eq",
+    "avid_air_lo_fi",
+    "avid_d_fi_recti_fi",
+    "avid_d_fi_sci_fi",
+    "avid_d_fi_vari_fi_audiosuite_only",
+    "avid_eleven_lite",
+    "avid_eleven_mk_ii",
+    "avid_moogerfooger_12_stage_phaser",
+    "avid_moogerfooger_analog_delay",
+    "avid_moogerfooger_lowpass_filter",
+    "avid_moogerfooger_ring_modulator",
+    "avid_reel_tape_flanger",
+    "avid_air_multichorus",
+    "avid_air_phaser",
+    "avid_air_stereo_width",
+    "avid_air_talkbox",
+    "avid_air_vintage_filter",
+    "avid_d_fi_lo_fi",
+    "avid_reel_tape_saturation",
+    "avid_sansamp_psa_1",
+    "avid_voce_chorus_vibrato",
+    "avid_voce_spin",
+    "avid_air_dynamic_delay",
+    "avid_air_multi_delay",
+    "avid_air_nonlinear_reverb",
+    "avid_air_reverb",
+    "avid_air_spring_reverb",
+    "avid_d_verb",
+    "avid_mod_delay_iii",
+    "avid_reel_tape_delay",
+    "avid_reverb_one",
+    "avid_studio_reverb",
+    "avid_tape_echo",
+    "avid_tel_ray_variable_delay",
+    "avid_bbd_delay",
+    "avid_black_op_distortion",
+    "avid_black_shiny_wah",
+    "avid_black_spring",
+    "avid_c1_chorus_vibrato",
+    "avid_dc_distortion",
+    "avid_flanger",
+    "avid_gray_compressor",
+    "avid_green_jrc_overdrive",
+    "avid_orange_phaser",
+    "avid_roto_speaker",
+    "avid_tri_knob_fuzz",
+    "avid_vibe_phaser",
+    "avid_white_boost",
+    "avid_dc_offset_removal_audiosuite_only",
+    "avid_dither",
+    "avid_down_mixer",
+    "avid_duplicate_audiosuite_only",
+    "avid_gain_audiosuite_only",
+    "avid_intune",
+    "avid_invert_audiosuite_only",
+    "avid_mastermeter",
+    "avid_normalize_audiosuite_only",
+    "avid_pitch_shift_audiosuite_only",
+    "avid_pow_r_dither",
+    "avid_reverse_audiosuite_only",
+    "avid_signal_generator",
+    "avid_sound_replacer_audiosuite_only",
+    "avid_time_adjuster",
+    "avid_time_compression_expansion_audiosuite_only",
+    "avid_time_shift_audiosuite_only",
+    "avid_trim",
+    "avid_pitch_ii",
+    "avid_304c_compressor",
+    "avid_304e_equalizer",
+    "avid_pro_compressor",
+    "avid_pro_limiter",
+    "avid_pro_multiband_dynamics",
+    "avid_heat",
+    "avid_pro_subharmonic",
+    "avid_revibe_ii",
+    "avid_space",
+    "avid_x_form"
+   ]
+  },
+  {
+   "id": "fl_producer",
+   "name": "FL Studio Producer Edition",
+   "plugins": [
+    "fl_fruity_db_meter",
+    "fl_fruity_spectroman",
+    "fl_wave_candy",
+    "fl_distructor",
+    "fl_equo",
+    "fl_frequency_splitter",
+    "fl_fruity_balance",
+    "fl_fruity_chorus",
+    "fl_fruity_compressor",
+    "fl_fruity_convolver",
+    "fl_fruity_delay_2",
+    "fl_fruity_delay_3",
+    "fl_fruity_delay_bank",
+    "fl_fruity_fast_dist",
+    "fl_fruity_filter",
+    "fl_fruity_flanger",
+    "fl_fruity_flangus",
+    "fl_fruity_limiter",
+    "fl_fruity_multiband_compressor",
+    "fl_fruity_parametric_eq",
+    "fl_fruity_parametric_eq2",
+    "fl_fruity_phaser",
+    "fl_fruity_reeverb_2",
+    "fl_fruity_soft_clipper",
+    "fl_fruity_squeeze",
+    "fl_fruity_stereo_enhancer",
+    "fl_fruity_stereo_shaper",
+    "fl_fruity_waveshaper",
+    "fl_soundgoodizer",
+    "fl_emphasizer",
+    "fl_frequency_shifter",
+    "fl_hyper_chorus",
+    "fl_maximus",
+    "fl_multiband_delay",
+    "fl_spreader",
+    "fl_slicex",
+    "fl_soundfont_player",
+    "fl_sytrus",
+    "fl_edison",
+    "fl_newtime"
+   ]
+  },
+  {
+   "id": "fl_all",
+   "name": "FL Studio All Plugins Edition",
+   "plugins": [
+    "fl_fruity_db_meter",
+    "fl_fruity_spectroman",
+    "fl_wave_candy",
+    "fl_distructor",
+    "fl_equo",
+    "fl_frequency_splitter",
+    "fl_fruity_balance",
+    "fl_fruity_chorus",
+    "fl_fruity_compressor",
+    "fl_fruity_convolver",
+    "fl_fruity_delay_2",
+    "fl_fruity_delay_3",
+    "fl_fruity_delay_bank",
+    "fl_fruity_fast_dist",
+    "fl_fruity_filter",
+    "fl_fruity_flanger",
+    "fl_fruity_flangus",
+    "fl_fruity_limiter",
+    "fl_fruity_multiband_compressor",
+    "fl_fruity_parametric_eq",
+    "fl_fruity_parametric_eq2",
+    "fl_fruity_phaser",
+    "fl_fruity_reeverb_2",
+    "fl_fruity_soft_clipper",
+    "fl_fruity_squeeze",
+    "fl_fruity_stereo_enhancer",
+    "fl_fruity_stereo_shaper",
+    "fl_fruity_waveshaper",
+    "fl_soundgoodizer",
+    "fl_emphasizer",
+    "fl_frequency_shifter",
+    "fl_hyper_chorus",
+    "fl_maximus",
+    "fl_multiband_delay",
+    "fl_spreader",
+    "fl_slicex",
+    "fl_soundfont_player",
+    "fl_sytrus",
+    "fl_edison",
+    "fl_newtime",
+    "fl_gross_beat",
+    "fl_hardcore_11_guitar_fx",
+    "fl_low_lifter",
+    "fl_pitcher",
+    "fl_vintage_chorus",
+    "fl_vintage_phaser",
+    "fl_harmless",
+    "fl_newtone",
+    "fl_transmitter",
+    "fl_luxeverb",
+    "fl_pitch_shifter",
+    "fl_transient_processor",
+    "fl_emphasis",
+    "fl_transporter"
+   ]
+  }
+ ]
+}

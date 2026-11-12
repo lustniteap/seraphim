@@ -1,0 +1,1101 @@
+# Plugin Catalog
+
+Compiled from vendor product pages and retail listings, November 2026. Prices and sale status are not included. Plugin Alliance and UAD listings are the live store grids read in full. Items marked "partial" are not complete. Verify on each vendor's site before buying.
+
+## Waves (about 280 names, by subscription tier)
+
+### Waves Essential (included)
+
+- Abbey Road EMI TG12345 Channel
+- AudioTrack
+- Berzerk Distortion
+- Butch Vig Vocals
+- C1 Compressor
+- C4 Multiband Compressor
+- CLA EchoSphere
+- CLA Vocals
+- CLA-76 Compressor / Limiter
+- Clarity Vx
+- Clarity Vx DeReverb
+- COSMOS Sample Finder
+- CR8 Creative Sampler
+- Curves Resolve
+- DeBreath
+- DeEsser
+- Doubler
+- Eddie Kramer Effects Channel
+- Eddie Kramer Guitar Channel
+- Eddie Kramer Vocal Channel
+- Electric 200 Piano
+- Electric 88 Piano
+- Electric Grand 80 Piano
+- Element 2.0 Virtual Analog Synth
+- eMo D5 Dynamics
+- eMo F2 Filter
+- eMo Generator
+- eMo Q4 Equalizer
+- Enigma
+- F6 Floating-Band Dynamic EQ
+- Flow Motion FM Synth
+- Gemstones
+- Grand Rhapsody Piano
+- Greg Wells MixCentric
+- Greg Wells PianoCentric
+- GTR Solo
+- GTR3
+- GTR3 Amps
+- GTR3 Stomps
+- GTR3 ToolRack
+- GTR3 Tuner
+- H-Comp Hybrid Compressor
+- H-Delay Hybrid Delay
+- H-EQ Hybrid Equalizer
+- IDX Intelligent Dynamics
+- Infected Mushroom Pusher
+- InPhase LT
+- IR-L Convolution Reverb
+- JJP Drums
+- JJP Strings & Keys
+- Kaleidoscopes
+- Key Detector
+- Kramer Master Tape
+- L1 Ultramaximizer
+- L2 Ultramaximizer
+- LoAir
+- Lofi Space
+- Magma Lil Tube
+- Magma StressBox
+- Magma Tube Channel Strip
+- Manny Marroquin Reverb
+- Manny Marroquin Triple D
+- Maserati ACG
+- Maserati B72
+- MaxxBass
+- MaxxVolume
+- MetaFilter
+- MetaFlanger
+- MondoMod
+- Morphoder
+- MV2
+- NS1 Noise Suppressor
+- Nx
+- Nx Germano Studios New York
+- OneKnob Brighter
+- OneKnob Driver
+- OneKnob Filter
+- OneKnob Louder
+- OneKnob Phatter
+- OneKnob Pressure
+- OneKnob Pumper
+- OneKnob Wetter
+- PAZ Analyzer
+- Playlist Rider
+- Primary Source Expander
+- PS22 Stereo Maker
+- PuigTec EQs
+- Q10 Equalizer
+- Renaissance Axx
+- Renaissance Bass
+- Renaissance Channel
+- Renaissance Compressor
+- Renaissance DeEsser
+- Renaissance Equalizer
+- Renaissance Reverb
+- Renaissance Vox
+- S1 Stereo Imager
+- Sibilance
+- Silk Vocal
+- SoundShifter
+- SSL E-Channel
+- StudioVerse Audio Effects
+- StudioVerse Instruments
+- StudioVerse: Mix Unlock
+- Sub Align
+- SuperTap
+- Trans-X
+- TrueVerb
+- UltraPitch
+- V-Comp
+- V-EQ3
+- V-EQ4
+- Vitamin Sonic Enhancer
+- Vocal Bender
+- Vocal Rider
+- Voltage Amps
+- VU Meter
+- Waves Stream
+- Waves Tune LT
+- Waves Tune Real-Time
+- WLM Plus Loudness Meter
+- X-FDBK
+- Z-Noise
+
+### Waves Ultimate (adds to Essential)
+
+- Abbey Road Chambers
+- Abbey Road J37 Tape
+- Abbey Road King's Microphones
+- Abbey Road REDD Consoles
+- Abbey Road Reel ADT
+- Abbey Road Reverb Plates
+- Abbey Road RS124 Compressor
+- Abbey Road RS56 Passive EQ
+- Abbey Road Saturator
+- Abbey Road Studio 3
+- Abbey Road TG Mastering Chain
+- Abbey Road Vinyl
+- Aphex Vintage Aural Exciter
+- API 2500
+- API 550
+- API 560
+- Atlas Reverb
+- B360 Ambisonics Encoder
+- Bass Fingers
+- Bass Rider
+- Bass Slapper
+- Brauer Motion
+- BSS DPR-402
+- C360 Surround Compressor
+- C6 Multiband Compressor
+- Center
+- CLA Bass
+- CLA Drums
+- CLA Effects
+- CLA Epic
+- CLA Guitars
+- CLA MixDown
+- CLA MixHub
+- CLA Nx
+- CLA Unplugged
+- CLA-2A Compressor / Limiter
+- CLA-3A Compressor / Limiter
+- Clarity Vx DeReverb Pro
+- Clarity Vx Pro
+- Clarix LB
+- Clavinet
+- Cobalt Saphira
+- Codex Wavetable Synth
+- Curves AQ
+- Curves Equator
+- dbx 160 Compressor / Limiter
+- Doppler
+- Dorrough Stereo
+- Dorrough Surround
+- Eddie Kramer Bass Channel
+- Eddie Kramer Drum Channel
+- Feedback Hunter
+- GEQ Graphic Equalizer
+- Greg Wells ToneCentric
+- Greg Wells VoiceCentric
+- H-Reverb Hybrid Reverb
+- IDR360 Bit Re-Quantizer
+- Immersive Wrapper
+- InPhase
+- InTrigger Drum Replacer
+- IR1 Convolution Reverb
+- IR360 Convolution Reverb
+- IR-Live Convolution Reverb
+- JJP Bass
+- JJP Cymbals & Percussion
+- JJP Guitars
+- JJP Vocals
+- Kramer HLS Channel
+- Kramer PIE Compressor
+- L3 Multimaximizer
+- L360 Surround Limiter
+- L3-LL Multimaximizer
+- L3-LL Ultramaximizer
+- L4 Ultramaximizer
+- LFE360 Low-Pass Filter
+- Linear Phase EQ
+- Linear Phase Multiband Compressor
+- M360 Surround Manager & Mixdown
+- Magma BB Tubes
+- Magma Springs
+- Manny Marroquin Delay
+- Manny Marroquin Distortion
+- Manny Marroquin EQ
+- Manny Marroquin Tone Shaper
+- Maserati DRM
+- Maserati GRP
+- Maserati GTi
+- Maserati HMX
+- Maserati VX1
+- MDMX Distortion Modules
+- MultiMod Rack
+- MV360
+- NLS Non-Linear Summer
+- Nx Ocean Way Nashville
+- OVox Vocal ReSynthesis
+- PRS SuperModels
+- PuigChild Compressor
+- Q-Clone
+- R360 Surround Reverb
+- Retro Fi
+- S360 Surround Imager & Panner
+- Scheps 73
+- Scheps Omni Channel 2
+- Scheps Parallel Particles
+- Smack Attack
+- Space Rider
+- Spherix Immersive Compressor & Limiter
+- SSL EV2 Channel
+- SSL G-Channel
+- SSL G-Equalizer
+- SSL G-Master Buss Compressor
+- Submarine
+- Sync Vx
+- Torque
+- TRACT SPL Meter
+- TRACT System Calibration
+- UM225 / UM226
+- W43 Noise Reduction Plugin
+- Waves Harmony
+- Waves Tune
+- WNS Noise Suppressor
+- X-Click
+- X-Crackle
+- X-Hum
+- X-Noise
+
+## UAD (Universal Audio) (201 products, full store grid)
+
+Subscriptions: UAD Spark Studio (the current subscription) and UAD Spark. Bundles: Select, Custom, Ultimate, Complete, Mix Tape and Native bundles. Products are native (run without hardware) or Apollo (DSP, needs UA hardware), as the store labels them.
+
+- UAD Custom 3 + 3 Bundle
+- Capitol Studios
+- UAD B-Side Mix Tape
+- Empirical Labs FATSO Tape Simulator
+- Studer A800 Multichannel Tape Recorder
+- UAD Mix Tape Pro
+- Manley VOXBOX Channel Strip
+- LUNA Studio
+- EMT 140 Classic Plate Reverberator
+- UAD Select 3 Bundle
+- Little Labs Voice Of God Bass Resonance
+- Avalon VT-737 Tube Channel Strip
+- 1176 Classic Limiter Collection
+- EMT 250 Classic Electronic Reverb
+- Precision De-Esser
+- Teletronix LA-3A Classic Audio Leveler
+- Lexicon 224 Digital Reverb
+- Empirical Labs EL8 Distressor Compressor
+- UAD Select 2 Bundle
+- UA 175B & 176 Tube Compressor Collection
+- Manley Tube Preamp
+- Manley Variable Mu Limiter Compressor
+- Teletronix LA-2A Leveler Collection
+- Pultec Passive EQ Collection
+- EP-34 Tape Echo
+- Hitsville EQ Collection
+- UAD Custom 2 Bundle
+- API Preamp
+- UAD Sound City Studios Plug-In
+- SSL 4000 Series Console Bundle
+- AKG BX 20 Spring Reverb
+- Hitsville Reverb Chambers
+- Lexicon 480L Digital Reverb and Effects
+- UAD Compressor All Stars Mix Tape
+- Galaxy Tape Echo
+- LA-6176 Signature Channel Strip
+- elysia alpha compressor v2
+- Ocean Way Studios Deluxe
+- Moog Multimode Filter Collection
+- UAD Ultimate 15
+- Auto-Tune Realtime X
+- Neve Preamp
+- Eventide H910 Harmonizer
+- Ampeg B-15N Bass Amplifier
+- Brigade Chorus
+- UAD Classic Tone & EQ Mix Tape
+- Cooper Time Cube Delay
+- UAD Spark Studio (subscription)
+- Vibe Analog Machines
+- Paradise Guitar Studio
+- UAD Holiday Mix Tape
+- Moog Minimoog
+- Topline Vocal Tune
+- UAD Complete 5
+- dbx 160 Compressor / Limiter
+- Electra 88 Vintage Keyboard Studio
+- Waterfall B3 Organ
+- UAD Enigmatic '82 Overdrive Special Amp
+- A-Type Multiband Dynamic Enhancer
+- Black Box Analog Design HG-2
+- Studio D Chorus
+- Ravel
+- Ampex ATR-102 Mastering Tape Recorder
+- UAD Custom 2 Premium Bundle
+- Neve 1073 Preamp & EQ Collection
+- UAD Dream '65 Reverb Amplifier
+- Manley Massive Passive EQ
+- UAD Native Classics Bundle
+- Opal Morphing Synthesizer
+- Friedman Buxom Betty Amplifier
+- Precision K-Stereo Ambience Recovery
+- Topline Vocal Suite
+- Waterfall Rotary Speaker
+- Oxide Tape Recorder
+- API 2500 Bus Compressor
+- Korg SDD-3000 Digital Delay
+- A/DA STD-1 Stereo Tapped Delay
+- Ampeg SVT-VR Bass Amplifier
+- MXR Flanger/Doubler
+- UAD Custom 6 + 6 Bundle
+- Maag Audio EQ4 MS
+- Shadow Hills Mastering Compressor Class A
+- UAD Ruby '63 Top Boost Amplifier
+- Helios Type 69 Preamp and EQ Collection
+- Harrison 32C / 32C SE Channel EQ
+- UAD Select 6 Bundle
+- UAD Native Pro
+- Anthem Analog Synthesizer
+- SSL 4000 E Channel Strip
+- Capitol Mastering Compressor
+- Fairchild Tube Limiter Collection
+- API Vision Channel Strip Collection
+- Diezel Herbert Amplifier
+- V76 Preamplifier
+- Gallien-Krueger 800RB Bass Amp
+- Fender '55 Tweed Deluxe
+- Ampeg SVT-3 PRO Bass Amplifier
+- ENGL E646 VS Limited Edition
+- ENGL E765 Retro Tube
+- API 500 Series EQ Collection
+- Trident A-Range Classic Console EQ
+- UAD Vocal Mix Tape
+- LUNA Studio + UAD Native Pro Bundle
+- UAD Will Yip Mix Tape
+- UAD Select 10 Bundle
+- UAD Native Studio Bundle
+- elysia karacter Stereo Saturator
+- SPL Vitalizer MK3-T
+- UAD Woodrow '55 Instrument Amplifier
+- SSL 4000 G Bus Compressor
+- C-Suite C-Vox Noise & Ambience Reduction
+- Neve Complete Bundle
+- Neve Dynamics Collection
+- Neve Summing
+- Diezel VH4 Amplifier
+- Tube-Tech CL 1B MkII Compressor
+- Softube Vocoder
+- Brainworx bx_masterdesk Classic
+- Ocean Way Microphone Collection
+- ENGL Savage 120 Amplifier
+- Dytronics Cyclosonic Panner
+- AMS RMX16 Expanded Digital Reverb
+- Eden WT800 Bass Amplifier
+- Sonnox Oxford Dynamic EQ
+- Sonnox Oxford Limiter v2
+- Vertigo Sound VSC-2 Compressor
+- Distortion Essentials Bundle
+- Brainworx bx_refinement
+- Chandler Limited GAV19T Amplifier
+- Sonnox Oxford Inflator
+- Little Labs IBP Phase Alignment Tool
+- Precision Limiter
+- Precision EQ
+- Precision Multiband
+- Precision Maximizer
+- UAD Custom 10 + 10 Bundle
+- UAD Custom 10 Premium Bundle
+- UAD Custom 6 Premium Bundle
+- UAD Custom 3 Premium Bundle
+- UAD Native Producer Bundle
+- UAD Carlos De La Garza Mix Tape
+- UAD Hip Hop Mix Tape
+- UAD Guitar Mix Tape
+- UAD Apollo Hardware Essentials Mix Tape
+- UAD Classic Keys and Synths Bundle
+- UAD Guitar Bundle
+- UAD Pro Vocal Bundle
+- UAD Guitar Amp Bundle
+- UAD Lion '68 Super Lead Amp
+- Analog Tape Bundle
+- Brainworx bx_saturator V2
+- C-Suite C-Max Limiter
+- Capitol Chambers
+- C-Suite C-Axe Guitar Noise Suppressor
+- AMS DMX Digital Delay & Pitch Shifter
+- LUNA API Vision Console Emulation Bundle
+- API Summing
+- Neve 1084 Preamp & EQ
+- LUNA Spitfire Bundle
+- Spitfire Chamber Strings
+- Spitfire Symphonic Brass
+- Spitfire Symphonic Woodwinds
+- Sonnox Oxford SuprEsser DS
+- Suhr SE100 Amplifier
+- AMS Neve DFC Channel Strip
+- Brainworx bx_masterdesk
+- The Bill Putnam Mic Collection
+- Suhr PT100 Amplifier
+- A/DA Flanger
+- Dytronics Tri-Stereo Chorus
+- Fuchs Train II Amplifier
+- Fuchs Overdrive Supreme 50 Amplifier
+- bx_subsynth Subharmonic Synth
+- OTO BISCUIT 8-bit Effects
+- Chandler Limited Zener Limiter
+- Sphere Mic Collection
+- Chandler Limited Curve Bender Mastering EQ
+- Sonnox Oxford Envolution
+- Brainworx bx_digital V3 EQ Collection
+- Tube-Tech EQ Collection
+- Neve 88RS Channel Strip Collection
+- Sound Machine Wood Works
+- Friedman Amplifiers Collection
+- Massenburg MDWEQ5 Parametric EQ
+- Vertigo Sound VSM-3 Mix Satellite
+- Summit Audio TLA-100A Compressor
+- elysia mpressor
+- Thermionic Culture Vulture
+- Tonelux Tilt EQ
+- Valley People Dyna-mite
+- Millennia NSEQ-2 EQ
+- SPL TwinTube Processor
+- Sonnox Oxford EQ
+- DreamVerb Room Modeler
+- SPL Transient Designer
+- Precision Enhancer kHz
+- Precision Enhancer Hz
+- Neve 1081 / 1081SE Classic Console EQ
+- Neve 31102 / 31102SE Classic Console EQs
+- Cambridge EQ
+- Precision Buss Compressor
+
+## FabFilter (14 plug-ins; Total Bundle = all of them)
+
+### Mixing and mastering
+
+- Pro-Q 4 (equalizer)
+- Pro-C 3 (compressor)
+- Pro-L 2 (limiter)
+- Pro-R 2 (reverb)
+- Pro-MB (multiband compressor)
+- Pro-DS (de-esser)
+- Pro-G (gate/expander)
+
+### Creative effects and synths
+
+- Saturn 2 (distortion/saturation)
+- Timeless 3 (delay)
+- Volcano 3 (filter)
+- Twin 3 (synthesizer)
+
+### Basic plug-ins
+
+- One (synthesizer)
+- Simplon (filter)
+- Micro (filter)
+
+Subscriptions: none. Bundles: Total Bundle (all 14), Pro Bundle and FX Bundle. Some retailers also list older legacy versions, such as Pro-C 2 and Saturn 1.
+
+## iZotope (35 products, full grid)
+
+Tiers: Elements, Standard, Advanced. Subscriptions: iZotope Plus and iZotope Pro. Bundles: Music Production Suite 9, RX Post Production Suite 9, Elements Suite 12, Everything Bundle, Mix & Master Bundle Standard and Advanced.
+
+### Free
+
+- Ozone Imager
+- Vocal Doubler
+- Vinyl
+- Trash Lite
+- Ozone EQ
+
+### Plug-ins (by product line)
+
+- Ozone 12 Advanced
+- Ozone 12 Standard
+- Ozone 12 Elements
+- Neutron 5
+- Neutron 5 Elements
+- Nectar 4 Advanced
+- Nectar 4 Standard
+- Nectar 4 Elements
+- RX 12 Advanced
+- RX 12 Standard
+- RX 12 Elements
+- Trash
+- Tonal Balance Control 3
+- Velvet
+- VocalSynth 2
+- Photon
+- Equinox
+- Insight 2
+- Aurora
+- Stutter Edit 2
+- Plasma
+- FXEQ
+- Cascadia
+- Neoverb
+
+### Bundles
+
+- Music Production Suite 9
+- RX Post Production Suite 9
+- Elements Suite 12
+- Everything Bundle
+- Mix & Master Bundle Advanced
+- Mix & Master Bundle Standard
+
+Not on the main grid but in the navigation: the Catalyst Series.
+
+## Plugin Alliance (210 products, full store grid, six pages)
+
+Sold per product. The MEGA Bundle is the subscription. All products are shown with vendor brand. Brainworx products are listed under the Brainworx brand. The "niveau filter" appears under Brainworx on the store, but it is an elysia product.
+
+- Black Box Analog Design HG-2MS
+- Mäag Audio EQ4 MS
+- SPL Transient Designer Plus
+- SPL Vitalizer MK3-T
+- HEARS Perfection
+- SPL Machine Head
+- Brainworx bx_console SSL 4000 E
+- ADPTR Audio Utopia
+- Brainworx bx_pulsar
+- Elysia alpha compressor V2
+- AMEK Mastering Compressor
+- Apogee Clearmountain 8068
+- Apogee Clearmountain Domain
+- Apogee Clearmountain Spaces
+- Apogee Clearmountain Phases
+- Brainworx bx_digital V3
+- SPL BiG
+- DS Audio TANTRA 2
+- Apogee ECS2 Channel Strip
+- Apogee Opto-3A
+- ADPTR Audio Metric AB
+- Apogee Clearmountain Dance
+- Apogee EQP-1A
+- Apogee MEQ-5
+- Lindell Audio EQ825
+- Brainworx bx_console AMEK 9099
+- Brainworx bx_clipper
+- Brainworx bx_console AMEK 200
+- Black Box Analog Design HG-Q
+- Brainworx bx_tonebox
+- Brainworx bx_masterdesk PRO
+- Brainworx bx_aura
+- HUM Audio LAAL
+- Bettermaker Mastering Compressor
+- Brainworx bx_glue
+- AMEK EQ 200
+- Bettermaker BM60
+- Kiive Audio Tape Face
+- Brainworx bx_XL V3
+- Brainworx bx_crispytuner
+- Lindell Audio 50 Series
+- Looptrotter SA2RATE 2
+- Knif Audio Knifonium
+- NEOLD WUNDERLICH
+- DS Audio Thorn
+- Brainworx bx_enhancer
+- Knif Audio Soma
+- Bettermaker Passive Equalizer
+- Elysia karacter
+- Lindell Audio 69 Series
+- ADPTR Audio HYPE
+- Mäag Audio Magnum-K
+- Elysia mpressor
+- Ampeg V-4B
+- Harris Doyle Natalus DSCEQ
+- Brainworx bx_oberhausen
+- Lindell Audio MU-66
+- Brainworx bx_rockergain100
+- Fuchs Overdrive Supreme 50
+- Brainworx bx_console Focusrite SC
+- Brainworx bx_townhouse Buss Compressor
+- Black Box Analog Design HG-2
+- Mäag Audio EQ4
+- Shadow Hills Mastering Compressor Class A
+- Three-Body Technology Kirchhoff-EQ
+- Brainworx bx_limiter True Peak
+- Brainworx bx_console SSL 9000 J
+- Brainworx bx_subsynth
+- Shadow Hills Mastering Compressor
+- Lindell Audio 80 Series
+- NEOLD RZ062
+- Shadow Hills OptoMax
+- Brainworx bx_console SSL 4000 G
+- Swivel Audio Spread
+- Unfiltered Audio Bass-Mint
+- Unfiltered Audio Battalion
+- Maor Appelbaum Mastering & Hendyamps THE OVEN
+- Purple Audio MC77
+- Ampeg B-15N
+- Brainworx bx_saturator V2
+- Ampeg SVT-VR
+- Dangerous Music BAX EQ
+- Unfiltered Audio SpecOps
+- Unfiltered Audio SILO
+- Vertigo VSM-3
+- ProAudioDSP DSM V3
+- SPL IRON
+- Louder Than Liftoff SILVER BULLET mk2
+- ADPTR Audio Streamliner
+- Three-Body Technology Cenozoix Compressor
+- Brainworx bx_stereomaker
+- Lindell Audio 902 De-Esser
+- Kiive Audio XTComp
+- SPL PQ
+- Vertigo VSS-2
+- Three-Body Technology Trinity Shaper
+- Mäag Audio EQ2
+- THX Spatial Creator
+- Brainworx bx_masterdesk True Peak
+- Brainworx bx_control V2
+- Unfiltered Audio TRIAD
+- SPL De-Verb Plus
+- Unfiltered Audio LO-FI-AF
+- AMEK EQ 250
+- Unfiltered Audio Dent 2
+- Vertigo VSC-2
+- Unfiltered Audio BYOME
+- Swivel Audio HitStrip
+- Brainworx bx_rooMS
+- NEOLD OLDTIMER
+- Unfiltered Audio Needlepoint
+- Gallien-Krueger 800RB
+- Bettermaker EQ232D
+- Swivel Audio Knocktonal
+- Millennia NSEQ-2
+- Brainworx bx_2098 EQ
+- Unfiltered Audio Sandman Pro
+- Diezel VH4
+- ADA Flanger
+- NEOLD V76U73
+- ACME Audio Opticom XLA-3
+- Unfiltered Audio LION
+- SPL HawkEye
+- Bettermaker Bus Compressor
+- Ampeg SVT-3PRO
+- ADPTR Audio SCULPT
+- Noveltech Vocal Enhancer
+- Brainworx bx_limiter
+- Mixland Vac Attack
+- Unfiltered Audio TAILS
+- Elysia museq
+- NEOLD U2A
+- Brainworx bx_bassdude
+- Karanyi Sounds Wavesurfer
+- NEOLD WARBLE
+- Elysia nvelope
+- Lindell Audio SBC
+- Brainworx bx_panEQ
+- Swivel Audio Click Boom
+- Brainworx bx_delay 2500
+- Millennia TCL-2
+- NEOLD BIG AL
+- SPL TwinTube
+- Brainworx bx_opto
+- Brainworx bx_dynEQ V2
+- ENGL Savage 120
+- Unfiltered Audio Fault
+- Swivel Audio BDE
+- TOMO Audiolabs LISA
+- SPL De-Esser Collection
+- Unfiltered Audio Indent 2
+- Cut Classic High Flyer
+- fiedler audio stage
+- Lindell Audio MBC
+- Friedman BE-100
+- Unfiltered Audio Instant Delay
+- Noveltech Character
+- Lindell Audio TE-100
+- NEOLD U17
+- Lindell Audio 354E
+- SPL DrumXchanger
+- Lindell Audio 6X-500
+- Lindell Audio ChannelX
+- Unfiltered Audio Zip
+- Brainworx bx_cleansweep Pro
+- Brainworx bx_hybrid V2
+- Elysia Phil's Cascade
+- fiedler audio splat
+- Diezel Herbert
+- SPL Passeq
+- Bettermaker C502V
+- Lindell Audio 7X-500
+- Lindell Audio PEX-500
+- Ampeg SVT-VR Classic
+- Brainworx bx_rockrack V3
+- Unfiltered Audio G8
+- ADA STD-1 Stereo Tapped Delay
+- Suhr SE100
+- Brainworx bx_megadual
+- Friedman Buxom Betty
+- Suhr PT100
+- Louder Than Liftoff Chop Shop
+- ENGL E646 VS
+- SPL EQ Ranger Plus
+- Friedman DS-40
+- SPL Attacker Plus
+- Chandler Limited GAV19T
+- ENGL E765 RT
+- Unfiltered Audio Sandman
+- Fuchs Train II
+- SPL Mo-Verb Plus
+- Brainworx bx_meter
+- Brainworx bx_bluechorus2
+- Brainworx bx_tuner
+- Brainworx bx_shredspread
+- Brainworx bx_subfilter
+- Brainworx bx_rockrack V3 Player
+- Brainworx bx_blackdist2
+- Brainworx bx_metal2
+- Brainworx bx_yellowdrive
+- Brainworx bx_greenscreamer
+- Brainworx bx_boom!
+- Brainworx bx_solo
+- SPL Free Ranger
+- Brainworx bx_distorange
+- Brainworx bx_megasingle
+- Brainworx bx_opto Pedal
+- Brainworx bx_cleansweep V2
+- Brainworx niveau filter (Elysia)
+- Brainworx bx_masterdesk Classic
+
+## Pro Tools (Avid) (Artist, Studio, Ultimate; Intro not captured)
+
+Tiers: Intro (free), Artist, Studio, Ultimate. Plugin counts per the Avid comparison: Artist 110+, Studio 130+, Ultimate 130+. Studio and Ultimate plugin lists are nearly identical; Ultimate adds MPEG-H Authoring and more immersive audio software.
+
+### Pro Tools Artist (included)
+
+- BF-2A
+- BF-3A
+- BF-76
+- Channel Strip
+- Dynamics III Compressor/Limiter
+- Dynamics III De-Esser
+- Dynamics III Expander/Gate
+- EQ III 1-Band
+- EQ III 7-Band
+- Fairchild 660
+- Fairchild 670
+- Focusrite d2
+- Focusrite d3
+- Graphic EQ
+- Impact
+- Maxim
+- Pultec EQH-2
+- Pultec EQP-1A
+- Pultec MEQ-5
+- Purple Audio MC-77
+- Smack!
+- AIR Chorus
+- AIR Distortion
+- AIR Enhancer
+- AIR Ensemble
+- AIR Filter Gate
+- AIR Flanger
+- AIR Frequency Shifter
+- AIR Fuzz-Wah
+- AIR Kill EQ
+- AIR Lo-Fi
+- D-Fi Recti-Fi
+- D-Fi Sci-Fi
+- D-Fi Vari-Fi (AudioSuite only)
+- Eleven Lite
+- Eleven MK II
+- Moogerfooger 12-Stage Phaser
+- Moogerfooger Analog Delay
+- Moogerfooger Lowpass Filter
+- Moogerfooger Ring Modulator
+- Reel Tape Flanger
+- AIR MultiChorus
+- AIR Phaser
+- AIR Stereo Width
+- AIR Talkbox
+- AIR Vintage Filter
+- D-Fi Lo-Fi
+- Reel Tape Saturation
+- SansAmp PSA-1
+- Voce Chorus/Vibrato
+- Voce Spin
+- AIR Dynamic Delay
+- AIR Multi-Delay
+- AIR Nonlinear Reverb
+- AIR Reverb
+- AIR Spring Reverb
+- D-Verb
+- Mod Delay III
+- Reel Tape Delay
+- Reverb One
+- Studio Reverb
+- Tape Echo
+- Tel-Ray Variable Delay
+- BBD Delay
+- Black Op Distortion
+- Black Shiny Wah
+- Black Spring
+- C1 Chorus/Vibrato
+- DC Distortion
+- Flanger
+- Gray Compressor
+- Green JRC Overdrive
+- Orange Phaser
+- Roto Speaker
+- Tri-Knob Fuzz
+- Vibe Phaser
+- White Boost
+- 510k SEQUND Lite
+- Audiomodern Riffer 3
+- BLEASS Arpeggiator
+- ChordAXE PT
+- K-Devices TATAT
+- Mixed In Key Captain Chords Lite
+- Mixed In Key Human Lite
+- Modalics EON-Arp
+- Note Stack
+- Pitch Control
+- Pitch Innovations Groove Shaper
+- Velocity Control
+- AIR Boom
+- AIR DB-33
+- AIR Mini Grand
+- AIR Structure Free
+- AIR Vacuum
+- AIR Xpand!2
+- Avid Loopmasters Sample Pack
+- Haze (Massive X)
+- Hybrid Keys (Kontakt)
+- Lo-fi & Chill Plucks (Massive X)
+- Native Instruments Kontakt Player
+- Native Instruments Massive X Player
+- Pro Tools | GrooveCell
+- Pro Tools | SynthCell
+- Pro Tools | PlayCell
+- Pro Tools Factory Essentials (Kontakt)
+- Pro Tools Massive X Essentials (Massive X)
+- Click II
+- DC Offset Removal (AudioSuite only)
+- Dither
+- Down Mixer
+- Duplicate (AudioSuite only)
+- Gain (AudioSuite only)
+- InTune
+- Invert (AudioSuite only)
+- MasterMeter
+- Normalize (AudioSuite only)
+- Pitch Shift (AudioSuite only)
+- POW-r Dither
+- Reverse (AudioSuite only)
+- Signal Generator
+- Sound Replacer (AudioSuite only)
+- Time Adjuster
+- Time Compression/Expansion (AudioSuite only)
+- Time Shift (AudioSuite only)
+- Trim
+- Pitch II
+
+### Pro Tools Studio adds
+
+- 304C Compressor
+- 304E Equalizer
+- Pro Compressor
+- Pro Expander
+- Pro Limiter
+- Pro Multiband Dynamics
+- HEAT
+- Pro Subharmonic
+- ReVibe II
+- Space
+- Soul Sessions (Kontakt)
+- X-Form
+- Software: Audio Futures 360RA WalkMix Renderer (limited), Audio Futures WalkMix Panner (limited), Audio Vivid Production Suite, MPEG-H Renderer by Fraunhofer IIS, Pro Tools Dolby Atmos renderer, Acon Digital Acoustica Essentials, Bounce Factory Lite, Celemony Melodyne 5 essential, Forte for Pro Tools, iZotope RX 11 Spectral Editor, Pro Tools Stem Separator Extension, SoundFlow Extension, Splice Extension, Steinberg SpectraLayers Go, Steinberg WaveLab Go, Synchro Arts RePitch Elements
+
+### Pro Tools Ultimate adds (over Studio)
+
+- MPEG-H Authoring
+- Software: NoiseWorks DynAssist Lite, Pro Tools | Sonic Drop content, Pro Tools | Inner Circle rewards
+
+## FL Studio (Image-Line) (complete, by edition)
+
+### Fruity Edition (included in every edition)
+
+- 3x Osc
+- Autogun
+- BassDrum
+- BeepMap
+- BooBass
+- Channel Sampler
+- DirectWave Player
+- Drumpad
+- FLEX
+- Fruity DrumSynth Live
+- Fruity DX10
+- Fruity Granulizer
+- Fruity Kick
+- Fruity Pad Controller
+- Fruity Slicer
+- Fruity Slicer 2
+- GMS
+- MiniSynth
+- Plucked!
+- SimSynth
+- Speech Synthesizer
+- Wave Traveller
+- FL Keys
+- Fruity Big Clock
+- Fruity dB Meter
+- Fruity Spectroman
+- Video Visualizer
+- Wave Candy
+- Distructor
+- Effector
+- EQUO
+- Frequency Splitter
+- Fruity Balance
+- Fruity Blood Overdrive
+- Fruity Chorus
+- Fruity Compressor
+- Fruity Convolver
+- Fruity Delay 2
+- Fruity Delay 3
+- Fruity Delay Bank
+- Fruity Fast Dist
+- Fruity Filter
+- Fruity Flanger
+- Fruity Flangus
+- Fruity Formula Controller
+- Fruity HTML NoteBook
+- Fruity Limiter
+- Fruity Love Philter
+- Fruity LSD
+- Fruity Multiband Compressor
+- Fruity NoteBook
+- Fruity NoteBook 2
+- Fruity PanOMatic
+- Fruity Parametric EQ
+- Fruity Parametric EQ2
+- Fruity Phaser
+- Fruity Reeverb 2
+- Fruity Scratcher
+- Fruity Send
+- Fruity Soft Clipper
+- Fruity Squeeze
+- Fruity Stereo Enhancer
+- Fruity Stereo Shaper
+- Fruity Vocoder
+- Fruity WaveShaper
+- Fruity X-Y Controller
+- Fruity X-Y-Z Controller
+- Fruity Envelope Controller
+- Fruity Keyboard Controller
+- Fruity Voltage Controller
+- Fruity Peak Controller
+- Control Surface
+- Patcher
+- Razer Chroma
+- Soundgoodizer
+- Tuner
+- VFX Color Mapper
+- VFX Envelope
+- VFX Level Scaler
+- VFX Keyboard Splitter
+- VFX Key Mapper
+- VFX Sequencer
+- Emphasizer
+- VFX Script
+
+### Producer Edition adds
+
+- Frequency Shifter
+- Hyper Chorus
+- Maximus
+- Multiband Delay
+- Spreader
+- Vocodex
+- Kepler
+- Slicex
+- SoundFont Player
+- Sytrus
+- Edison
+- Newtime
+
+### Signature Bundle adds
+
+- Gross Beat
+- Hardcore (11 Guitar FX)
+- Low Lifter
+- Pitcher
+- Vintage Chorus
+- Vintage Phaser
+- DirectWave Full
+- Harmless
+- Newtone
+- Fruity Video Player
+
+### All Plugins Edition adds
+
+- Transmitter
+- LuxeVerb
+- Pitch Shifter
+- Transient Processor
+- Emphasis
+- Transporter
+- Drumaxx
+- Harmor
+- Kepler Exo
+- Morphine
+- Ogun
+- Poizone
+- Sakura
+- Sawer
+- Toxic Biohazard
+- Transistor Bass
+
+## Logic Pro (Apple) (partial, no full catalog published)
+
+Subscription: Logic Pro is part of Apple Creator Studio ($12.99/month or $129/year, after a free trial). Standalone Logic Pro for Mac is $199.99. Apple does not publish a complete plug-in or sound catalog; the lists below are the named items on Apple's pages.
+
+### Named audio effects
+
+- Reverb: ChromaVerb, Quantec Room Simulator, Space Designer
+- Delay: Delay Designer
+- EQ: Linear Phase EQ, Match EQ, Vintage EQ Collection
+- Filter: Spectral Gate
+- Pitch: Pitch Correction, Pitch Shifter, Vocal Transformer
+- Other named in Apple's Creator Studio and effects pages: ChromaGlow (AI texture effect)
+
+### Named instruments
+
+- Alchemy
+- Sampler
+- Quick Sampler
+- Drum Kit Designer
+- Drum Machine Designer
+- Drum Synth
+- Retro Synth
+- ES1
+- ES2
+- EFM1
+- ES E
+- ES M
+- ES P
+- EVOC 20 PolySynth
+- Sculpture
+- Ultrabeat
+- Vintage B3 Organ
+- Vintage Clav
+- Vintage Electric Piano
+- Studio Bass
+- Studio Strings
+- Studio Horns
+- Session Players (AI)
+
+## GarageBand (Apple) (free; partial)
+
+Free on Mac. Apple's current help page lists effect types but not individual plug-in names.
+
+### Effect types
+
+- Dynamics: Compressor, Noise Gate
+- Time-based: Delay, Reverb
+- Tone and color: Distortion, EQ, Modulation
+- Others: amp models, filters, pitch shifters, specialized effects
+
+### Software instruments
+
+An older third-party book reports 65 software instruments in 12 groups. Apple does not publish a current list.

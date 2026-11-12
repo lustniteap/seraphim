@@ -184,3 +184,9 @@ Points that follow from this:
   reviews `docs/library-draft.md` (rendered by `tools/render_library.py`); the standards are expected to be settled by
   feedback from audio engineers using the app. A test keeps every key, action id and stage pointing at something real
   and requires a Vigil line wherever a cause is upstream.
+- 2026-11-12 (plugin list): the picker's list now comes from Tyler's compiled vendor catalog
+  (`docs/plugin-catalog-source.md`) through `tools/build_plugin_list.py` into `mixcheck/library/plugins.json`: about 745
+  effects and utilities (instruments left out) from Waves, UAD, Plugin Alliance, Pro Tools, FL Studio, FabFilter, iZotope
+  and Logic, replacing the shorter list written from memory. One-click bundles: Waves Essential and Ultimate, Pro Tools
+  Artist and Studio, FL Studio Producer and All Plugins. A plugin picked from the list adds no fix steps until it is
+  promoted into the steps catalog; categories are a rough search aid only.

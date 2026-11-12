@@ -1022,17 +1022,14 @@ $("plugin-chosen").addEventListener("click", (e) => {
   if (b) { chosenPlugins.delete(b.dataset.remove); renderPicker(); }
 });
 
-/* Waves bundle: adding one picks the plugins it includes (that Seraphim writes fix steps for). */
+/* A bundle: adding one picks the plugins it includes. Remove any you don't have. */
 $("plugin-bundles").addEventListener("click", (e) => {
-  const btn = e.target.closest("button[data-tier]");
+  const btn = e.target.closest("button[data-bundle]");
   if (!btn || !setupOptions) return;
-  const tier = setupOptions.waves_tiers.find((t) => t.id === btn.dataset.tier);
-  if (!tier) return;
-  tier.plugins.forEach((id) => chosenPlugins.add(id));
-  const outside = setupOptions.packages.filter((p) => p.group === "Waves" && !tier.plugins.includes(p.id)).map((p) => p.name);
-  const them = outside.length > 1 ? "them" : "it";
-  $("tier-note").textContent = `Added what ${tier.name} includes. Remove any you don't have.` +
-    (outside.length ? ` ${outside.join(" and ")} ${outside.length > 1 ? "aren't" : "isn't"} in ${tier.name}, so search for ${them} if you own ${them}.` : "");
+  const bundle = setupOptions.bundles.find((t) => t.id === btn.dataset.bundle);
+  if (!bundle) return;
+  bundle.plugins.forEach((id) => chosenPlugins.add(id));
+  $("tier-note").textContent = `Added what ${bundle.name} lists (${bundle.plugins.length} plugins). Editions and promotions vary, so remove any you don't have.`;
   renderPicker();
 });
 
@@ -1087,8 +1084,8 @@ async function initSetup() {
       <span>${esc(d.name)}</span></label>`).join("");
   chosenPlugins.clear();
   cur.packages.forEach((id) => chosenPlugins.add(id));
-  $("plugin-bundles").innerHTML = (setupOptions.waves_tiers || []).map((t) => `
-    <button class="button ghost" type="button" data-tier="${esc(t.id)}">Add ${esc(t.name)}</button>`).join("");
+  $("plugin-bundles").innerHTML = (setupOptions.bundles || []).map((t) => `
+    <button class="button ghost" type="button" data-bundle="${esc(t.id)}">Add ${esc(t.name)}</button>`).join("");
   renderPicker();
   showSetupLabel();
   if (!setup) intro.done.then(() => setTimeout(() => { if (!setup) $("setup-dialog").showModal(); }, 700));

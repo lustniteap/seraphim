@@ -950,6 +950,18 @@ def test_the_library_points_only_at_things_that_exist():
     assert library.entry_for("clipping")["id"] == "clipping" and library.entry_for("nope") is None
 
 
+def test_plugin_list_and_bundles_resolve():
+    from mixcheck import catalog
+    known = set(catalog.PACKAGES) | set(catalog.LISTED)
+    assert len(catalog.LISTED) > 500 and not set(catalog.LISTED) & set(catalog.PACKAGES)
+    for b in catalog.BUNDLES:
+        assert b["plugins"] and set(b["plugins"]) <= known, b["id"]
+    ids = {b["id"] for b in catalog.options()["bundles"]}
+    assert {"waves_essential", "waves_ultimate", "pro_tools_artist", "pro_tools_studio"} <= ids
+    ess = next(b for b in catalog.BUNDLES if b["id"] == "waves_essential")["plugins"]
+    assert "waves_l2" in ess and "waves_f6" in ess   # the plugins with steps keep their ids inside the bundle
+
+
 def test_plugin_requests_are_noted_on_this_computer():
     try:
         from fastapi.testclient import TestClient
