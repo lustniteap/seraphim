@@ -190,3 +190,12 @@ Points that follow from this:
   and Logic, replacing the shorter list written from memory. One-click bundles: Waves Essential and Ultimate, Pro Tools
   Artist and Studio, FL Studio Producer and All Plugins. A plugin picked from the list adds no fix steps until it is
   promoted into the steps catalog; categories are a rough search aid only.
+- 2026-11-12 (step 4, built, not yet run against the real provider): the listener (`mixcheck/listen.py`) returns the
+  `listen` block: a style id from the app's own list with a confidence and up to two alternatives, instruments, the
+  vocal kind, sections with times, and qualities labelled "heard, unverified". `check()` rejects a reply that states a
+  measured quantity (decibels, frequencies, tempo, key, percentages), uses an unknown style id, or puts sections outside
+  the audio; one retry, then "not listened" and the run continues. Test provider: Gemini Flash-Lite
+  (`gemini-3.1-flash-lite`, to be confirmed on the provider's models page) with the person's own `GEMINI_API_KEY`; the key
+  travels in a header, the audio is reduced to 16 kHz mono, nothing is stored. `evals/listen_eval.py` runs it over the
+  calibration folders (the folder is the label) and reports parent and sub-genre accuracy, confidence against accuracy,
+  confusions, failures, time and cost.

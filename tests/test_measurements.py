@@ -962,6 +962,93 @@ def test_plugin_list_and_bundles_resolve():
     assert "waves_l2" in ess and "waves_f6" in ess   # the plugins with steps keep their ids inside the bundle
 
 
+def _good_listen():
+    return {"style": {"id": "hiphop_rap.drill", "confidence": 0.8, "alternatives": ["hiphop_rap.trap"]},
+            "instruments": ["808 bass", "hi-hats"], "vocal": {"present": True, "kind": "rapped"},
+            "sections": [{"label": "intro", "start_s": 0, "end_s": 10}, {"label": "verse", "start_s": 10, "end_s": 40}],
+            "qualities": ["vocal sounds heavily pitch-corrected"]}
+
+
+def test_listener_reply_checks_enforce_the_contract():
+    from mixcheck import listen
+    assert listen.check(_good_listen(), 60) == []
+    def bad(mut):
+        r = _good_listen(); mut(r); return listen.check(r, 60)
+    assert bad(lambda r: r["style"].update(id="made_up"))                        # id not in the list
+    assert bad(lambda r: r["style"].update(confidence=1.4))
+    assert bad(lambda r: r["qualities"].append("bass is boosted 6 dB around 60 Hz"))  # measured quantity
+    assert bad(lambda r: r["instruments"].append("tempo around 140 BPM"))
+    assert bad(lambda r: r["qualities"].append("sounds like it is in F minor"))
+    assert bad(lambda r: r["vocal"].update(kind="screamed"))
+    assert bad(lambda r: r["sections"].append({"label": "outro", "start_s": 40, "end_s": 300}))   # past the audio
+    assert bad(lambda r: r["sections"].append({"label": "outro", "start_s": 20, "end_s": 50}))    # overlaps
+    assert bad(lambda r: r.pop("style"))
+    assert listen.check("not an object", 60)
+    r = _good_listen(); r["style"]["id"] = None                                  # "can't tell" is allowed
+    assert listen.check(r, 60) == []
+    cleaned = listen.clean(_good_listen())
+    assert cleaned["qualities"][0]["trust"] == "heard, unverified" and cleaned["sections"][0]["start_s"] == 0.0
+
+
+def test_listener_sends_the_key_in_a_header_retries_once_and_never_raises():
+    import json as _json
+    from mixcheck import listen
+    sent = []
+    replies = iter(["not json", _json.dumps(_good_listen())])
+    def post(url, body, key, timeout=180):
+        sent.append((url, body, key))
+        return {"candidates": [{"content": {"parts": [{"text": next(replies)}]}}],
+                "usageMetadata": {"promptTokenCount": 1000, "candidatesTokenCount": 80}}
+    real = listen._post_json
+    listen._post_json = post
+    try:
+        import tempfile, soundfile as sf
+        with tempfile.TemporaryDirectory() as d:
+            sf.write(f"{d}/s.wav", np.random.RandomState(0).uniform(-0.3, 0.3, (16000 * 45, 2)), 16000)
+            res = listen.listen_to(f"{d}/s.wav", key="SECRET")
+            assert res["ok"] and res["attempts"] == 2 and res["usage"]["input_tokens"] == 2000
+            assert res["listen"]["style"]["id"] == "hiphop_rap.drill"
+            url, body, key = sent[0]
+            assert "SECRET" not in url and key == "SECRET"                       # the key never goes in the address
+            parts = body["contents"][0]["parts"]
+            assert parts[1]["inline_data"]["mime_type"] == "audio/wav" and body["generationConfig"]["temperature"] == 0
+            assert "file" not in _json.dumps(body["contents"][0]["parts"][0]).lower().split("the audio")[0]  # no file name
+            sent.clear(); replies = iter(["not json", "{}"])
+            res = listen.listen_to(f"{d}/s.wav", key="SECRET")
+            assert not res["ok"] and res["attempts"] == 2 and len(sent) == 2     # tried twice, then gave up quietly
+            assert not listen.listen_to(f"{d}/s.wav", key="")["ok"]              # no key: plain message, no call
+            assert not listen.listen_to(f"{d}/missing.wav", key="SECRET")["ok"]
+    finally:
+        listen._post_json = real
+
+
+def test_listener_audio_is_small_and_cost_is_estimated():
+    import io, tempfile, soundfile as sf
+    from mixcheck import listen
+    with tempfile.TemporaryDirectory() as d:
+        sf.write(f"{d}/long.wav", np.zeros((44100 * 5, 2)), 44100)
+        wav, sent_s, total = listen.prepare_audio(f"{d}/long.wav")
+    data, fs = sf.read(io.BytesIO(wav))
+    assert fs == listen.SEND_RATE and data.ndim == 1 and abs(sent_s - 5) < 0.01 and abs(total - 5) < 0.01
+    assert 0 < listen.estimate_cost(180) < 0.02 and listen.estimate_cost(10_000) == listen.estimate_cost(listen.MAX_SECONDS)
+
+
+def test_listener_eval_scores_parent_and_sub_genre_separately():
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+    from evals import listen_eval
+    def row(truth, pred, conf):
+        return {"ok": True, "truth": truth, "attempts": 1, "seconds": 2.0, "usage": {"sent_s": 100},
+                "listen": {"style": {"id": pred, "confidence": conf, "alternatives": []}, "sections": [1, 2]}}
+    rows = [row("hiphop_rap.drill", "hiphop_rap.drill", 0.9), row("hiphop_rap.drill", "hiphop_rap", 0.4),
+            row("hiphop_rap.rage", "hiphop_rap.trap", 0.8), {"ok": False, "truth": "hiphop_rap.rage",
+                                                             "reason": "states a measured quantity"}]
+    s = listen_eval.score(rows)
+    assert (s["songs"], s["listened"], s["failed"], s["quoted_a_number"]) == (4, 3, 1, 1)
+    assert s["parent_correct"] == 3 and (s["sub_correct"], s["sub_total"]) == (1, 3) and s["parent_only_answers"] == 1
+    assert s["confident"] == (2, 1) and s["unsure"] == (1, 0)
+    assert "hiphop_rap.rage" in listen_eval.render(s, "m")
+
+
 def test_plugin_requests_are_noted_on_this_computer():
     try:
         from fastapi.testclient import TestClient
