@@ -178,7 +178,7 @@ Points that follow from this:
   for the person's own tools from action ids the reasoning step chose and returns the ids it rejected. Also fixed:
   `describe_setup` failed on a plugin from the searchable list.
 - 2026-11-12 (step 3, draft): the explanation library exists as data (`mixcheck/library/causes.json`, loaded by
-  `mixcheck/library.py`): 22 entries keyed by floor id or playbook key, each with ranked causes, an `upstream` flag, one
+  `mixcheck/library.py`): 23 entries keyed by floor id or playbook key, each with ranked causes, an `upstream` flag, one
   question that tells causes apart, fix action ids, Vigil lines and the check it relates to. Drafted from general
   knowledge, so while its status is "draft" a cause from it is labelled "general knowledge", not "library". Tyler
   reviews `docs/library-draft.md` (rendered by `tools/render_library.py`); the standards are expected to be settled by
