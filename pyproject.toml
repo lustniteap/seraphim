@@ -29,5 +29,5 @@ mixcheck-calibrate = "mixcheck.calibrate:main"
 packages = ["mixcheck", "mixcheck.web"]
 
 [tool.setuptools.package-data]
-"mixcheck" = ["prompts/*.md"]
+"mixcheck" = ["prompts/*.md", "library/*.json"]
 "mixcheck.web" = ["static/*"]

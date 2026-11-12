@@ -927,6 +927,29 @@ def test_render_actions_uses_the_persons_tools_and_rejects_unknown_ids():
     assert "0:12" in ctx["steps"][0]["text"]
 
 
+def test_the_library_points_only_at_things_that_exist():
+    from mixcheck import analyze, catalog, library, observations, remediation
+    data = library.load()
+    assert data["status"] == "draft" and library.source_label() == "general knowledge"
+    keys = set()
+    for e in data["entries"]:
+        assert e["stage_no"] in observations.CHAIN and e["scope"] in ("vocal", "mix", "master")
+        assert e["causes"] and all(c["likelihood"] in ("common", "possible", "rare") for c in e["causes"])
+        for k in e["applies_to"]:
+            assert k in remediation.FIXES, k          # a floor id or playbook key
+            assert k not in keys, f"{k} is in two entries"
+            keys.add(k)
+        for a in e["fix_actions"]:
+            assert a in catalog.ACTIONS, a
+        for oid in e["observation_ids"]:
+            source, dim = oid.split(".")[:2]
+            assert source in ("style", "reference", "default", "file", "vocal"), oid
+            assert dim in observations.STAGE_OF or dim in ("tone", "top_end"), oid
+        assert all(c["upstream"] is False or e["vigil"] for c in e["causes"]), f"{e['id']}: upstream cause without Vigil"
+    assert analyze.FLOOR_IDS - {"silent"} <= keys   # every floor except a silent file has an entry
+    assert library.entry_for("clipping")["id"] == "clipping" and library.entry_for("nope") is None
+
+
 def test_plugin_requests_are_noted_on_this_computer():
     try:
         from fastapi.testclient import TestClient
