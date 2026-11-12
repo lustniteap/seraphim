@@ -1040,6 +1040,22 @@ def test_listener_trusts_certificates_and_failed_songs_are_retried():
     assert set(done) == {"a"}
 
 
+def test_listener_drops_bad_sections_and_keeps_the_rest_and_prompt_options():
+    from mixcheck import listen
+    r = _good_listen()
+    r["sections"] += [{"label": "outro", "start_s": 70, "end_s": 90},          # starts after the audio ends
+                      {"label": "bridge", "start_s": 20, "end_s": 30},         # overlaps the verse
+                      {"label": "weird", "start_s": 50, "end_s": 55}]          # not a known label
+    assert listen.check(r, 60, strict_sections=False) == [] and listen.check(r, 60)
+    c = listen.clean(r, 60)
+    assert [x["label"] for x in c["sections"]] == ["intro", "verse"] and c["sections_dropped"] == 3
+    order = lambda p: [l.split(":")[0].strip() for l in p.split("Style ids:")[1].split("JSON shape")[0].strip().splitlines()]  # noqa: E731
+    a, b = order(listen.prompt()), order(listen.prompt(shuffle_seed=1))
+    assert sorted(a) == sorted(b) and a != b and order(listen.prompt(shuffle_seed=1)) == b
+    assert "sliding 808" not in listen.prompt() and "sliding 808" in listen.prompt(describe=True)
+    assert "60 seconds long" in listen.prompt(60)
+
+
 def test_listener_waits_and_retries_when_the_provider_says_slow_down():
     import json, tempfile, soundfile as sf
     from mixcheck import listen

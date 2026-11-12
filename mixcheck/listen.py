@@ -18,6 +18,7 @@ import base64
 import io
 import json
 import os
+import random
 import re
 import time
 import urllib.error
@@ -46,6 +47,19 @@ _MEASURED = re.compile(r"\d+(\.\d+)?\s*(db|dbfs|dbtp|lufs|lu|hz|khz|bpm|%|percen
                        re.I)
 
 
+# What separates the hip-hop sub-genres, in plain words and no numbers, for the prompt's optional "describe" mode.
+# Drafted from general knowledge: Tyler's to correct.
+DESCRIPTIONS = {
+    "hiphop_rap.trap": "hard 808 bass, rolling or stuttering hi-hats, sparse dark synths; the broad mainstream trap sound",
+    "hiphop_rap.drill": "sliding 808 bass, bouncy triplet-feel hi-hats and snares, dark menacing mood, cold deadpan delivery "
+                        "(Chicago, UK and Brooklyn variants)",
+    "hiphop_rap.boom_bap": "sampled drum breaks and soul or jazz loops, dusty swung drums, lyric-focused, 1990s-rooted",
+    "hiphop_rap.melodic": "sung or pitch-corrected melodies over trap beats, emotional or dreamy mood, melodic hooks",
+    "hiphop_rap.rage": "distorted aggressive synth leads and heavy bass, chaotic high-energy delivery with shouted ad-libs, "
+                       "often video-game-like synth sounds",
+}
+
+
 def vocabulary():
     """The style ids the model may choose from, each with its name."""
     names = {}
@@ -58,9 +72,13 @@ def vocabulary():
     return names
 
 
-def prompt(duration_s=None):
+def prompt(duration_s=None, shuffle_seed=None, describe=False):
     length = f"The audio is {duration_s:.0f} seconds long. " if duration_s else ""
-    styles = "\n".join(f"  {sid}: {name}" for sid, name in vocabulary().items())
+    names = list(vocabulary().items())
+    if shuffle_seed is not None:                   # an order that favours no style: the same for one song, different between songs
+        random.Random(shuffle_seed).shuffle(names)
+    styles = "\n".join(f"  {sid}: {name}" + (f" ({DESCRIPTIONS[sid]})" if describe and sid in DESCRIPTIONS else "")
+                       for sid, name in names)
     return f"""You are listening to a finished or nearly finished song to describe it for a mixing engineer's assistant.
 Describe only what you can hear. {length}Reply with one JSON object and nothing else.
 
@@ -97,8 +115,9 @@ def _text_problems(where, value):
     return []
 
 
-def check(reply, duration_s):
-    """Problems with a reply (a dict). Empty when it can be used. Never raises."""
+def check(reply, duration_s, strict_sections=True):
+    """Problems with a reply (a dict). Empty when it can be used. Never raises. With strict_sections False the section
+    list is not judged here: clean() drops the sections that are unusable and keeps the rest."""
     if not isinstance(reply, dict):
         return ["reply is not a JSON object"]
     out, ids = [], set(vocabulary())
@@ -127,7 +146,7 @@ def check(reply, duration_s):
     secs = reply.get("sections")
     if not isinstance(secs, list) or len(secs) > MAX_SECTIONS:
         out.append("sections: expected a list")
-    else:
+    elif strict_sections:
         prev_end = 0.0
         for i, s in enumerate(secs):
             ok = (isinstance(s, dict) and s.get("label") in SECTION_LABELS
@@ -148,14 +167,27 @@ def clean(reply, duration_s=None):
     that runs a little past the audio clamped to it."""
     end = (lambda t: min(t, duration_s)) if duration_s else (lambda t: t)
     st = reply["style"]
+    sections, dropped, prev_end = [], 0, 0.0
+    for s in sorted((s for s in reply["sections"] if isinstance(s, dict)
+                     and isinstance(s.get("start_s"), (int, float)) and not isinstance(s.get("start_s"), bool)),
+                    key=lambda s: s["start_s"]):
+        ok = (s.get("label") in SECTION_LABELS and isinstance(s.get("end_s"), (int, float)) and not isinstance(s.get("end_s"), bool)
+              and s["start_s"] >= 0 and s["end_s"] > s["start_s"] and s["start_s"] >= prev_end - 1.0
+              and (duration_s is None or (s["start_s"] < duration_s and s["end_s"] <= duration_s + END_SLACK_S)))
+        if not ok:
+            dropped += 1
+            continue
+        sections.append({"label": s["label"], "start_s": round(float(s["start_s"]), 1),
+                         "end_s": round(float(end(s["end_s"])), 1)})
+        prev_end = max(prev_end, s["end_s"])
+    dropped += max(0, len(reply["sections"]) - len(sections) - dropped)   # entries that were not objects at all
     return {"version": LISTEN_VERSION,
             "style": {"id": st.get("id"), "confidence": round(float(st["confidence"]), 2),
                       "alternatives": list(st.get("alternatives", []))},
             "instruments": [t.strip().lower() for t in reply["instruments"]],
             "vocal": {"present": reply["vocal"]["present"], "kind": reply["vocal"]["kind"]},
-            "sections": sorted(({"label": s["label"], "start_s": round(float(s["start_s"]), 1),
-                                 "end_s": round(float(end(s["end_s"])), 1)} for s in reply["sections"]),
-                               key=lambda s: s["start_s"]),
+            "sections": sections,
+            "sections_dropped": dropped,
             "qualities": [{"note": t.strip(), "trust": "heard, unverified"} for t in reply["qualities"]]}
 
 
@@ -255,7 +287,7 @@ def _with_backoff(call, wav, model, key, ask, waits=3):
             time.sleep(min(65.0, (e.retry_s or 20.0) + 1.0))
 
 
-def listen_to(path, provider="gemini", model=None, key=None):
+def listen_to(path, provider="gemini", model=None, key=None, shuffle=False, describe=False):
     """Listen to one song. Retries once if the reply does not pass check(). Never raises for provider trouble."""
     model = model or DEFAULT_MODEL
     key = key or os.environ.get("GEMINI_API_KEY", "")
@@ -269,7 +301,7 @@ def listen_to(path, provider="gemini", model=None, key=None):
     except Exception as e:  # noqa: BLE001 - an unreadable file is a result, not a crash
         return {"ok": False, "reason": f"could not read the audio: {e}"}
     call = _gemini if provider == "gemini" else _fake
-    ask = prompt(sent_s)
+    ask = prompt(sent_s, shuffle_seed=os.path.getsize(path) if shuffle else None, describe=describe)
     problems, tokens_in, tokens_out = [], 0, 0
     for attempt in (1, 2):
         try:
@@ -283,7 +315,7 @@ def listen_to(path, provider="gemini", model=None, key=None):
         except ValueError:
             problems = ["the reply was not valid JSON"]
             continue
-        problems = check(reply, sent_s)
+        problems = check(reply, sent_s, strict_sections=False)
         if not problems:
             return {"ok": True, "listen": clean(reply, sent_s), "attempts": attempt, "model": model,
                     "usage": {"input_tokens": tokens_in, "output_tokens": tokens_out, "sent_s": round(sent_s, 1),

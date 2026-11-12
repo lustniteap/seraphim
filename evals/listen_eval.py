@@ -88,6 +88,7 @@ def score(rows):
     out["seconds"] = round(sum(r.get("seconds", 0) for r in ok) / len(ok), 1)
     out["cost"] = sum(listen.estimate_cost(r["usage"]["sent_s"]) for r in ok)
     out["sections"] = round(sum(len(r["listen"]["sections"]) for r in ok) / len(ok), 1)
+    out["sections_dropped"] = sum(r["listen"].get("sections_dropped", 0) for r in ok)
     out["retried"] = sum(1 for r in ok if r.get("attempts", 1) > 1)
     conf = defaultdict(Counter)
     for r in subs:
@@ -113,7 +114,7 @@ def render(s, model):
               f"| Accuracy when unsure (< {CONFIDENT}) | {pct(s['unsure'][1], s['unsure'][0])} |",
               f"| Said it could not tell | {s['no_answer']} |",
               f"| Replies needing a retry | {s['retried']} |",
-              f"| Sections per song (average) | {s['sections']} |",
+              f"| Sections per song (average) | {s['sections']} (dropped as unusable: {s['sections_dropped']}) |",
               f"| Seconds per song (average) | {s['seconds']} |",
               f"| Estimated cost for these songs | ${s['cost']:.2f} |", "",
               "## Which styles were confused (truth -> what the model said)", ""]
@@ -130,6 +131,8 @@ def main():
     ap.add_argument("--workers", type=int, default=2, help="songs at a time (a free key needs 1 or 2)")
     ap.add_argument("--model", default=listen.DEFAULT_MODEL)
     ap.add_argument("--provider", choices=listen.PROVIDERS, default="gemini")
+    ap.add_argument("--shuffle", action="store_true", help="put the style list in a different order for each song")
+    ap.add_argument("--describe", action="store_true", help="add a plain-words description of each hip-hop sub-genre to the prompt")
     ap.add_argument("--fake", action="store_true", help="a stand-in listener: tests the harness, sends nothing")
     ap.add_argument("--variant", default="baseline", help="name for this run; results are kept per variant")
     ap.add_argument("--show", action="store_true", help="print the saved summary and stop")
@@ -165,7 +168,7 @@ def main():
     lock = threading.Lock()
 
     def one(sid, path):
-        res = listen.listen_to(path, provider=provider, model=a.model)
+        res = listen.listen_to(path, provider=provider, model=a.model, shuffle=a.shuffle, describe=a.describe)
         return {"key": _key(path), "truth": sid, "song": Path(path).name, **res}
 
     if todo:
