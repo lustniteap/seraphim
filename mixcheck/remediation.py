@@ -17,7 +17,7 @@ Stage matters: clipping in a mix headed for mastering is fixed with gain
 staging, not a limiter. STAGE_SEVERITY re-rates findings that mean something
 different for a mix.
 """
-from .catalog import ACTIONS, DAWS, PACKAGES, expand_packages, owned_tools
+from .catalog import ACTIONS, DAWS, LISTED, PACKAGES, expand_packages, owned_tools
 from .util import fmt_time
 
 STAGES = ("mix", "master")
@@ -210,8 +210,9 @@ def normalize_setup(setup):
 
 def describe_setup(setup):
     # Waves plugins are listed together, like "Waves (L2, F6)", rather than as many separate items.
-    waves = [PACKAGES[p]["name"] for p in setup["packages"] if PACKAGES[p]["group"] == "Waves"]
-    others = [PACKAGES[p]["name"] for p in setup["packages"] if PACKAGES[p]["group"] != "Waves"]
+    known = {**LISTED, **PACKAGES}
+    waves = [known[p]["name"] for p in setup["packages"] if known[p]["group"] == "Waves"]
+    others = [known[p]["name"] for p in setup["packages"] if known[p]["group"] != "Waves"]
     parts = [DAWS[setup["daw"]]] + ([f"Waves ({', '.join(waves)})"] if waves else []) + others
     return " + ".join(parts)
 
@@ -265,6 +266,31 @@ def build_fix(flag, setup, stage):
         for _, t in others:
             fix["more"].append({"text": t["can"][action][1].format(**ctx), "tool": t["name"], "action": action})
     return fix
+
+
+def render_actions(action_ids, setup=None, flag=None):
+    """Steps for the person's own setup from action ids a reasoning step chose. Code renders the wording; the model
+    only picks ids. Returns {"steps": [...], "more": [...], "rejected": [ids that are not in the catalog]}.
+    flag: optional finding or observation values for the placeholders ({times}, {band}, {start} ...)."""
+    setup, tools, ctx = normalize_setup(setup), None, _context(flag or {})
+    tools = owned_tools(setup)
+    out = {"steps": [], "more": [], "rejected": []}
+    for action in dict.fromkeys(action_ids or []):
+        if not isinstance(action, str) or action not in ACTIONS:
+            out["rejected"].append(action)
+            continue
+        ranked = _ranked(action, tools)
+        if not ranked:
+            out["steps"].append({"text": ACTIONS[action].format(**ctx), "tool": None, "action": action})
+        elif action in ANY_OWNED:
+            names = ", ".join(t["name"] for _, t in ranked)
+            out["steps"].append({"text": f"{ACTIONS[action]} {ANY_OWNED[action]}: {names}.", "tool": None, "action": action})
+        else:
+            (_, best), *others = ranked
+            out["steps"].append({"text": best["can"][action][1].format(**ctx), "tool": best["name"], "action": action})
+            out["more"] += [{"text": t["can"][action][1].format(**ctx), "tool": t["name"], "action": action}
+                            for _, t in others]
+    return out
 
 
 def attach_fixes(flags, setup=None, stage="mix"):

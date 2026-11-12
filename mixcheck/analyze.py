@@ -12,7 +12,7 @@ from .audio_io import load_audio
 from .edges import measure_edges
 from .loudness import measure_loudness
 from .peaks import measure_peaks
-from .observations import attach_observation_fixes, build_observations
+from .observations import CHAIN, attach_observation_fixes, build_observations
 from .reference import compare, measure_profile
 from .remediation import STAGES, attach_fixes, describe_setup, detect_stage, normalize_setup
 from .score import score_flags
@@ -53,6 +53,16 @@ FLOOR_IDS = {
     "true_peak_over", "true_peak_hot", "clipping", "negative_correlation", "mono_loss", "wide_low_end",
     "phase_section", "imbalance", "dc_offset", "silent", "long_head", "long_tail", "abrupt_end",
 }
+
+# The stage of the ten-stage chain (observations.CHAIN) each floor belongs to, and its scope.
+FLOOR_STAGE = {
+    "clipping": (1, "mix"), "dc_offset": (1, "mix"), "silent": (1, "mix"),
+    "negative_correlation": (9, "mix"), "mono_loss": (9, "mix"), "wide_low_end": (9, "mix"),
+    "phase_section": (9, "mix"), "imbalance": (9, "mix"),
+    "true_peak_over": (10, "master"), "true_peak_hot": (10, "master"),
+    "long_head": (10, "master"), "long_tail": (10, "master"), "abrupt_end": (10, "master"),
+}
+assert set(FLOOR_STAGE) == FLOOR_IDS
 
 
 # The stages analyze_file() reports as it finishes them, in order (the web page lights one lamp each).
@@ -174,7 +184,9 @@ def build_flags(r):
     t, flags = THRESHOLDS, []
 
     def flag(fid, severity, message, **data):
-        flags.append({"id": fid, "severity": severity, "message": message, **data})
+        no, scope = FLOOR_STAGE[fid]
+        flags.append({"id": fid, "severity": severity, "message": message, "stage_no": no,
+                      "stage": CHAIN[no], "scope": scope, **data})
 
     tp = r["peaks"]["true_peak_max_dbtp"]
     if tp > 0:

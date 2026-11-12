@@ -897,6 +897,36 @@ def test_plugin_picker_options_and_setups_accept_listed_plugins():
         catalog.LISTED.pop("uad_1176")
 
 
+def test_every_floor_has_a_stage_and_listed_plugins_describe_cleanly():
+    from mixcheck import analyze, catalog, observations
+    from mixcheck.remediation import describe_setup, normalize_setup, render_actions
+    assert set(analyze.FLOOR_STAGE) == analyze.FLOOR_IDS
+    assert all(n in observations.CHAIN for n, _ in analyze.FLOOR_STAGE.values())
+    import tempfile
+    import soundfile as sf
+    t = np.arange(96000) / 48000
+    x = np.clip(1.6 * np.sin(2 * np.pi * 220 * t), -1, 1)  # clipped and hot: raises several floors
+    with tempfile.TemporaryDirectory() as d:
+        sf.write(f"{d}/c.wav", np.stack([x, x], axis=1), 48000)
+        flags = analyze.analyze_file(f"{d}/c.wav")["flags"]
+    assert flags
+    for f in flags:
+        assert f["stage_no"] == analyze.FLOOR_STAGE[f["id"]][0] and f["stage"] == observations.CHAIN[f["stage_no"]]
+    listed = next(i for i, v in catalog.LISTED.items() if v["group"] == "Universal Audio (UAD)")
+    label = describe_setup(normalize_setup({"daw": "logic", "packages": [listed, "waves_l2"]}))
+    assert catalog.LISTED[listed]["name"] in label and "Waves (L2)" in label
+
+
+def test_render_actions_uses_the_persons_tools_and_rejects_unknown_ids():
+    from mixcheck.remediation import render_actions
+    plain = render_actions(["limit_true_peak", "made_up", "limit_true_peak"], {"daw": "other", "packages": []})
+    assert plain["rejected"] == ["made_up"] and len(plain["steps"]) == 1 and plain["steps"][0]["tool"] is None
+    owned = render_actions(["limit_true_peak"], {"daw": "other", "packages": ["waves_l2"]})
+    assert owned["steps"][0]["tool"] == "Waves L2" and "L2" in owned["steps"][0]["text"]
+    ctx = render_actions(["clip_gain"], None, {"id": "clipping", "times_s": [12.0]})
+    assert "0:12" in ctx["steps"][0]["text"]
+
+
 def test_plugin_requests_are_noted_on_this_computer():
     try:
         from fastapi.testclient import TestClient

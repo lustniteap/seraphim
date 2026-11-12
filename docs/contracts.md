@@ -172,3 +172,8 @@ Points that follow from this:
   technical issues", "Technical issues to fix", "Several technical problems", "Major technical problems"). The "ready"
   labels ("Ready for Wings") can only come from `score.apply_verdict`, which checks that the reasoning step says ready, the technical score
   is at least 9.0, no diagnosis is open, and no floor finding is at warning level or worse.
+- 2026-11-12 (step 2c, built): every floor carries `stage_no`, `stage` and `scope` (`analyze.FLOOR_STAGE`): clipping, DC
+  and a silent file are stage 1; polarity, mono loss, wide low end, phase sections and imbalance are stage 9; the true-peak
+  ceiling and the head, tail and ending notes are stage 10. `remediation.render_actions(ids, setup, flag)` renders steps
+  for the person's own tools from action ids the reasoning step chose and returns the ids it rejected. Also fixed:
+  `describe_setup` failed on a plugin from the searchable list.
