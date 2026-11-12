@@ -178,17 +178,31 @@ def estimate_cost(duration_s):
 
 # ---------------------------------------------------------------- providers
 
+def _ssl_context():
+    """Certificates to trust. Python installed from python.org on a Mac has none until a setup file is run, so use the
+    certifi bundle when it is installed (it comes with the web extras)."""
+    import ssl
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        return ssl.create_default_context()
+
+
 def _post_json(url, body, key, timeout=180):
     req = urllib.request.Request(url, data=json.dumps(body).encode("utf-8"), method="POST",
                                  headers={"Content-Type": "application/json", "x-goog-api-key": key})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        with urllib.request.urlopen(req, timeout=timeout, context=_ssl_context()) as r:
             return json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         detail = e.read().decode("utf-8", "replace")[:300]
         raise RuntimeError(f"The provider answered {e.code}: {detail}") from None
     except urllib.error.URLError as e:
-        raise RuntimeError(f"Could not reach the provider: {e.reason}") from None
+        why = str(e.reason)
+        hint = (" On a Mac with Python from python.org, run 'Install Certificates.command' in /Applications/Python 3.x/, "
+                "or run: pip install certifi") if "CERTIFICATE_VERIFY_FAILED" in why else ""
+        raise RuntimeError(f"Could not reach the provider: {why}.{hint}") from None
 
 
 def _gemini(wav, model, key):

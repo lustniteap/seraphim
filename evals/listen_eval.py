@@ -49,7 +49,8 @@ def load_done(folder):
         for line in f.read_text(encoding="utf-8").splitlines():
             if line.strip():
                 row = json.loads(line)
-                done[row["key"]] = row
+                if row.get("ok"):          # a failed song is tried again on the next run
+                    done[row["key"]] = row
     return done
 
 

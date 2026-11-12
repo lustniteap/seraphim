@@ -1022,6 +1022,21 @@ def test_listener_sends_the_key_in_a_header_retries_once_and_never_raises():
         listen._post_json = real
 
 
+def test_listener_trusts_certificates_and_failed_songs_are_retried():
+    import tempfile
+    from mixcheck import listen
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+    from evals import listen_eval
+    assert listen._ssl_context().verify_mode.name == "CERT_REQUIRED"           # never switched off
+    with tempfile.TemporaryDirectory() as d:
+        f = os.path.join(d, "results.jsonl")
+        with open(f, "w") as out:
+            out.write('{"key": "a", "ok": true}\n{"key": "b", "ok": false, "reason": "x"}\n')
+        from pathlib import Path
+        done = listen_eval.load_done(Path(d))
+    assert set(done) == {"a"}
+
+
 def test_listener_audio_is_small_and_cost_is_estimated():
     import io, tempfile, soundfile as sf
     from mixcheck import listen
