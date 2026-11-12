@@ -11,6 +11,8 @@ would apply later, so keep them concrete.
 
 Text placeholders: {value} {times} {start} {end}, and for reference tone {band} {amount} {shape}
 """
+import re
+
 
 # What the user picks in setup: one DAW, plus any number of packages.
 DAWS = {
@@ -38,9 +40,86 @@ PACKAGES = {
 # Plugins a person can pick from the searchable list that Seraphim has no fix steps for yet. They are recorded in the
 # person's setup (so the reasoning step knows what they own) but add no tools: the steps stay generic until a plugin
 # is promoted into PACKAGES with TOOLS entries. Same shape as PACKAGES, plus a category (eq, compressor, limiter,
-# de-esser, reverb, delay, saturation, imager, meter, utility). Filled from the lists people confirm; each entry's
-# name and vendor come from the vendor's own materials or from the person's installed plugins, never from memory.
+# de-esser, reverb, delay, saturation, imager, meter, utility, modulation, channel strip, pitch, amp).
+#
+# This is a starting list for the picker, written generically from what each vendor's bundles are known to include
+# (Waves Essential and its popular companions, Avid's Pro Tools Artist set, Universal Audio's UAD set that ships with
+# an Apollo Solo and its common additions). It is for selection only: which plugins a particular bundle or edition
+# contains varies by version and promotion, so entries are not a statement of what any licence includes. Names a
+# person's own machine shows, or the "I don't see mine" log, extend it.
+def _listed(group, entries, prefix):
+    out = {}
+    for name, category in entries:
+        slug = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+        out[f"{prefix}_{slug}"] = {"name": name, "group": group, "category": category}
+    return out
+
+
 LISTED = {}
+LISTED.update(_listed("Waves", [
+    ("L1 Ultramaximizer", "limiter"), ("L3 Multimaximizer", "limiter"), ("C1 Compressor", "compressor"),
+    ("C4 Multiband Compressor", "compressor"), ("C6 Multiband Compressor", "compressor"),
+    ("Renaissance Axx", "compressor"), ("Renaissance Bass", "utility"), ("Renaissance DeEsser", "de-esser"),
+    ("Renaissance Vox", "compressor"), ("Renaissance Reverb", "reverb"), ("Q10 Equalizer", "eq"),
+    ("SSL E-Channel", "channel strip"), ("SSL G-Master Buss Compressor", "compressor"),
+    ("CLA-2A", "compressor"), ("CLA-3A", "compressor"), ("CLA-76", "compressor"), ("CLA Vocals", "channel strip"),
+    ("CLA Drums", "channel strip"), ("CLA Guitars", "channel strip"), ("CLA Bass", "channel strip"),
+    ("CLA Unplugged", "channel strip"), ("PuigTec EQP1A", "eq"), ("PuigTec MEQ5", "eq"), ("Vocal Rider", "utility"),
+    ("Bass Rider", "utility"), ("Waves Tune Real-Time", "pitch"), ("Waves Tune LT", "pitch"),
+    ("Clarity Vx", "utility"), ("DeEsser", "de-esser"), ("Doppler", "modulation"), ("H-Delay", "delay"),
+    ("H-Reverb", "reverb"), ("H-Comp", "compressor"), ("H-EQ", "eq"), ("IR-1 Convolution Reverb", "reverb"),
+    ("Abbey Road Plates", "reverb"), ("TrueVerb", "reverb"), ("MetaFlanger", "modulation"),
+    ("Kramer Master Tape", "saturation"), ("Kramer Tape", "saturation"), ("Aphex Vintage Aural Exciter", "saturation"),
+    ("Center", "imager"), ("Dorrough Stereo", "meter"), ("Eddie Kramer Vocal Channel", "channel strip"),
+    ("Greg Wells ToneShaper", "compressor"), ("Greg Wells MixCentric", "compressor"), ("Scheps 73", "eq"),
+    ("Scheps Omni Channel", "channel strip"), ("NS1 Noise Suppressor", "utility"), ("Trans-X", "utility"),
+    ("API 550", "eq"), ("API 560", "eq"), ("PS22 Stereo Maker", "imager"), ("SuperTap", "delay"),
+    ("Vitamin Sonic Enhancer", "saturation"), ("MondoMod", "modulation"), ("Enigma", "modulation"),
+    ("OneKnob Brighter", "eq"), ("OneKnob Phatter", "eq"), ("OneKnob Louder", "limiter"),
+    ("OneKnob Pressure", "compressor"), ("OneKnob Wetter", "reverb"), ("OneKnob Driver", "saturation"),
+    ("Chorus", "modulation"), ("Doubler", "modulation"), ("UltraPitch", "pitch"), ("SoundShifter", "pitch"),
+    ("GTR3", "amp"), ("Linear Phase EQ", "eq"), ("REQ 6-Band Equalizer", "eq"), ("Linear Phase Multiband", "compressor"),
+], "waves"))
+LISTED.update(_listed("Avid (Pro Tools)", [
+    ("EQ III 1-Band", "eq"), ("EQ III 4-Band", "eq"), ("EQ III 7-Band", "eq"),
+    ("Dyn3 Compressor/Limiter", "compressor"), ("Dyn3 Expander/Gate", "utility"), ("Dyn3 De-Esser", "de-esser"),
+    ("Channel Strip", "channel strip"), ("Pro Compressor", "compressor"), ("Pro Expander", "utility"),
+    ("Pro Limiter", "limiter"), ("Pro Multiband Dynamics", "compressor"), ("Pro Subharmonic", "utility"),
+    ("D-Verb", "reverb"), ("Mod Delay III", "delay"), ("Mod Delay", "delay"), ("Time Shift", "pitch"),
+    ("Pitch II", "pitch"), ("Trim", "utility"), ("Signal Generator", "utility"), ("Down Mix", "utility"),
+    ("Dither", "utility"), ("Eleven Lite", "amp"), ("Sci-Fi", "modulation"),
+    ("AIR Reverb", "reverb"), ("AIR Non-Linear Reverb", "reverb"), ("AIR Spring Reverb", "reverb"),
+    ("AIR Dynamic Delay", "delay"), ("AIR Multi-Delay", "delay"), ("AIR Chorus", "modulation"),
+    ("AIR Flanger", "modulation"), ("AIR Phaser", "modulation"), ("AIR Ensemble", "modulation"),
+    ("AIR Distortion", "saturation"), ("AIR Fuzz-Wah", "saturation"), ("AIR Lo-Fi", "saturation"),
+    ("AIR Enhancer", "saturation"), ("AIR Stereo Width", "imager"), ("AIR Kill EQ", "eq"),
+    ("AIR Filter Gate", "utility"), ("AIR Vintage Filter", "modulation"), ("AIR Talkbox", "modulation"),
+    ("AIR Frequency Shifter", "pitch"),
+], "avid"))
+LISTED.update(_listed("Universal Audio (UAD)", [
+    ("UA 610-B Tube Preamp & EQ", "channel strip"), ("1176 Classic Limiter Collection", "compressor"),
+    ("1176 Legacy", "compressor"), ("Teletronix LA-2A Collection", "compressor"),
+    ("Teletronix LA-2A Legacy", "compressor"), ("Pultec Passive EQ Collection", "eq"),
+    ("Pultec EQP-1A Legacy", "eq"), ("Pultec Pro Legacy", "eq"), ("Pultec HLF-3C", "eq"),
+    ("UA 610 Collection", "channel strip"), ("Marshall Plexi Classic Amp", "amp"),
+    ("Fairchild 660/670 Legacy", "compressor"), ("Precision Limiter", "limiter"), ("Precision Equalizer", "eq"),
+    ("Precision Maximizer", "limiter"), ("Precision De-Esser", "de-esser"), ("Precision Multiband", "compressor"),
+    ("Precision Buss Compressor", "compressor"), ("Precision Enhancer Hz", "saturation"),
+    ("Precision Delay Modulator", "modulation"), ("Cambridge EQ", "eq"), ("RealVerb Pro", "reverb"),
+    ("DreamVerb", "reverb"), ("Pure Plate Reverb", "reverb"), ("Neve 1073 Preamp & EQ", "channel strip"),
+    ("Neve 1073SPX", "channel strip"), ("Neve 88RS Channel Strip", "channel strip"),
+    ("Neve 33609 Compressor", "compressor"), ("API 550A EQ", "eq"), ("API 550B EQ", "eq"), ("API 2500 Bus Compressor", "compressor"),
+    ("SSL G Bus Compressor", "compressor"), ("SSL E Channel Strip", "channel strip"),
+    ("Manley Massive Passive EQ", "eq"), ("Empirical Labs Distressor", "compressor"),
+    ("Studer A800 Tape Recorder", "saturation"), ("Ampex ATR-102 Mastering Tape", "saturation"),
+    ("Oxford Inflator", "saturation"), ("Oxford SuprEsser", "de-esser"), ("Lexicon 224 Digital Reverb", "reverb"),
+    ("EMT 140 Plate Reverb", "reverb"), ("EMT 250 Electronic Reverberator", "reverb"),
+    ("Capitol Chambers", "reverb"), ("Ocean Way Studios", "reverb"), ("Helios Type 69 EQ", "eq"),
+    ("Shadow Hills Mastering Compressor", "compressor"), ("Culture Vulture", "saturation"),
+    ("Dytronics Tri-Stereo Chorus", "modulation"), ("Roland Dimension D", "modulation"),
+    ("EP-34 Tape Echo", "delay"), ("Galaxy Tape Echo", "delay"), ("Brigade Chorus", "modulation"),
+    ("Little Labs IBP", "utility"), ("Maag EQ4", "eq"), ("Softube-style Tape Simulator", "saturation"),
+], "uad"))
 
 # Ids that older saved setups, scripts and eval cases use, each standing for several current ones.
 # "waves_essential" used to be one item covering these four Waves plugins.
