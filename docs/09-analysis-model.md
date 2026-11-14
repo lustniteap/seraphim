@@ -98,10 +98,14 @@ The JSON report stays the contract between layers. v2 adds:
 ```json
 {
   "bands": {"engineer": [{"id": "mud", "lo_hz": 250, "hi_hz": 500,
-             "level_db_rel": -6.1, "target_delta_db": 2.4, "crest_db": 9.8,
-             "correlation": 0.93, "side_mid_db": -18.0,
-             "timeline": [{"t_s": 0.0, "level_db_rel": -6.4}]}],
-           "fine": "31 x 1/3-octave levels, summary and timeline"},
+             "level_db_rel": -6.1, "target_delta_db": 2.4, "crest_db": 9.8, "lra_lu": 3.1,
+             "correlation": 0.93, "side_mid_db": -18.0, "balance_db": 0.2,
+             "transient_ratio": 0.12, "level_std_db": 1.4,
+             "timeline": {"t_s": [0.0, 0.4], "level_db_rel": [-6.4, -6.0], "crest_db": [9.9, 9.6],
+                          "transient_ratio": [0.1, 0.14], "correlation": [0.93, 0.92],
+                          "side_mid_db": [-18.2, -17.9], "balance_db": [0.2, 0.1]}}],
+           "fine": {"center_hz": [20, 25], "level_db_rel": [-21.1, -16.9],
+                    "timeline": {"t_s": [0.0, 0.4], "level_db_rel": [[-22.8, -17.7], [-27.2, -15.7]]}}},
   "relations": {"tilt_db_per_oct": -4.2, "ratios": {"low_mids_to_mids_db": 3.1}, "flatness": 0.21},
   "resonances": [{"hz": 3150, "prominence_db": 7.5, "q": 9, "time_ranges_s": [[42.0, 61.5]], "element": "vocals"}],
   "elements": {"source": "separated|user_stems", "vocals": {"level_vs_beat_db": -3.0, "bands": "..."}},
@@ -112,6 +116,10 @@ The JSON report stays the contract between layers. v2 adds:
               "detector_version": "perc-0.1"}]
 }
 ```
+
+Timelines are stored as columns: one list per measure with one entry per window (about 400 ms), which is
+about a third of the size of one object per window. Silent windows are `null`. The fine bands' timeline is one
+row of 31 levels per window. (The example is shortened to two windows and two fine bands.)
 
 Issue categories reuse the `missed_issues.category` list in 08-feedback-data.md, so model output and human
 labels use one vocabulary.
