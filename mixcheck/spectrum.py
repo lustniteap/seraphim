@@ -2,13 +2,7 @@
 import numpy as np
 from scipy.signal import welch
 
-BANDS = [
-    ("sub", 20, 60),
-    ("low", 60, 250),
-    ("low_mid", 250, 2000),
-    ("high_mid", 2000, 6000),
-    ("high", 6000, 20000),
-]
+from .bands import ENERGY_BANDS
 
 
 def measure_spectrum(x, fs):
@@ -21,7 +15,7 @@ def measure_spectrum(x, fs):
         return None
 
     bands = {}
-    for name, lo, hi in BANDS:
+    for name, lo, hi in ENERGY_BANDS:
         mask = (freqs >= lo) & (freqs < min(hi, top))
         bands[name] = round(float(psd[mask].sum() / total * 100), 2)
 

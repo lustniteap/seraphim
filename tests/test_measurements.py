@@ -1279,6 +1279,38 @@ def test_web_split_vocal_option():
     assert fixed["score"]["vocal_checked"] and any(f["id"] == "vocal_uncompressed" for f in fixed["flags"])
 
 
+# ---------------------------------------------------------------- band plan (docs/09-analysis-model.md)
+
+def test_one_band_plan_with_two_resolutions():
+    from mixcheck import bands, spectrum
+    # Ten engineer bands with no gaps or overlaps from 20 Hz to 20 kHz (edges are exact).
+    eng = bands.ENGINEER_BANDS
+    assert [b[0] for b in eng] == ["sub", "bass", "low_mids", "mud", "box", "mids", "presence", "bite", "sibilance", "air"]
+    assert [b[1] for b in eng] == [20, 60, 120, 250, 500, 1000, 2000, 4000, 6000, 10000]
+    assert [b[2] for b in eng] == [b[1] for b in eng[1:]] + [20000]
+    # 31 one-third-octave bands: each nominal center within 2% of the exact one, each band a third
+    # of an octave wide (edge ratio 10^0.1, to 1e-9), each starting where the last one ended.
+    fine = bands.FINE_BANDS
+    assert len(fine) == 31 and fine[0][0] == 20 and fine[17][0] == 1000 and fine[-1][0] == 20000
+    for i, (nominal, lo, hi) in enumerate(fine):
+        assert abs(nominal / (lo * hi) ** 0.5 - 1) < 0.02 and abs(hi / lo - 10 ** 0.1) < 1e-9
+        assert i == 0 or abs(lo - fine[i - 1][2]) < 1e-9
+    # The five tone bands are exactly what saved calibrations and reference sets were measured with.
+    assert [(b[0], b[1], b[2]) for b in bands.TONE_BANDS] == [
+        ("lows", 20, 100), ("low_mids", 100, 300), ("mids", 300, 2000), ("presence", 2000, 6000), ("highs", 6000, 20000)]
+    assert bands.BAND_IDS == list(bands.BANDS) == list(bands.TONE_GROUPS)
+    # Every engineer band belongs to one tone band and one energy band; the energy bands (the
+    # report's "spectrum" shares) keep their ids and edges and are exact unions of engineer bands.
+    for groups in (bands.TONE_GROUPS, bands.ENERGY_GROUPS):
+        assert [e for members in groups.values() for e in members] == bands.ENGINEER_IDS
+    assert bands.ENERGY_BANDS == [("sub", 20, 60), ("low", 60, 250), ("low_mid", 250, 2000),
+                                  ("high_mid", 2000, 6000), ("high", 6000, 20000)]
+    assert not hasattr(spectrum, "BANDS")  # the second, conflicting definition is gone
+    # Energy shares still come out right: a 1 kHz sine is all "low_mid" (250 Hz-2 kHz), to 0.1%.
+    share = spectrum.measure_spectrum(stereo(sine(1000, -12, seconds=2)), FS)["band_energy_pct"]
+    assert list(share) == ["sub", "low", "low_mid", "high_mid", "high"] and share["low_mid"] > 99.9
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in globals().items() if n.startswith("test_")]
     for name, fn in tests:
