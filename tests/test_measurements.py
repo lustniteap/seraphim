@@ -1311,6 +1311,304 @@ def test_one_band_plan_with_two_resolutions():
     assert list(share) == ["sub", "low", "low_mid", "high_mid", "high"] and share["low_mid"] > 99.9
 
 
+# ---------------------------------------------------------------- layer A, band by band (docs/09)
+
+def _noise(seconds=12.0, color="pink", seed=0, shape=None, fs=FS, channels=1):
+    """Noise at -20 dBFS RMS: white, or pink (-3 dB per octave) from 20 Hz up. shape(freqs) -> gain to apply."""
+    rng = np.random.default_rng(seed)
+    n = int(seconds * fs)
+    spec, f = np.fft.rfft(rng.standard_normal((n, channels)), axis=0), np.fft.rfftfreq(n, 1 / fs)
+    if color == "pink":
+        spec /= np.sqrt(np.maximum(f, 20.0))[:, None]
+    spec[f < 20] = 0
+    if shape is not None:
+        spec *= shape(f)[:, None]
+    x = np.fft.irfft(spec, n=n, axis=0)
+    x *= 0.1 / np.sqrt(np.mean(x ** 2))
+    return x if channels > 1 else stereo(x[:, 0])
+
+
+def _clicks(seconds=12.0, every_s=0.5):
+    """One full-scale sample every half second: all hits, nothing sustained."""
+    x = np.zeros(int(seconds * FS))
+    x[int(0.1 * FS)::int(every_s * FS)] = 0.9
+    return stereo(x)
+
+
+def _bands(x, fs=FS):
+    """The report's "bands" block for an array, keyed by band id."""
+    from mixcheck.band_measures import measure_bands
+    block, power = measure_bands(x, fs, integrated_lufs(x, fs))
+    return {b["id"]: b for b in block["engineer"]}, block, power
+
+
+def _relations(x, fs=FS):
+    from mixcheck.band_measures import spectral_pass
+    from mixcheck.relations import find_resonances, measure_relations
+    _, block, power = _bands(x, fs)
+    spectral = spectral_pass(x, fs)
+    return measure_relations(block, power, spectral), find_resonances(spectral)
+
+
+def test_band_level_reads_a_known_boost():
+    # Pink noise, then the same noise with +6 dB at 250-500 Hz. Each band is measured relative to
+    # the song's loudness, which the boost also raises, so compare band against band: "mud" must
+    # rise 6 dB against "mids" and no other band may move against "mids". Tolerance 0.1 dB.
+    plain, _, _ = _bands(_noise())
+    boosted, _, _ = _bands(_noise(shape=lambda f: np.where((f >= 250) & (f < 500), 2.0, 1.0)))
+    rel = lambda b, bid: b[bid]["level_db_rel"] - b["mids"]["level_db_rel"]
+    assert abs(rel(boosted, "mud") - rel(plain, "mud") - 6.02) < 0.1
+    for bid in plain:
+        if bid != "mud":
+            assert abs(rel(boosted, bid) - rel(plain, bid)) < 0.1, bid
+    # Pink noise has equal power per octave: the one-octave bands from 250 Hz to 4 kHz read the same. 0.5 dB.
+    octaves = [plain[b]["level_db_rel"] for b in ("mud", "box", "mids", "presence")]
+    assert max(octaves) - min(octaves) < 0.5
+    # A band's level is its power relative to the song's K-weighted power. A 1 kHz sine is all in
+    # "mids" (1-2 kHz) and K-weighting is 0.69 dB up at 1 kHz, so it reads -0.69 dB. Tolerance 0.1 dB.
+    tone, _, _ = _bands(stereo(sine(1000, -20)))
+    assert abs(tone["mids"]["level_db_rel"] + 0.69) < 0.1
+    assert tone["box"]["level_db_rel"] is None or tone["box"]["level_db_rel"] < -60
+
+
+def test_fine_bands_put_a_tone_in_its_third_octave():
+    from mixcheck.band_measures import fine_timeline, spectral_pass
+    x = stereo(sine(1000, -20))
+    _, block, _ = _bands(x)
+    fine = dict(zip(block["fine"]["center_hz"], block["fine"]["level_db_rel"]))
+    assert len(fine) == 31
+    # All of a 1 kHz sine is in the 1 kHz band (-0.69 dB, as above, to 0.1 dB); its neighbors are 30+ dB down.
+    assert abs(fine[1000] + 0.69) < 0.1
+    assert all(v is None or v < fine[1000] - 30 for hz, v in fine.items() if hz != 1000)
+    # The timeline is one row of 31 levels per 0.4 s window and reads the same in every window (0.2 dB).
+    table = fine_timeline(spectral_pass(x, FS), integrated_lufs(x, FS))
+    assert len(table["t_s"]) == len(table["level_db_rel"]) == 25 and table["t_s"][1] == 0.4
+    assert all(len(row) == 31 and abs(row[17] + 0.69) < 0.2 for row in table["level_db_rel"][1:-1])
+    # White noise has 1 dB more power in each third-octave than the one below it (10 log 10^0.1):
+    # 15 dB from 500 Hz to 16 kHz (tolerance 0.3 dB), and each step within 0.3 dB of 1 dB.
+    _, white, _ = _bands(_noise(color="white", seconds=20))
+    levels = white["fine"]["level_db_rel"][14:30]  # 500 Hz to 16 kHz
+    assert abs(levels[-1] - levels[0] - 15.0) < 0.3 and np.abs(np.diff(levels) - 1.0).max() < 0.3
+
+
+def test_band_crest_factor():
+    # A sine's peak is 3.01 dB above its RMS. Tolerance 0.1 dB, in the summary and in every window.
+    tone, _, _ = _bands(stereo(sine(1000, -12)))
+    assert abs(tone["mids"]["crest_db"] - 3.01) < 0.1
+    assert all(abs(p["crest_db"] - 3.01) < 0.1 for p in tone["mids"]["timeline"])
+    # Steady noise sits around 10-14 dB; a click every half second is far above it (over 20 dB).
+    noise, _, _ = _bands(_noise())
+    clicks, _, _ = _bands(_clicks())
+    assert 8 < noise["mids"]["crest_db"] < 15
+    assert clicks["mids"]["crest_db"] > 20 and clicks["air"]["crest_db"] > 20
+
+
+def test_band_level_range_and_movement():
+    # Noise that alternates every 12 s between two levels 10 dB apart, in the 250-500 Hz band only.
+    n = 48 * FS
+    loud = (np.arange(n) // (12 * FS)) % 2 == 1
+    in_band = lambda f: ((f >= 250) & (f < 500)).astype(float)
+    x = _noise(48, shape=in_band, seed=1) * np.where(loud, 1.0, 10 ** (-10 / 20))[:, None]
+    x += _noise(48, shape=lambda f: 1.0 - in_band(f), seed=2)  # everything else stays steady
+    b, _, _ = _bands(x)
+    # The 3 s level range of that band is the 10 dB step. Tolerance 1 LU.
+    assert abs(b["mud"]["lra_lu"] - 10.0) < 1.0
+    # Window levels sit 5 dB either side of their middle, so their standard deviation is 5 dB. Tolerance 0.5 dB.
+    assert abs(b["mud"]["level_std_db"] - 5.0) < 0.5
+    # The steady bands don't move: range under 1 LU, and (for wide bands) under 0.5 dB of deviation.
+    for bid in ("box", "mids", "presence", "air"):
+        assert b[bid]["lra_lu"] < 1.0 and b[bid]["level_std_db"] < 0.5, bid
+    # The timeline shows the step where it happens: 10 dB up between 11.6 s and 12.4 s. Tolerance 1.5 dB.
+    tl = {p["t_s"]: p["level_db_rel"] for p in b["mud"]["timeline"]}
+    assert len(tl) == 120 and abs(tl[12.4] - tl[11.2] - 10.0) < 1.5 and abs(tl[11.2] - tl[10.8]) < 1.5
+
+
+def test_band_stereo_measures():
+    # Out-of-phase lows: the same noise in both channels, with the right channel flipped below 120 Hz.
+    left = _noise(seed=3)[:, 0]
+    spec, f = np.fft.rfft(left), np.fft.rfftfreq(len(left), 1 / FS)
+    right = np.fft.irfft(spec * np.where(f < 120, -1.0, 1.0), n=len(left))
+    b, _, _ = _bands(np.column_stack([left, right]))
+    # Correlation is -1 in the flipped bands and +1 above them. Tolerance 0.01.
+    for bid in ("sub", "bass"):
+        assert b[bid]["correlation"] < -0.99 and b[bid]["side_mid_db"] > 40, bid
+    for bid in ("low_mids", "mud", "mids", "air"):
+        assert b[bid]["correlation"] > 0.99 and b[bid]["side_mid_db"] < -40, bid
+    assert all(p["correlation"] < -0.95 for p in b["sub"]["timeline"])
+    assert all(p["correlation"] > 0.95 for p in b["mids"]["timeline"])
+
+    # Unrelated left and right: correlation 0 (tolerance 0.1) and side as strong as mid (0 dB, tolerance 0.5 dB).
+    b, _, _ = _bands(_noise(seed=4, channels=2, seconds=30))
+    for bid in ("bass", "mud", "mids", "sibilance"):
+        assert abs(b[bid]["correlation"]) < 0.1 and abs(b[bid]["side_mid_db"]) < 0.5, bid
+
+    # Left 6 dB louder than right: every band reads +6.0 dB balance (tolerance 0.1 dB) and stays mono.
+    x = _noise(seed=5)
+    x[:, 1] *= 10 ** (-6 / 20)
+    b, _, _ = _bands(x)
+    for bid, band in b.items():
+        assert abs(band["balance_db"] - 6.0) < 0.1 and band["correlation"] > 0.99, bid
+    assert all(abs(p["balance_db"] - 6.0) < 0.15 for p in b["box"]["timeline"])
+
+    # A mono file has no stereo measures, and says so with nulls rather than numbers.
+    mono = _noise(seed=6)[:, :1]
+    b, _, _ = _bands(mono)
+    assert b["mids"]["correlation"] is None and b["mids"]["side_mid_db"] is None and b["mids"]["balance_db"] is None
+    assert "correlation" not in b["mids"]["timeline"][0] and b["mids"]["level_db_rel"] is not None
+
+
+def test_band_transient_versus_sustained():
+    # Steady noise is all sustained. Narrow low bands flutter on their own, so they read a little
+    # above zero: under 0.1 in every band, under 0.02 from 500 Hz up.
+    noise, _, _ = _bands(_noise(seconds=20))
+    assert all(b["transient_ratio"] < 0.1 for b in noise.values())
+    assert all(noise[bid]["transient_ratio"] < 0.02 for bid in ("box", "mids", "presence", "bite", "sibilance", "air"))
+    # A click every half second is all hits: over 0.8 from 250 Hz up, where a click is short
+    # against the 5 ms frames (lower bands ring longer; they still read over 0.5).
+    clicks, _, _ = _bands(_clicks())
+    for bid in ("mud", "box", "mids", "presence", "bite", "sibilance", "air"):
+        assert clicks[bid]["transient_ratio"] > 0.8, bid
+    assert all(b["transient_ratio"] > 0.5 for b in clicks.values())
+    # Clicks over noise 20 dB down land in between, and the windows without a click read steady.
+    mixed, _, _ = _bands(_clicks(every_s=1.2) + 0.03 * _noise(color="white"))
+    assert 0.3 < mixed["air"]["transient_ratio"] < 0.99
+    assert min(p["transient_ratio"] for p in mixed["air"]["timeline"]) < 0.05
+
+
+def test_spectral_tilt_and_band_ratios():
+    # Tilt is the slope of the spectrum's density: 0 dB/octave for white noise, -3.01 for pink. Tolerance 0.15.
+    white, _ = _relations(_noise(color="white", seconds=20))
+    pink, _ = _relations(_noise(seconds=20))
+    assert abs(white["tilt_db_per_oct"]) < 0.15 and abs(pink["tilt_db_per_oct"] + 3.01) < 0.15
+    # At 44.1 kHz the top band is cut short by the sample rate and must not bend the line.
+    assert abs(_relations(_noise(color="white", seconds=20, fs=44100), 44100)[0]["tilt_db_per_oct"]) < 0.15
+    # Ratios move by exactly what's injected: cut the sub 6 dB and boost 2-4 kHz 4 dB. Tolerance 0.1 dB.
+    shaped, _ = _relations(_noise(seconds=20, shape=lambda f: np.where(f < 60, 0.5, 1.0)
+                                                              * np.where((f >= 2000) & (f < 4000), 10 ** (4 / 20), 1.0)))
+    moved = {k: shaped["ratios"][k] - pink["ratios"][k] for k in pink["ratios"]}
+    assert set(moved) == {"sub_to_bass_db", "low_mids_to_mids_db", "presence_to_mids_db", "sibilance_to_presence_db"}
+    assert abs(moved["sub_to_bass_db"] + 6.02) < 0.1 and abs(moved["presence_to_mids_db"] - 4.0) < 0.1
+    assert abs(moved["sibilance_to_presence_db"] + 4.0) < 0.1 and abs(moved["low_mids_to_mids_db"]) < 0.1
+
+
+def test_spectral_flatness_and_contrast():
+    white, _ = _relations(_noise(color="white", seconds=20))
+    pink, _ = _relations(_noise(seconds=20))
+    # A harmonic tone: 110 Hz and every harmonic up to 16 kHz, falling 3 dB per octave, plus faint noise.
+    t = np.arange(20 * FS) / FS
+    tone = sum(np.sin(2 * np.pi * 110 * k * t + k) / np.sqrt(k) for k in range(1, 146))
+    harmonic, _ = _relations(stereo(0.1 * tone / tone.std()) + 0.001 * _noise(color="white", seconds=20))
+    # Flatness: white noise is even (over 0.95); pink leans to the lows (well under white); a tone is near 0 (under 0.01).
+    assert white["flatness"] > 0.95 and 0.05 < pink["flatness"] < 0.6 and harmonic["flatness"] < 0.01
+    # Contrast: noise of either color reads about 14 dB (the spread of noise itself; tolerance 2 dB),
+    # clear harmonics with gaps between them read far higher (over 30 dB).
+    assert abs(white["contrast_db"] - 14) < 2 and abs(pink["contrast_db"] - 14) < 2
+    assert harmonic["contrast_db"] > 30
+
+
+def test_band_to_band_level_correlation():
+    # 250-500 Hz and 2-4 kHz share one slow tremolo (0.3 Hz, about 9 dB deep); 1-2 kHz is steady,
+    # and 6-10 kHz has the opposite tremolo.
+    n = 40 * FS
+    t = np.arange(n) / FS
+    trem, anti = 1 + 0.5 * np.sin(2 * np.pi * 0.3 * t), 1 - 0.5 * np.sin(2 * np.pi * 0.3 * t)
+    part = lambda lo, hi, seed: _noise(40, shape=lambda f: ((f >= lo) & (f < hi)).astype(float), seed=seed)
+    x = (part(250, 500, 1) + part(2000, 4000, 2)) * trem[:, None] + part(1000, 2000, 3) + part(6000, 10000, 4) * anti[:, None]
+    rel, _ = _relations(x)
+    ids, m = rel["band_correlation"]["bands"], rel["band_correlation"]["matrix"]
+    at = lambda a, b: m[ids.index(a)][ids.index(b)]
+    assert len(ids) == 10 and all(len(row) == 10 for row in m)
+    # Bands moving together read over 0.9, opposite under -0.9, and a steady band reads near 0 (within 0.3).
+    assert at("mud", "presence") > 0.9 and at("presence", "mud") == at("mud", "presence") and at("mud", "mud") == 1.0
+    assert at("mud", "sibilance") < -0.9 and abs(at("mud", "mids")) < 0.3
+    assert at("sub", "mud") is None  # nothing in the sub band: no number rather than a made-up one
+
+
+def test_resonance_finder():
+    from scipy.signal import lfilter
+    # Pink noise with a 3150 Hz sine added from 4 s to 8 s (a ringing resonance).
+    x = _noise(seed=7)
+    t = np.arange(len(x)) / FS
+    x += (0.05 * np.sin(2 * np.pi * 3150 * t) * ((t >= 4) & (t < 8)))[:, None]
+    _, found = _relations(x)
+    assert len(found) == 1
+    r = found[0]
+    # Frequency within 1%; it stands well over the 6 dB threshold above the spectrum around it
+    # (over 10 dB); a pure tone is as narrow as the finder can tell (Q over 30); and it shows from
+    # 4 s to 8 s, within 0.5 s.
+    assert abs(r["hz"] - 3150) < 31.5 and r["prominence_db"] > 10 and r["q"] > 30
+    assert len(r["time_ranges_s"]) == 1 and r["element"] is None
+    assert abs(r["time_ranges_s"][0][0] - 4.0) <= 0.5 and abs(r["time_ranges_s"][0][1] - 8.0) <= 0.5
+
+    # Plain noise has no resonances, pink or white.
+    assert _relations(_noise(seed=8))[1] == [] and _relations(_noise(color="white", seed=9))[1] == []
+
+    # A broad bump, as an EQ would make it: a +12 dB bell at 1 kHz with Q 4 (RBJ peaking filter).
+    f0, q, gain = 1000.0, 4.0, 12.0
+    a_, w = 10 ** (gain / 40), 2 * np.pi * f0 / FS
+    alpha = np.sin(w) / (2 * q)
+    b = [1 + alpha * a_, -2 * np.cos(w), 1 - alpha * a_]
+    a = [1 + alpha / a_, -2 * np.cos(w), 1 - alpha / a_]
+    _, found = _relations(lfilter(b, a, _noise(seed=10, seconds=20), axis=0))
+    assert len(found) == 1
+    r = found[0]
+    # Frequency within 3%; prominence is the bell's 12 dB less what its skirts add to the surrounding
+    # spectrum (tolerance 2.5 dB); the whole song rings, so one range covers it (within 0.5 s).
+    assert abs(r["hz"] - 1000) < 30 and abs(r["prominence_db"] - 12) < 2.5
+    assert r["time_ranges_s"] == [[0.0, 20.0]]
+    # Q is measured 3 dB down from the top of the peak, where this bell is narrower than its
+    # nominal Q of 4 says (that is defined at half the gain): it reads 8, tolerance 2.
+    assert abs(r["q"] - 8) < 2
+
+
+def test_report_v2_adds_bands_relations_and_resonances():
+    import json
+    import tempfile
+    from scipy.io import wavfile
+    x = _noise(seed=11, seconds=10)
+    t = np.arange(len(x)) / FS
+    x += (0.05 * np.sin(2 * np.pi * 3150 * t))[:, None]
+    path = os.path.join(tempfile.mkdtemp(), "v2.wav")
+    wavfile.write(path, FS, (x * 32767).astype(np.int16))
+    report = analyze_file(path, target="hiphop_rap")
+    json.loads(json.dumps(report, allow_nan=False))  # valid JSON, no NaN or infinity
+    assert report["schema_version"] == "2.0"
+    # Every field the page, score, fixes and notes read is still there.
+    for key in ("analyzer_version", "file", "loudness", "peaks", "dynamics", "stereo", "spectrum", "edges", "vocal",
+                "streaming", "profile", "stage", "setup", "measures", "target", "flags", "score", "style", "reference"):
+        assert key in report, key
+    assert set(report["spectrum"]["band_energy_pct"]) == {"sub", "low", "low_mid", "high_mid", "high"}
+    assert set(report["profile"]["tone_db"]) == {"lows", "low_mids", "mids", "presence", "highs"}
+    # The new blocks, shaped as docs/09 shows them.
+    eng = report["bands"]["engineer"]
+    assert [b["id"] for b in eng] == ["sub", "bass", "low_mids", "mud", "box", "mids", "presence", "bite", "sibilance", "air"]
+    for b in eng:
+        assert set(b) == {"id", "lo_hz", "hi_hz", "level_db_rel", "target_delta_db", "crest_db", "lra_lu", "correlation",
+                          "side_mid_db", "balance_db", "transient_ratio", "level_std_db", "timeline"}
+        assert len(b["timeline"]) == 25 and b["timeline"][1]["t_s"] == 0.4
+        assert set(b["timeline"][0]) == {"t_s", "level_db_rel", "crest_db", "transient_ratio", "correlation",
+                                         "side_mid_db", "balance_db"}
+    fine = report["bands"]["fine"]
+    assert len(fine["center_hz"]) == len(fine["level_db_rel"]) == 31 and len(fine["timeline"]["level_db_rel"]) == 25
+    assert set(report["relations"]) == {"tilt_db_per_oct", "ratios", "flatness", "contrast_db", "band_correlation"}
+    assert [r["hz"] for r in report["resonances"]] == [3150]
+    # The engineer's notes are written from a fixed list of fields, so the new bulk never reaches the AI.
+    from mixcheck.notes import notes_input
+    assert len(json.dumps(notes_input(report))) < 6000
+
+    # A silent file and one shorter than a timeline window still give a report, with the new blocks empty.
+    for name, audio in (("silent.wav", np.zeros((FS, 2))), ("short.wav", x[:FS // 5])):
+        path = os.path.join(tempfile.mkdtemp(), name)
+        wavfile.write(path, FS, (audio * 32767).astype(np.int16))
+        short = analyze_file(path)
+        assert short["bands"] is None and short["relations"] is None and short["resonances"] == []
+    # A low sample rate: bands the file can't hold are null, the rest are measured.
+    low = _noise(seed=12, fs=16000)
+    b, block, _ = _bands(low, 16000)
+    assert b["air"]["level_db_rel"] is None and b["air"]["timeline"] == [] and b["mids"]["level_db_rel"] is not None
+    assert block["fine"]["level_db_rel"][-1] is None and block["fine"]["level_db_rel"][17] is not None
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in globals().items() if n.startswith("test_")]
     for name, fn in tests:

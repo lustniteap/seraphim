@@ -9,10 +9,12 @@ from pathlib import Path
 
 from . import __version__
 from .audio_io import load_audio
+from .band_measures import fine_timeline, measure_bands, spectral_pass
 from .edges import measure_edges
 from .loudness import measure_loudness
 from .peaks import measure_peaks
 from .reference import apply_reference, measure_profile
+from .relations import find_resonances, measure_relations
 from .remediation import STAGES, attach_fixes, describe_setup, detect_stage, normalize_setup
 from .score import score_flags
 from .style import canonical, measures, style_flags, style_match
@@ -22,7 +24,9 @@ from .stereo import measure_stereo
 from .util import fmt_time
 from .vocal import ESTIMATE_NOTE, measure_vocal, vocal_flags
 
-SCHEMA_VERSION = "1.3"
+# 2.0: report v2 (docs/09-analysis-model.md) adds "bands", "relations" and "resonances".
+# Every 1.x field is still there, unchanged.
+SCHEMA_VERSION = "2.0"
 
 # Loudness normalization references (LUFS). Platforms change these, so
 # verify against their current documentation before relying on them.
@@ -81,6 +85,7 @@ def analyze_file(path, setup=None, stage="auto", target=None, references=None, p
     spectrum = measure_spectrum(x, fs)
     # Kept in the report so references can be added or changed later without re-analyzing.
     profile = safe_profile(x, fs, path.name) if math.isfinite(integrated) else None
+    bands, relations, resonances = band_analysis(x, fs, integrated)
     done("tone")
     edges = measure_edges(x, fs)
     done("edges")
@@ -106,6 +111,9 @@ def analyze_file(path, setup=None, stage="auto", target=None, references=None, p
         },
         "stereo": stereo,
         "spectrum": spectrum,
+        "bands": bands,
+        "relations": relations,
+        "resonances": resonances,
         "edges": edges,
         "vocal": vocal,
         "streaming": streaming_adjustments(integrated),
@@ -127,6 +135,16 @@ def analyze_file(path, setup=None, stage="auto", target=None, references=None, p
     report["score"] = score_flags(report["flags"], stage, vocal=bool(vocal and vocal.get("found")))
     report["style"] = style_match(report["measures"], target, stage)
     return clean(report)
+
+
+def band_analysis(x, fs, integrated):
+    """Layer A band by band: the report's "bands", "relations" and "resonances" (see docs/09)."""
+    bands, window_power = measure_bands(x, fs, integrated)
+    if bands is None:  # silent, or shorter than one timeline window
+        return None, None, []
+    spectral = spectral_pass(x, fs)
+    bands["fine"]["timeline"] = fine_timeline(spectral, integrated)
+    return bands, measure_relations(bands, window_power, spectral), find_resonances(spectral)
 
 
 def split_and_measure(x, fs):
