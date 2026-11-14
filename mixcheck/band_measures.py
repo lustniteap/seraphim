@@ -8,7 +8,8 @@ and transformed back at a sample rate just high enough for its width. The result
 "analytic" signal per channel: its magnitude is the band's envelope, and products of the left and
 right signals give correlation, mid and side. That makes ten bands cost about as much as one.
 
-Per band, as a whole-song summary and per WINDOW_S window:
+Per band, as a whole-song summary and per WINDOW_S window (the timeline, stored as columns:
+one list per measure, one entry per window):
 
   level_db_rel     band level relative to the song's loudness (the same convention as the tone
                    bands in reference.py: band power in dB minus the K-weighted power of the song)
@@ -95,7 +96,7 @@ def measure_bands(x, fs, integrated_lufs):
     for b, (bid, lo, hi, _name) in enumerate(ENGINEER_BANDS):
         entry = {"id": bid, "lo_hz": lo, "hi_hz": hi, "level_db_rel": None, "target_delta_db": None,
                  "crest_db": None, "lra_lu": None, "correlation": None, "side_mid_db": None,
-                 "balance_db": None, "transient_ratio": None, "level_std_db": None, "timeline": []}
+                 "balance_db": None, "transient_ratio": None, "level_std_db": None, "timeline": None}
         engineer.append(entry)
         k0, k1 = int(math.ceil(lo / df)), min(int(math.ceil(min(hi, top) / df)), len(spectra[0]))
         if k1 - k0 < 2:  # the sample rate is too low to hold this band
@@ -151,19 +152,19 @@ def measure_bands(x, fs, integrated_lufs):
                 song_balance = float(_db(sl) - _db(sr))
 
         level = _db(power) - ref_db
-        for i in range(count):
-            point = {"t_s": round(i * WINDOW_S, 1)}
-            if heard[i]:
-                point.update(level_db_rel=_r(level[i], 1), crest_db=_r(crest[i], 1),
-                             transient_ratio=_r(transient[i], 2))
-                if channels == 2:
-                    point.update(correlation=_r(corr[i], 2), side_mid_db=_r(max(side_mid[i], -99.0), 1),
-                                 balance_db=_r(float(np.clip(balance[i], -99.0, 99.0)), 1))
-            else:
-                point.update(level_db_rel=None, crest_db=None, transient_ratio=None)
-                if channels == 2:
-                    point.update(correlation=None, side_mid_db=None, balance_db=None)
-            entry["timeline"].append(point)
+        # The timeline is stored as columns (one list per measure, one entry per window): the same
+        # numbers as a list of points at about a quarter of the size. Silent windows read null.
+        def column(values, places, lo=None, hi=None):
+            if lo is not None:
+                values = np.clip(values, lo, hi)
+            return [_r(float(v), places) if ok else None for v, ok in zip(values, heard)]
+
+        entry["timeline"] = {"t_s": [round(i * WINDOW_S, 1) for i in range(count)],
+                             "level_db_rel": column(level, 1), "crest_db": column(crest, 1),
+                             "transient_ratio": column(transient, 2)}
+        if channels == 2:
+            entry["timeline"].update(correlation=column(corr, 2), side_mid_db=column(side_mid, 1, -99.0, 99.0),
+                                     balance_db=column(balance, 1, -99.0, 99.0))
 
         # Whole-song level: exact, from the spectrum (every sample, not just whole windows).
         song_power = sum(2.0 * np.sum(np.abs(spec[k0:k1]) ** 2) for spec in spectra) / (nfast * n)

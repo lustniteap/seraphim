@@ -1395,7 +1395,7 @@ def test_band_crest_factor():
     # A sine's peak is 3.01 dB above its RMS. Tolerance 0.1 dB, in the summary and in every window.
     tone, _, _ = _bands(stereo(sine(1000, -12)))
     assert abs(tone["mids"]["crest_db"] - 3.01) < 0.1
-    assert all(abs(p["crest_db"] - 3.01) < 0.1 for p in tone["mids"]["timeline"])
+    assert all(abs(v - 3.01) < 0.1 for v in tone["mids"]["timeline"]["crest_db"])
     # Steady noise sits around 10-14 dB; a click every half second is far above it (over 20 dB).
     noise, _, _ = _bands(_noise())
     clicks, _, _ = _bands(_clicks())
@@ -1419,7 +1419,7 @@ def test_band_level_range_and_movement():
     for bid in ("box", "mids", "presence", "air"):
         assert b[bid]["lra_lu"] < 1.0 and b[bid]["level_std_db"] < 0.5, bid
     # The timeline shows the step where it happens: 10 dB up between 11.6 s and 12.4 s. Tolerance 1.5 dB.
-    tl = {p["t_s"]: p["level_db_rel"] for p in b["mud"]["timeline"]}
+    tl = dict(zip(b["mud"]["timeline"]["t_s"], b["mud"]["timeline"]["level_db_rel"]))
     assert len(tl) == 120 and abs(tl[12.4] - tl[11.2] - 10.0) < 1.5 and abs(tl[11.2] - tl[10.8]) < 1.5
 
 
@@ -1434,8 +1434,8 @@ def test_band_stereo_measures():
         assert b[bid]["correlation"] < -0.99 and b[bid]["side_mid_db"] > 40, bid
     for bid in ("low_mids", "mud", "mids", "air"):
         assert b[bid]["correlation"] > 0.99 and b[bid]["side_mid_db"] < -40, bid
-    assert all(p["correlation"] < -0.95 for p in b["sub"]["timeline"])
-    assert all(p["correlation"] > 0.95 for p in b["mids"]["timeline"])
+    assert all(v < -0.95 for v in b["sub"]["timeline"]["correlation"])
+    assert all(v > 0.95 for v in b["mids"]["timeline"]["correlation"])
 
     # Unrelated left and right: correlation 0 (tolerance 0.1) and side as strong as mid (0 dB, tolerance 0.5 dB).
     b, _, _ = _bands(_noise(seed=4, channels=2, seconds=30))
@@ -1448,13 +1448,13 @@ def test_band_stereo_measures():
     b, _, _ = _bands(x)
     for bid, band in b.items():
         assert abs(band["balance_db"] - 6.0) < 0.1 and band["correlation"] > 0.99, bid
-    assert all(abs(p["balance_db"] - 6.0) < 0.15 for p in b["box"]["timeline"])
+    assert all(abs(v - 6.0) < 0.15 for v in b["box"]["timeline"]["balance_db"])
 
     # A mono file has no stereo measures, and says so with nulls rather than numbers.
     mono = _noise(seed=6)[:, :1]
     b, _, _ = _bands(mono)
     assert b["mids"]["correlation"] is None and b["mids"]["side_mid_db"] is None and b["mids"]["balance_db"] is None
-    assert "correlation" not in b["mids"]["timeline"][0] and b["mids"]["level_db_rel"] is not None
+    assert "correlation" not in b["mids"]["timeline"] and b["mids"]["level_db_rel"] is not None
 
 
 def test_band_transient_versus_sustained():
@@ -1472,7 +1472,7 @@ def test_band_transient_versus_sustained():
     # Clicks over noise 20 dB down land in between, and the windows without a click read steady.
     mixed, _, _ = _bands(_clicks(every_s=1.2) + 0.03 * _noise(color="white"))
     assert 0.3 < mixed["air"]["transient_ratio"] < 0.99
-    assert min(p["transient_ratio"] for p in mixed["air"]["timeline"]) < 0.05
+    assert min(mixed["air"]["timeline"]["transient_ratio"]) < 0.05
 
 
 def test_spectral_tilt_and_band_ratios():
@@ -1585,9 +1585,10 @@ def test_report_v2_adds_bands_relations_and_resonances():
     for b in eng:
         assert set(b) == {"id", "lo_hz", "hi_hz", "level_db_rel", "target_delta_db", "crest_db", "lra_lu", "correlation",
                           "side_mid_db", "balance_db", "transient_ratio", "level_std_db", "timeline"}
-        assert len(b["timeline"]) == 25 and b["timeline"][1]["t_s"] == 0.4
-        assert set(b["timeline"][0]) == {"t_s", "level_db_rel", "crest_db", "transient_ratio", "correlation",
-                                         "side_mid_db", "balance_db"}
+        # The timeline is columns: one list per measure, one entry per 0.4 s window.
+        assert set(b["timeline"]) == {"t_s", "level_db_rel", "crest_db", "transient_ratio", "correlation",
+                                      "side_mid_db", "balance_db"}
+        assert all(len(col) == 25 for col in b["timeline"].values()) and b["timeline"]["t_s"][1] == 0.4
     fine = report["bands"]["fine"]
     assert len(fine["center_hz"]) == len(fine["level_db_rel"]) == 31 and len(fine["timeline"]["level_db_rel"]) == 25
     assert set(report["relations"]) == {"tilt_db_per_oct", "ratios", "flatness", "contrast_db", "band_correlation"}
@@ -1602,10 +1603,15 @@ def test_report_v2_adds_bands_relations_and_resonances():
         wavfile.write(path, FS, (audio * 32767).astype(np.int16))
         short = analyze_file(path)
         assert short["bands"] is None and short["relations"] is None and short["resonances"] == []
+    # Silent windows are null in every column, not a made-up level: 2 s of noise, 2 s of silence.
+    gap, _, _ = _bands(np.concatenate([x[:2 * FS], np.zeros((2 * FS, 2))]))
+    for col in ("level_db_rel", "crest_db", "transient_ratio", "correlation", "side_mid_db", "balance_db"):
+        values = gap["mids"]["timeline"][col]
+        assert all(v is not None for v in values[:5]) and all(v is None for v in values[5:]), col
     # A low sample rate: bands the file can't hold are null, the rest are measured.
     low = _noise(seed=12, fs=16000)
     b, block, _ = _bands(low, 16000)
-    assert b["air"]["level_db_rel"] is None and b["air"]["timeline"] == [] and b["mids"]["level_db_rel"] is not None
+    assert b["air"]["level_db_rel"] is None and b["air"]["timeline"] is None and b["mids"]["level_db_rel"] is not None
     assert block["fine"]["level_db_rel"][-1] is None and block["fine"]["level_db_rel"][17] is not None
 
 
